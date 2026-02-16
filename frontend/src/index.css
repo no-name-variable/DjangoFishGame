@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply min-h-screen bg-forest-900 text-wood-200;
+    font-family: Georgia, 'PT Serif', serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-forest-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-wood-700 rounded;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-wood-600;
+  }
+
+  /* Стилизация select */
+  select {
+    @apply bg-forest-800 border-wood-700 text-wood-200;
+  }
+  option {
+    @apply bg-forest-800 text-wood-200;
+  }
+}
+
+@layer components {
+  /* Базовые кнопки */
+  .btn {
+    @apply px-4 py-2 rounded font-semibold transition-all duration-200 cursor-pointer
+           border text-sm;
+  }
+  .btn-primary {
+    @apply bg-forest-700 hover:bg-forest-600 text-gold border-gold/40
+           hover:border-gold/70 hover:shadow-lg;
+  }
+  .btn-secondary {
+    @apply bg-wood-800 hover:bg-wood-700 text-wood-200 border-wood-600
+           hover:border-wood-500;
+  }
+  .btn-danger {
+    @apply bg-red-900/80 hover:bg-red-800 text-red-200 border-red-700/50;
+  }
+  .btn-action {
+    @apply bg-water-700 hover:bg-water-600 text-water-100 border-water-500/40
+           hover:border-water-400/60;
+  }
+
+  /* Карточка — полупрозрачная с деревянной рамкой */
+  .card {
+    @apply bg-wood-900/60 border border-wood-700/60 rounded-lg shadow-wood p-4
+           backdrop-blur-sm;
+  }
+
+  /* Панель — деревянная текстура */
+  .panel {
+    @apply bg-wood-800/80 border border-wood-600/50 rounded-lg p-3 bg-wood-grain;
+  }
+
+  /* Деревянная панель с текстурой */
+  .wood-panel {
+    background: linear-gradient(
+      180deg,
+      #4a3118 0%,
+      #5c3d1e 20%,
+      #4a3118 40%,
+      #5c3d1e 60%,
+      #4a3118 80%,
+      #5c3d1e 100%
+    );
+    background-size: 100% 12px;
+    @apply border-2 border-wood-600/80 rounded-lg shadow-wood;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  /* Рамка в стиле игры */
+  .game-frame {
+    @apply border-2 rounded-lg;
+    border-color: #5c3d1e;
+    box-shadow:
+      0 0 0 1px #2a1a0d,
+      0 0 0 3px #5c3d1e,
+      0 0 0 4px #2a1a0d,
+      0 4px 12px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Золотой текст */
+  .gold-text {
+    @apply text-gold font-serif;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Инпут в стиле игры */
+  .game-input {
+    @apply w-full bg-forest-900/80 border border-wood-700/60 rounded px-3 py-2
+           text-wood-100 placeholder-wood-600
+           focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20
+           transition-colors;
+  }
+
+  /* Вкладка */
+  .game-tab {
+    @apply px-4 py-2 rounded-t font-serif text-sm transition-all cursor-pointer
+           border-b-2;
+  }
+  .game-tab-active {
+    @apply bg-wood-800/80 text-gold border-gold;
+  }
+  .game-tab-inactive {
+    @apply bg-forest-800/60 text-wood-400 border-transparent
+           hover:text-wood-200 hover:bg-forest-700/60;
+  }
+
+  /* Разделитель */
+  .divider {
+    @apply border-t border-wood-700/40 my-4;
+  }
+
+  /* Бейдж */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+  .badge-green {
+    @apply bg-green-900/60 text-green-300 border border-green-700/40;
+  }
+  .badge-blue {
+    @apply bg-water-800/60 text-water-300 border border-water-600/40;
+  }
+  .badge-yellow {
+    @apply bg-yellow-900/60 text-yellow-300 border border-yellow-700/40;
+  }
+  .badge-red {
+    @apply bg-red-900/60 text-red-300 border border-red-700/40;
+  }
+
+  /* Таблица в стиле игры */
+  .game-table {
+    @apply w-full text-left;
+  }
+  .game-table thead tr {
+    @apply border-b border-wood-700/60;
+  }
+  .game-table th {
+    @apply py-2 px-3 text-wood-400 text-sm font-serif;
+  }
+  .game-table tbody tr {
+    @apply border-b border-wood-800/40 hover:bg-wood-900/40 transition-colors;
+  }
+  .game-table td {
+    @apply py-2 px-3 text-sm;
+  }
+}

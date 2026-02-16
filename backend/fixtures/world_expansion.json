@@ -1,0 +1,522 @@
+[
+  {
+    "model": "world.base",
+    "pk": 2,
+    "fields": {
+      "name": "Ахтуба",
+      "description": "Крупная река в Астраханской области, левый рукав Волги. Знаменитое место трофейной рыбалки с обилием проток, ериков и затонов.",
+      "world_map_x": 72.0,
+      "world_map_y": 65.0,
+      "min_rank": 3,
+      "min_karma": 0,
+      "travel_cost": "200.00",
+      "requires_vehicle": false,
+      "image": "bases/base_2.jpg"
+    }
+  },
+  {
+    "model": "world.base",
+    "pk": 3,
+    "fields": {
+      "name": "Ладога",
+      "description": "Ладожское озеро — крупнейшее пресноводное озеро Европы на северо-западе России. Суровые воды с холодолюбивыми видами рыб.",
+      "world_map_x": 38.0,
+      "world_map_y": 20.0,
+      "min_rank": 5,
+      "min_karma": 0,
+      "travel_cost": "350.00",
+      "requires_vehicle": true,
+      "image": "bases/base_3.jpg"
+    }
+  },
+  {
+    "model": "world.location",
+    "pk": 4,
+    "fields": {
+      "base": 2,
+      "name": "Протока Банная",
+      "description": "Мелководная протока с песчаным дном и умеренным течением. Глубина 1-4 метра. Здесь кормится мирная рыба и охотится жерех.",
+      "min_rank": 3,
+      "requires_ticket": false,
+      "depth_map": {
+        "min": 1.0,
+        "max": 4.0,
+        "avg": 2.2
+      },
+      "image_day": "locations/loc_4.jpg",
+      "image_morning": "locations/loc_4.jpg",
+      "image_evening": "locations/loc_4.jpg",
+      "image_night": "locations/loc_4.jpg"
+    }
+  },
+  {
+    "model": "world.location",
+    "pk": 5,
+    "fields": {
+      "base": 2,
+      "name": "Глубокий яр",
+      "description": "Глубокий участок русла с резким свалом и обратным течением. Глубина 3-12 метров. Излюбленное место сомов, сазанов и бершей.",
+      "min_rank": 5,
+      "requires_ticket": false,
+      "depth_map": {
+        "min": 3.0,
+        "max": 12.0,
+        "avg": 7.0
+      },
+      "image_day": "locations/loc_5.jpg",
+      "image_morning": "locations/loc_5.jpg",
+      "image_evening": "locations/loc_5.jpg",
+      "image_night": "locations/loc_5.jpg"
+    }
+  },
+  {
+    "model": "world.location",
+    "pk": 6,
+    "fields": {
+      "base": 2,
+      "name": "Затон Старица",
+      "description": "Тихий затон со стоячей водой, заросший кувшинками и рдестом. Глубина 1-6 метров. Рай для линя, краснопёрки и карася.",
+      "min_rank": 3,
+      "requires_ticket": false,
+      "depth_map": {
+        "min": 1.0,
+        "max": 6.0,
+        "avg": 3.0
+      },
+      "image_day": "locations/loc_6.jpg",
+      "image_morning": "locations/loc_6.jpg",
+      "image_evening": "locations/loc_6.jpg",
+      "image_night": "locations/loc_6.jpg"
+    }
+  },
+  {
+    "model": "world.location",
+    "pk": 7,
+    "fields": {
+      "base": 3,
+      "name": "Бухта Тихая",
+      "description": "Защищённая от ветра и волн бухта с песчано-каменистым дном. Глубина 2-8 метров. Здесь кормятся сиг, ряпушка и корюшка.",
+      "min_rank": 5,
+      "requires_ticket": false,
+      "depth_map": {
+        "min": 2.0,
+        "max": 8.0,
+        "avg": 4.5
+      },
+      "image_day": "locations/loc_7.jpg",
+      "image_morning": "locations/loc_7.jpg",
+      "image_evening": "locations/loc_7.jpg",
+      "image_night": "locations/loc_7.jpg"
+    }
+  },
+  {
+    "model": "world.location",
+    "pk": 8,
+    "fields": {
+      "base": 3,
+      "name": "Каменная гряда",
+      "description": "Протяжённая каменистая гряда с валунами и резкими перепадами глубин 3-15 метров. Здесь обитают палия, форель и ладожский лосось.",
+      "min_rank": 7,
+      "requires_ticket": true,
+      "depth_map": {
+        "min": 3.0,
+        "max": 15.0,
+        "avg": 8.0
+      },
+      "image_day": "locations/loc_8.jpg",
+      "image_morning": "locations/loc_8.jpg",
+      "image_evening": "locations/loc_8.jpg",
+      "image_night": "locations/loc_8.jpg"
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 22,
+    "fields": {
+      "location": 4,
+      "fish": 30,
+      "spawn_weight": 0.85,
+      "depth_preference": 2.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 23,
+    "fields": {
+      "location": 4,
+      "fish": 28,
+      "spawn_weight": 0.7,
+      "depth_preference": 1.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 24,
+    "fields": {
+      "location": 4,
+      "fish": 33,
+      "spawn_weight": 0.6,
+      "depth_preference": 2.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 25,
+    "fields": {
+      "location": 4,
+      "fish": 34,
+      "spawn_weight": 0.55,
+      "depth_preference": 2.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 26,
+    "fields": {
+      "location": 4,
+      "fish": 35,
+      "spawn_weight": 0.75,
+      "depth_preference": 2.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 27,
+    "fields": {
+      "location": 4,
+      "fish": 32,
+      "spawn_weight": 0.65,
+      "depth_preference": 1.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 28,
+    "fields": {
+      "location": 4,
+      "fish": 29,
+      "spawn_weight": 0.35,
+      "depth_preference": 3.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 29,
+    "fields": {
+      "location": 5,
+      "fish": 27,
+      "spawn_weight": 0.4,
+      "depth_preference": 8.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 30,
+    "fields": {
+      "location": 5,
+      "fish": 26,
+      "spawn_weight": 0.25,
+      "depth_preference": 6.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 31,
+    "fields": {
+      "location": 5,
+      "fish": 29,
+      "spawn_weight": 0.5,
+      "depth_preference": 7.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 32,
+    "fields": {
+      "location": 5,
+      "fish": 33,
+      "spawn_weight": 0.45,
+      "depth_preference": 5.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 33,
+    "fields": {
+      "location": 5,
+      "fish": 34,
+      "spawn_weight": 0.4,
+      "depth_preference": 5.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 34,
+    "fields": {
+      "location": 5,
+      "fish": 35,
+      "spawn_weight": 0.5,
+      "depth_preference": 4.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 35,
+    "fields": {
+      "location": 5,
+      "fish": 28,
+      "spawn_weight": 0.3,
+      "depth_preference": 4.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 36,
+    "fields": {
+      "location": 5,
+      "fish": 30,
+      "spawn_weight": 0.35,
+      "depth_preference": 4.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 37,
+    "fields": {
+      "location": 6,
+      "fish": 31,
+      "spawn_weight": 0.55,
+      "depth_preference": 2.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 38,
+    "fields": {
+      "location": 6,
+      "fish": 32,
+      "spawn_weight": 0.7,
+      "depth_preference": 1.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 39,
+    "fields": {
+      "location": 6,
+      "fish": 26,
+      "spawn_weight": 0.3,
+      "depth_preference": 4.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 40,
+    "fields": {
+      "location": 6,
+      "fish": 35,
+      "spawn_weight": 0.6,
+      "depth_preference": 2.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 41,
+    "fields": {
+      "location": 6,
+      "fish": 30,
+      "spawn_weight": 0.4,
+      "depth_preference": 2.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 42,
+    "fields": {
+      "location": 6,
+      "fish": 33,
+      "spawn_weight": 0.5,
+      "depth_preference": 3.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 43,
+    "fields": {
+      "location": 6,
+      "fish": 27,
+      "spawn_weight": 0.15,
+      "depth_preference": 5.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 44,
+    "fields": {
+      "location": 7,
+      "fish": 36,
+      "spawn_weight": 0.6,
+      "depth_preference": 5.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 45,
+    "fields": {
+      "location": 7,
+      "fish": 38,
+      "spawn_weight": 0.8,
+      "depth_preference": 4.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 46,
+    "fields": {
+      "location": 7,
+      "fish": 40,
+      "spawn_weight": 0.85,
+      "depth_preference": 3.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 47,
+    "fields": {
+      "location": 7,
+      "fish": 39,
+      "spawn_weight": 0.3,
+      "depth_preference": 3.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 48,
+    "fields": {
+      "location": 7,
+      "fish": 41,
+      "spawn_weight": 0.25,
+      "depth_preference": 6.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 49,
+    "fields": {
+      "location": 7,
+      "fish": 42,
+      "spawn_weight": 0.2,
+      "depth_preference": 5.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 50,
+    "fields": {
+      "location": 7,
+      "fish": 43,
+      "spawn_weight": 0.15,
+      "depth_preference": 5.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 51,
+    "fields": {
+      "location": 8,
+      "fish": 37,
+      "spawn_weight": 0.35,
+      "depth_preference": 10.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 52,
+    "fields": {
+      "location": 8,
+      "fish": 36,
+      "spawn_weight": 0.45,
+      "depth_preference": 8.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 53,
+    "fields": {
+      "location": 8,
+      "fish": 42,
+      "spawn_weight": 0.3,
+      "depth_preference": 6.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 54,
+    "fields": {
+      "location": 8,
+      "fish": 43,
+      "spawn_weight": 0.25,
+      "depth_preference": 7.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 55,
+    "fields": {
+      "location": 8,
+      "fish": 41,
+      "spawn_weight": 0.35,
+      "depth_preference": 9.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 56,
+    "fields": {
+      "location": 8,
+      "fish": 45,
+      "spawn_weight": 0.05,
+      "depth_preference": 8.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 57,
+    "fields": {
+      "location": 8,
+      "fish": 44,
+      "spawn_weight": 0.08,
+      "depth_preference": 5.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 58,
+    "fields": {
+      "location": 8,
+      "fish": 39,
+      "spawn_weight": 0.2,
+      "depth_preference": 4.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 59,
+    "fields": {
+      "location": 8,
+      "fish": 38,
+      "spawn_weight": 0.5,
+      "depth_preference": 6.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 60,
+    "fields": {
+      "location": 8,
+      "fish": 40,
+      "spawn_weight": 0.55,
+      "depth_preference": 5.0
+    }
+  }
+]

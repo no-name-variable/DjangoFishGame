@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 96" fill="none">
+  <rect width="128" height="96" rx="4" fill="#1a2e1a"/>
+  <path d="M88 48c0 8-12 20-32 20S32 56 32 48s12-20 24-20 32 12 32 20z" fill="#2d4a2d" stroke="#4a6a4a" stroke-width="1.5"/>
+  <circle cx="52" cy="44" r="2.5" fill="#6a8a6a"/>
+  <path d="M88 48l16-12v24L88 48z" fill="#2d4a2d" stroke="#4a6a4a" stroke-width="1.5"/>
+  <text x="64" y="82" text-anchor="middle" fill="#5a7a5a" font-size="10" font-family="serif">Рыба</text>
+</svg>

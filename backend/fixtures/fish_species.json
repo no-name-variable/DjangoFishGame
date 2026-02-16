@@ -1,0 +1,627 @@
+[
+  {
+    "model": "tackle.fishspecies",
+    "pk": 1,
+    "fields": {
+      "name_ru": "Окунь",
+      "name_latin": "Perca fluviatilis",
+      "description": "Широко распространённый хищный пресноводный вид, обитающий в реках, озёрах и водохранилищах по всей России.",
+      "weight_min": 0.05,
+      "weight_max": 3.0,
+      "length_min": 8,
+      "length_max": 50,
+      "rarity": "common",
+      "sell_price_per_kg": "120.00",
+      "experience_per_kg": 10,
+      "active_time": {
+        "morning": 0.9,
+        "day": 0.5,
+        "evening": 0.8,
+        "night": 0.2
+      },
+      "preferred_depth_min": 1.0,
+      "preferred_depth_max": 8.0,
+      "image": "fish/1.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 2,
+    "fields": {
+      "name_ru": "Плотва",
+      "name_latin": "Rutilus rutilus",
+      "description": "Одна из самых массовых рыб пресных водоёмов, часто становится первым трофеем начинающего рыболова.",
+      "weight_min": 0.03,
+      "weight_max": 2.0,
+      "length_min": 5,
+      "length_max": 40,
+      "rarity": "common",
+      "sell_price_per_kg": "80.00",
+      "experience_per_kg": 8,
+      "active_time": {
+        "morning": 0.8,
+        "day": 0.6,
+        "evening": 0.7,
+        "night": 0.1
+      },
+      "preferred_depth_min": 0.5,
+      "preferred_depth_max": 5.0,
+      "image": "fish/2.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 3,
+    "fields": {
+      "name_ru": "Карась",
+      "name_latin": "Carassius carassius",
+      "description": "Неприхотливая рыба, способная выживать в заиленных и бедных кислородом водоёмах, включая небольшие пруды.",
+      "weight_min": 0.05,
+      "weight_max": 3.0,
+      "length_min": 8,
+      "length_max": 45,
+      "rarity": "common",
+      "sell_price_per_kg": "90.00",
+      "experience_per_kg": 9,
+      "active_time": {
+        "morning": 0.9,
+        "day": 0.4,
+        "evening": 0.9,
+        "night": 0.1
+      },
+      "preferred_depth_min": 0.5,
+      "preferred_depth_max": 4.0,
+      "image": "fish/3.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 4,
+    "fields": {
+      "name_ru": "Лещ",
+      "name_latin": "Abramis brama",
+      "description": "Ценная промысловая рыба, предпочитающая глубокие участки рек и водохранилищ с илистым дном.",
+      "weight_min": 0.1,
+      "weight_max": 6.0,
+      "length_min": 10,
+      "length_max": 70,
+      "rarity": "common",
+      "sell_price_per_kg": "150.00",
+      "experience_per_kg": 14,
+      "active_time": {
+        "morning": 0.7,
+        "day": 0.3,
+        "evening": 0.6,
+        "night": 0.8
+      },
+      "preferred_depth_min": 2.0,
+      "preferred_depth_max": 12.0,
+      "image": "fish/4.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 5,
+    "fields": {
+      "name_ru": "Густера",
+      "name_latin": "Blicca bjoerkna",
+      "description": "Стайная рыба семейства карповых, внешне похожая на леща, но отличающаяся красноватыми плавниками.",
+      "weight_min": 0.03,
+      "weight_max": 1.2,
+      "length_min": 6,
+      "length_max": 35,
+      "rarity": "common",
+      "sell_price_per_kg": "70.00",
+      "experience_per_kg": 7,
+      "active_time": {
+        "morning": 0.7,
+        "day": 0.5,
+        "evening": 0.7,
+        "night": 0.3
+      },
+      "preferred_depth_min": 1.0,
+      "preferred_depth_max": 6.0,
+      "image": "fish/5.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 6,
+    "fields": {
+      "name_ru": "Уклейка",
+      "name_latin": "Alburnus alburnus",
+      "description": "Мелкая стайная рыба, обитающая у поверхности воды и активно клюющая в тёплое время года.",
+      "weight_min": 0.01,
+      "weight_max": 0.1,
+      "length_min": 5,
+      "length_max": 20,
+      "rarity": "common",
+      "sell_price_per_kg": "40.00",
+      "experience_per_kg": 4,
+      "active_time": {
+        "morning": 0.8,
+        "day": 0.9,
+        "evening": 0.7,
+        "night": 0.0
+      },
+      "preferred_depth_min": 0.2,
+      "preferred_depth_max": 2.0,
+      "image": "fish/6.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 7,
+    "fields": {
+      "name_ru": "Ёрш",
+      "name_latin": "Gymnocephalus cernua",
+      "description": "Мелкий донный хищник с колючими плавниками, известный своей прожорливостью и повсеместной распространённостью.",
+      "weight_min": 0.01,
+      "weight_max": 0.3,
+      "length_min": 4,
+      "length_max": 20,
+      "rarity": "common",
+      "sell_price_per_kg": "30.00",
+      "experience_per_kg": 3,
+      "active_time": {
+        "morning": 0.5,
+        "day": 0.4,
+        "evening": 0.6,
+        "night": 0.7
+      },
+      "preferred_depth_min": 1.0,
+      "preferred_depth_max": 8.0,
+      "image": "fish/7.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 8,
+    "fields": {
+      "name_ru": "Пескарь",
+      "name_latin": "Gobio gobio",
+      "description": "Мелкая донная рыба, обитающая на песчаных и галечных участках рек с чистой проточной водой.",
+      "weight_min": 0.005,
+      "weight_max": 0.1,
+      "length_min": 4,
+      "length_max": 15,
+      "rarity": "common",
+      "sell_price_per_kg": "35.00",
+      "experience_per_kg": 3,
+      "active_time": {
+        "morning": 0.7,
+        "day": 0.8,
+        "evening": 0.6,
+        "night": 0.1
+      },
+      "preferred_depth_min": 0.3,
+      "preferred_depth_max": 3.0,
+      "image": "fish/8.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 9,
+    "fields": {
+      "name_ru": "Краснопёрка",
+      "name_latin": "Scardinius erythrophthalmus",
+      "description": "Яркая рыба с красными плавниками, предпочитающая заросшие водной растительностью участки озёр и стариц.",
+      "weight_min": 0.03,
+      "weight_max": 2.0,
+      "length_min": 6,
+      "length_max": 40,
+      "rarity": "common",
+      "sell_price_per_kg": "85.00",
+      "experience_per_kg": 8,
+      "active_time": {
+        "morning": 0.8,
+        "day": 0.7,
+        "evening": 0.6,
+        "night": 0.0
+      },
+      "preferred_depth_min": 0.3,
+      "preferred_depth_max": 3.0,
+      "image": "fish/9.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 10,
+    "fields": {
+      "name_ru": "Линь",
+      "name_latin": "Tinca tinca",
+      "description": "Осторожная теплолюбивая рыба с толстым слоем слизи, обитающая в заросших илистых водоёмах.",
+      "weight_min": 0.1,
+      "weight_max": 7.0,
+      "length_min": 10,
+      "length_max": 60,
+      "rarity": "uncommon",
+      "sell_price_per_kg": "200.00",
+      "experience_per_kg": 20,
+      "active_time": {
+        "morning": 0.9,
+        "day": 0.3,
+        "evening": 0.9,
+        "night": 0.2
+      },
+      "preferred_depth_min": 0.5,
+      "preferred_depth_max": 4.0,
+      "image": "fish/10.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 11,
+    "fields": {
+      "name_ru": "Карп",
+      "name_latin": "Cyprinus carpio",
+      "description": "Одомашненная форма сазана, выращиваемая в прудовых хозяйствах и достигающая внушительных размеров.",
+      "weight_min": 0.2,
+      "weight_max": 25.0,
+      "length_min": 15,
+      "length_max": 100,
+      "rarity": "uncommon",
+      "sell_price_per_kg": "180.00",
+      "experience_per_kg": 18,
+      "active_time": {
+        "morning": 0.8,
+        "day": 0.4,
+        "evening": 0.8,
+        "night": 0.3
+      },
+      "preferred_depth_min": 1.0,
+      "preferred_depth_max": 8.0,
+      "image": "fish/11.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 12,
+    "fields": {
+      "name_ru": "Голавль",
+      "name_latin": "Squalius cephalus",
+      "description": "Сильная речная рыба, обитающая на быстрых перекатах и охотно хватающая как насекомых, так и мелкую рыбу.",
+      "weight_min": 0.05,
+      "weight_max": 6.0,
+      "length_min": 10,
+      "length_max": 70,
+      "rarity": "uncommon",
+      "sell_price_per_kg": "160.00",
+      "experience_per_kg": 16,
+      "active_time": {
+        "morning": 0.9,
+        "day": 0.6,
+        "evening": 0.8,
+        "night": 0.1
+      },
+      "preferred_depth_min": 0.5,
+      "preferred_depth_max": 5.0,
+      "image": "fish/12.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 13,
+    "fields": {
+      "name_ru": "Язь",
+      "name_latin": "Leuciscus idus",
+      "description": "Всеядная речная рыба, ведущая полухищный образ жизни и предпочитающая участки с умеренным течением.",
+      "weight_min": 0.1,
+      "weight_max": 6.0,
+      "length_min": 10,
+      "length_max": 65,
+      "rarity": "uncommon",
+      "sell_price_per_kg": "170.00",
+      "experience_per_kg": 17,
+      "active_time": {
+        "morning": 0.8,
+        "day": 0.5,
+        "evening": 0.8,
+        "night": 0.3
+      },
+      "preferred_depth_min": 1.0,
+      "preferred_depth_max": 6.0,
+      "image": "fish/13.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 14,
+    "fields": {
+      "name_ru": "Жерех",
+      "name_latin": "Leuciscus aspius",
+      "description": "Единственный настоящий хищник среди карповых, охотящийся стремительным ударом хвоста по стае мелкой рыбы.",
+      "weight_min": 0.2,
+      "weight_max": 10.0,
+      "length_min": 15,
+      "length_max": 80,
+      "rarity": "uncommon",
+      "sell_price_per_kg": "220.00",
+      "experience_per_kg": 22,
+      "active_time": {
+        "morning": 0.9,
+        "day": 0.7,
+        "evening": 0.8,
+        "night": 0.0
+      },
+      "preferred_depth_min": 0.5,
+      "preferred_depth_max": 6.0,
+      "image": "fish/14.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 15,
+    "fields": {
+      "name_ru": "Судак",
+      "name_latin": "Sander lucioperca",
+      "description": "Ценный хищник с клыковидными зубами, предпочитающий чистую глубокую воду с твёрдым дном.",
+      "weight_min": 0.2,
+      "weight_max": 12.0,
+      "length_min": 15,
+      "length_max": 100,
+      "rarity": "rare",
+      "sell_price_per_kg": "350.00",
+      "experience_per_kg": 35,
+      "active_time": {
+        "morning": 0.6,
+        "day": 0.3,
+        "evening": 0.7,
+        "night": 0.9
+      },
+      "preferred_depth_min": 3.0,
+      "preferred_depth_max": 15.0,
+      "image": "fish/15.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 16,
+    "fields": {
+      "name_ru": "Щука",
+      "name_latin": "Esox lucius",
+      "description": "Главный пресноводный хищник, устраивающий засады среди водной растительности и атакующий молниеносным броском.",
+      "weight_min": 0.2,
+      "weight_max": 20.0,
+      "length_min": 15,
+      "length_max": 130,
+      "rarity": "rare",
+      "sell_price_per_kg": "280.00",
+      "experience_per_kg": 30,
+      "active_time": {
+        "morning": 0.9,
+        "day": 0.5,
+        "evening": 0.8,
+        "night": 0.2
+      },
+      "preferred_depth_min": 0.5,
+      "preferred_depth_max": 10.0,
+      "image": "fish/16.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 17,
+    "fields": {
+      "name_ru": "Налим",
+      "name_latin": "Lota lota",
+      "description": "Единственный пресноводный представитель тресковых, активный в холодное время года и нерестящийся подо льдом.",
+      "weight_min": 0.1,
+      "weight_max": 18.0,
+      "length_min": 15,
+      "length_max": 100,
+      "rarity": "rare",
+      "sell_price_per_kg": "300.00",
+      "experience_per_kg": 32,
+      "active_time": {
+        "morning": 0.2,
+        "day": 0.0,
+        "evening": 0.4,
+        "night": 1.0
+      },
+      "preferred_depth_min": 3.0,
+      "preferred_depth_max": 20.0,
+      "image": "fish/17.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 18,
+    "fields": {
+      "name_ru": "Сом",
+      "name_latin": "Silurus glanis",
+      "description": "Крупнейшая пресноводная рыба Европы, ведущая ночной придонный образ жизни в глубоких омутах и ямах.",
+      "weight_min": 0.5,
+      "weight_max": 100.0,
+      "length_min": 30,
+      "length_max": 300,
+      "rarity": "rare",
+      "sell_price_per_kg": "250.00",
+      "experience_per_kg": 28,
+      "active_time": {
+        "morning": 0.1,
+        "day": 0.0,
+        "evening": 0.5,
+        "night": 1.0
+      },
+      "preferred_depth_min": 3.0,
+      "preferred_depth_max": 25.0,
+      "image": "fish/18.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 19,
+    "fields": {
+      "name_ru": "Стерлядь",
+      "name_latin": "Acipenser ruthenus",
+      "description": "Самый мелкий представитель осетровых, обитающий в руслах крупных рек и занесённый в Красную книгу ряда регионов.",
+      "weight_min": 0.2,
+      "weight_max": 6.0,
+      "length_min": 20,
+      "length_max": 70,
+      "rarity": "trophy",
+      "sell_price_per_kg": "800.00",
+      "experience_per_kg": 60,
+      "active_time": {
+        "morning": 0.5,
+        "day": 0.3,
+        "evening": 0.6,
+        "night": 0.7
+      },
+      "preferred_depth_min": 2.0,
+      "preferred_depth_max": 15.0,
+      "image": "fish/19.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 20,
+    "fields": {
+      "name_ru": "Сазан",
+      "name_latin": "Cyprinus carpio carpio",
+      "description": "Дикий предок карпа, мощная и осторожная речная рыба, обитающая в крупных реках южных регионов России.",
+      "weight_min": 0.3,
+      "weight_max": 30.0,
+      "length_min": 20,
+      "length_max": 110,
+      "rarity": "trophy",
+      "sell_price_per_kg": "400.00",
+      "experience_per_kg": 45,
+      "active_time": {
+        "morning": 0.8,
+        "day": 0.3,
+        "evening": 0.8,
+        "night": 0.4
+      },
+      "preferred_depth_min": 2.0,
+      "preferred_depth_max": 12.0,
+      "image": "fish/20.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 21,
+    "fields": {
+      "name_ru": "Толстолобик",
+      "name_latin": "Hypophthalmichthys molitrix",
+      "description": "Крупная растительноядная рыба, питающаяся фитопланктоном и акклиматизированная в водоёмах средней полосы России.",
+      "weight_min": 0.3,
+      "weight_max": 40.0,
+      "length_min": 20,
+      "length_max": 120,
+      "rarity": "uncommon",
+      "sell_price_per_kg": "140.00",
+      "experience_per_kg": 15,
+      "active_time": {
+        "morning": 0.7,
+        "day": 0.8,
+        "evening": 0.6,
+        "night": 0.1
+      },
+      "preferred_depth_min": 1.0,
+      "preferred_depth_max": 8.0,
+      "image": "fish/21.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 22,
+    "fields": {
+      "name_ru": "Белый амур",
+      "name_latin": "Ctenopharyngodon idella",
+      "description": "Крупная травоядная рыба, завезённая из Восточной Азии для борьбы с зарастанием водоёмов и каналов.",
+      "weight_min": 0.5,
+      "weight_max": 35.0,
+      "length_min": 25,
+      "length_max": 120,
+      "rarity": "rare",
+      "sell_price_per_kg": "190.00",
+      "experience_per_kg": 25,
+      "active_time": {
+        "morning": 0.8,
+        "day": 0.6,
+        "evening": 0.7,
+        "night": 0.1
+      },
+      "preferred_depth_min": 1.0,
+      "preferred_depth_max": 6.0,
+      "image": "fish/22.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 23,
+    "fields": {
+      "name_ru": "Форель",
+      "name_latin": "Salmo trutta",
+      "description": "Холодолюбивая лососёвая рыба, обитающая в чистых горных реках и ручьях с быстрым течением.",
+      "weight_min": 0.1,
+      "weight_max": 8.0,
+      "length_min": 15,
+      "length_max": 70,
+      "rarity": "trophy",
+      "sell_price_per_kg": "600.00",
+      "experience_per_kg": 50,
+      "active_time": {
+        "morning": 0.9,
+        "day": 0.5,
+        "evening": 0.9,
+        "night": 0.2
+      },
+      "preferred_depth_min": 0.5,
+      "preferred_depth_max": 5.0,
+      "image": "fish/23.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 24,
+    "fields": {
+      "name_ru": "Таймень",
+      "name_latin": "Hucho taimen",
+      "description": "Крупнейший лосось пресных вод, краснокнижный вид, обитающий в реках Сибири и Дальнего Востока.",
+      "weight_min": 1.0,
+      "weight_max": 80.0,
+      "length_min": 40,
+      "length_max": 200,
+      "rarity": "legendary",
+      "sell_price_per_kg": "1500.00",
+      "experience_per_kg": 100,
+      "active_time": {
+        "morning": 0.8,
+        "day": 0.4,
+        "evening": 0.9,
+        "night": 0.3
+      },
+      "preferred_depth_min": 1.0,
+      "preferred_depth_max": 10.0,
+      "image": "fish/24.png"
+    }
+  },
+  {
+    "model": "tackle.fishspecies",
+    "pk": 25,
+    "fields": {
+      "name_ru": "Осётр",
+      "name_latin": "Acipenser gueldenstaedtii",
+      "description": "Древняя проходная рыба, занесённая в Красную книгу, исторически обитавшая в бассейнах Каспийского и Чёрного морей.",
+      "weight_min": 1.0,
+      "weight_max": 80.0,
+      "length_min": 40,
+      "length_max": 230,
+      "rarity": "legendary",
+      "sell_price_per_kg": "2000.00",
+      "experience_per_kg": 120,
+      "active_time": {
+        "morning": 0.5,
+        "day": 0.3,
+        "evening": 0.6,
+        "night": 0.7
+      },
+      "preferred_depth_min": 3.0,
+      "preferred_depth_max": 20.0,
+      "image": "fish/25.png"
+    }
+  }
+]

@@ -1,0 +1,287 @@
+[
+  {
+    "model": "world.base",
+    "pk": 1,
+    "fields": {
+      "name": "Озеро Светлое",
+      "description": "Живописное озеро в средней полосе России, идеальное место для начинающих рыбаков.",
+      "world_map_x": 50.0,
+      "world_map_y": 40.0,
+      "min_rank": 1,
+      "min_karma": 0,
+      "travel_cost": "0.00",
+      "requires_vehicle": false,
+      "image": "bases/base_1.jpg"
+    }
+  },
+  {
+    "model": "world.location",
+    "pk": 1,
+    "fields": {
+      "base": 1,
+      "name": "Тихая заводь",
+      "description": "Спокойное место у берега, защищённое от ветра. Глубина до 3 метров.",
+      "min_rank": 1,
+      "requires_ticket": false,
+      "depth_map": {
+        "min": 0.5,
+        "max": 3.0,
+        "avg": 1.5
+      },
+      "image_day": "locations/loc_1.jpg",
+      "image_morning": "locations/loc_1.jpg",
+      "image_evening": "locations/loc_1.jpg",
+      "image_night": "locations/loc_1.jpg"
+    }
+  },
+  {
+    "model": "world.location",
+    "pk": 2,
+    "fields": {
+      "base": 1,
+      "name": "Камышовый залив",
+      "description": "Заросший камышом залив — любимое место карася и линя.",
+      "min_rank": 1,
+      "requires_ticket": false,
+      "depth_map": {
+        "min": 0.3,
+        "max": 2.5,
+        "avg": 1.2
+      },
+      "image_day": "locations/loc_2.jpg",
+      "image_morning": "locations/loc_2.jpg",
+      "image_evening": "locations/loc_2.jpg",
+      "image_night": "locations/loc_2.jpg"
+    }
+  },
+  {
+    "model": "world.location",
+    "pk": 3,
+    "fields": {
+      "base": 1,
+      "name": "Глубокий омут",
+      "description": "Глубокое место с сильным течением. Здесь водится крупная рыба.",
+      "min_rank": 5,
+      "requires_ticket": false,
+      "depth_map": {
+        "min": 2.0,
+        "max": 8.0,
+        "avg": 5.0
+      },
+      "image_day": "locations/loc_3.jpg",
+      "image_morning": "locations/loc_3.jpg",
+      "image_evening": "locations/loc_3.jpg",
+      "image_night": "locations/loc_3.jpg"
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 1,
+    "fields": {
+      "location": 1,
+      "fish": 1,
+      "spawn_weight": 0.8,
+      "depth_preference": 1.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 2,
+    "fields": {
+      "location": 1,
+      "fish": 2,
+      "spawn_weight": 0.9,
+      "depth_preference": 1.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 3,
+    "fields": {
+      "location": 1,
+      "fish": 3,
+      "spawn_weight": 0.7,
+      "depth_preference": 1.2
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 4,
+    "fields": {
+      "location": 1,
+      "fish": 4,
+      "spawn_weight": 0.4,
+      "depth_preference": 2.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 5,
+    "fields": {
+      "location": 1,
+      "fish": 6,
+      "spawn_weight": 0.9,
+      "depth_preference": 0.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 6,
+    "fields": {
+      "location": 1,
+      "fish": 7,
+      "spawn_weight": 0.6,
+      "depth_preference": 1.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 7,
+    "fields": {
+      "location": 1,
+      "fish": 9,
+      "spawn_weight": 0.5,
+      "depth_preference": 1.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 8,
+    "fields": {
+      "location": 2,
+      "fish": 3,
+      "spawn_weight": 0.9,
+      "depth_preference": 1.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 9,
+    "fields": {
+      "location": 2,
+      "fish": 10,
+      "spawn_weight": 0.5,
+      "depth_preference": 1.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 10,
+    "fields": {
+      "location": 2,
+      "fish": 9,
+      "spawn_weight": 0.7,
+      "depth_preference": 0.8
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 11,
+    "fields": {
+      "location": 2,
+      "fish": 2,
+      "spawn_weight": 0.6,
+      "depth_preference": 1.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 12,
+    "fields": {
+      "location": 2,
+      "fish": 11,
+      "spawn_weight": 0.3,
+      "depth_preference": 1.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 13,
+    "fields": {
+      "location": 2,
+      "fish": 5,
+      "spawn_weight": 0.5,
+      "depth_preference": 1.2
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 14,
+    "fields": {
+      "location": 2,
+      "fish": 16,
+      "spawn_weight": 0.15,
+      "depth_preference": 1.5
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 15,
+    "fields": {
+      "location": 3,
+      "fish": 15,
+      "spawn_weight": 0.4,
+      "depth_preference": 5.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 16,
+    "fields": {
+      "location": 3,
+      "fish": 16,
+      "spawn_weight": 0.3,
+      "depth_preference": 4.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 17,
+    "fields": {
+      "location": 3,
+      "fish": 18,
+      "spawn_weight": 0.15,
+      "depth_preference": 6.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 18,
+    "fields": {
+      "location": 3,
+      "fish": 4,
+      "spawn_weight": 0.5,
+      "depth_preference": 4.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 19,
+    "fields": {
+      "location": 3,
+      "fish": 1,
+      "spawn_weight": 0.6,
+      "depth_preference": 3.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 20,
+    "fields": {
+      "location": 3,
+      "fish": 17,
+      "spawn_weight": 0.2,
+      "depth_preference": 5.0
+    }
+  },
+  {
+    "model": "world.locationfish",
+    "pk": 21,
+    "fields": {
+      "location": 3,
+      "fish": 14,
+      "spawn_weight": 0.25,
+      "depth_preference": 3.0
+    }
+  }
+]

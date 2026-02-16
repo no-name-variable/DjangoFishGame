@@ -1,0 +1,192 @@
+[
+  {
+    "model": "quests.quest",
+    "pk": 1,
+    "fields": {
+      "name": "Первый улов",
+      "description": "Поймайте свою первую рыбу. Неважно какую — главное начать!",
+      "quest_type": "catch_fish",
+      "target_species": null,
+      "target_count": 1,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "100.00",
+      "reward_experience": 50,
+      "reward_karma": 0,
+      "prerequisite_quest": null,
+      "min_rank": 1,
+      "order": 1
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 2,
+    "fields": {
+      "name": "Начинающий рыболов",
+      "description": "Поймайте 10 рыб любого вида. Практика — залог успеха.",
+      "quest_type": "catch_fish",
+      "target_species": null,
+      "target_count": 10,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "300.00",
+      "reward_experience": 150,
+      "reward_karma": 1,
+      "prerequisite_quest": 1,
+      "min_rank": 1,
+      "order": 2
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 3,
+    "fields": {
+      "name": "Охотник на плотву",
+      "description": "Поймайте 5 плотв. Эта рыба водится повсюду.",
+      "quest_type": "catch_species",
+      "target_species": 1,
+      "target_count": 5,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "200.00",
+      "reward_experience": 100,
+      "reward_karma": 0,
+      "prerequisite_quest": 1,
+      "min_rank": 1,
+      "order": 3
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 4,
+    "fields": {
+      "name": "Знаток окуня",
+      "description": "Поймайте 5 окуней. Полосатый хищник — желанный трофей.",
+      "quest_type": "catch_species",
+      "target_species": 2,
+      "target_count": 5,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "250.00",
+      "reward_experience": 120,
+      "reward_karma": 0,
+      "prerequisite_quest": 1,
+      "min_rank": 1,
+      "order": 4
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 5,
+    "fields": {
+      "name": "Килограммовый рубеж",
+      "description": "Наберите суммарный вес пойманной рыбы 5 кг.",
+      "quest_type": "catch_weight",
+      "target_species": null,
+      "target_count": 0,
+      "target_weight": 5.0,
+      "target_location": null,
+      "reward_money": "400.00",
+      "reward_experience": 200,
+      "reward_karma": 1,
+      "prerequisite_quest": 2,
+      "min_rank": 1,
+      "order": 5
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 6,
+    "fields": {
+      "name": "Щучья охота",
+      "description": "Поймайте 3 щуки. Зубастая хищница требует мастерства.",
+      "quest_type": "catch_species",
+      "target_species": 4,
+      "target_count": 3,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "500.00",
+      "reward_experience": 250,
+      "reward_karma": 1,
+      "prerequisite_quest": 2,
+      "min_rank": 2,
+      "order": 6
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 7,
+    "fields": {
+      "name": "Рыбалка на мелководье",
+      "description": "Поймайте 5 рыб на Мелководном заливе.",
+      "quest_type": "catch_fish",
+      "target_species": null,
+      "target_count": 5,
+      "target_weight": 0,
+      "target_location": 1,
+      "reward_money": "350.00",
+      "reward_experience": 180,
+      "reward_karma": 0,
+      "prerequisite_quest": 1,
+      "min_rank": 1,
+      "order": 7
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 8,
+    "fields": {
+      "name": "Трофейный вес",
+      "description": "Наберите суммарный вес 20 кг. Настоящая проверка на выносливость.",
+      "quest_type": "catch_weight",
+      "target_species": null,
+      "target_count": 0,
+      "target_weight": 20.0,
+      "target_location": null,
+      "reward_money": "800.00",
+      "reward_experience": 400,
+      "reward_karma": 2,
+      "prerequisite_quest": 5,
+      "min_rank": 2,
+      "order": 8
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 9,
+    "fields": {
+      "name": "Глубоководный лещ",
+      "description": "Поймайте 3 леща. Эта рыба прячется на глубине.",
+      "quest_type": "catch_species",
+      "target_species": 3,
+      "target_count": 3,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "450.00",
+      "reward_experience": 200,
+      "reward_karma": 0,
+      "prerequisite_quest": 2,
+      "min_rank": 2,
+      "order": 9
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 10,
+    "fields": {
+      "name": "Полсотни",
+      "description": "Поймайте 50 рыб любого вида. Опытный рыболов!",
+      "quest_type": "catch_fish",
+      "target_species": null,
+      "target_count": 50,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "1500.00",
+      "reward_experience": 800,
+      "reward_karma": 3,
+      "prerequisite_quest": 2,
+      "min_rank": 2,
+      "order": 10
+    }
+  }
+]

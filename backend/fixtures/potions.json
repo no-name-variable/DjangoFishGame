@@ -1,0 +1,15 @@
+[
+  {"model": "potions.marinestar", "pk": 1, "fields": {"color": "red", "name": "Красная морская звезда", "description": "Обычная красная звезда, встречается чаще всего.", "drop_chance": 0.08}},
+  {"model": "potions.marinestar", "pk": 2, "fields": {"color": "orange", "name": "Оранжевая морская звезда", "description": "Оранжевая звезда, попадается нередко.", "drop_chance": 0.06}},
+  {"model": "potions.marinestar", "pk": 3, "fields": {"color": "yellow", "name": "Жёлтая морская звезда", "description": "Жёлтая звезда — источник солнечной энергии.", "drop_chance": 0.05}},
+  {"model": "potions.marinestar", "pk": 4, "fields": {"color": "green", "name": "Зелёная морская звезда", "description": "Зелёная звезда — довольно редкая находка.", "drop_chance": 0.04}},
+  {"model": "potions.marinestar", "pk": 5, "fields": {"color": "blue", "name": "Синяя морская звезда", "description": "Синяя звезда — редкий глубоководный экземпляр.", "drop_chance": 0.03}},
+  {"model": "potions.marinestar", "pk": 6, "fields": {"color": "purple", "name": "Фиолетовая морская звезда", "description": "Фиолетовая звезда — крайне редкая и ценная.", "drop_chance": 0.02}},
+
+  {"model": "potions.potion", "pk": 1, "fields": {"name": "Отвар удачи", "description": "Облегчает натяжение лески при вываживании, снимает лимит садка.", "effect_type": "luck", "effect_value": 0.7, "karma_cost": 50, "duration_hours": 6, "required_stars": {"red": 5, "orange": 3}, "is_one_time": false}},
+  {"model": "potions.potion", "pk": 2, "fields": {"name": "Отвар невидимости", "description": "Скрывает вас от других игроков на локации.", "effect_type": "invisibility", "effect_value": 1.0, "karma_cost": 200, "duration_hours": 4, "required_stars": {"blue": 4, "purple": 2}, "is_one_time": false}},
+  {"model": "potions.potion", "pk": 3, "fields": {"name": "Отвар клада", "description": "Повышает шанс найти клад при рыбалке.", "effect_type": "treasure", "effect_value": 2.0, "karma_cost": 40, "duration_hours": 8, "required_stars": {"yellow": 5, "green": 2}, "is_one_time": false}},
+  {"model": "potions.potion", "pk": 4, "fields": {"name": "Отвар редкости", "description": "Однократно повышает шанс поймать редкую рыбу.", "effect_type": "rarity", "effect_value": 3.0, "karma_cost": 1000, "duration_hours": 0, "required_stars": {"purple": 5, "blue": 5, "green": 3}, "is_one_time": true}},
+  {"model": "potions.potion", "pk": 5, "fields": {"name": "Отвар разряда", "description": "Мгновенно повышает разряд на 1.", "effect_type": "rank_boost", "effect_value": 1.0, "karma_cost": 5000, "duration_hours": 0, "required_stars": {"red": 10, "orange": 8, "yellow": 6, "green": 5, "blue": 4, "purple": 3}, "is_one_time": true}},
+  {"model": "potions.potion", "pk": 6, "fields": {"name": "Отвар трофея", "description": "Привлекает более крупные экземпляры рыб.", "effect_type": "trophy", "effect_value": 1.5, "karma_cost": 300, "duration_hours": 4, "required_stars": {"orange": 5, "yellow": 4, "green": 3}, "is_one_time": false}}
+]

@@ -1,0 +1,170 @@
+[
+  {
+    "model": "records.achievement",
+    "pk": 1,
+    "fields": {
+      "name": "Первая рыба",
+      "description": "Поймайте свою первую рыбу.",
+      "category": "catch",
+      "icon": "\ud83c\udf1f",
+      "condition_type": "fish_count",
+      "condition_value": 1,
+      "reward_money": "50.00",
+      "reward_experience": 25
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 2,
+    "fields": {
+      "name": "Десятка",
+      "description": "Поймайте 10 рыб.",
+      "category": "catch",
+      "icon": "\ud83c\udfaf",
+      "condition_type": "fish_count",
+      "condition_value": 10,
+      "reward_money": "100.00",
+      "reward_experience": 50
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 3,
+    "fields": {
+      "name": "Полтинник",
+      "description": "Поймайте 50 рыб.",
+      "category": "catch",
+      "icon": "\ud83c\udfc6",
+      "condition_type": "fish_count",
+      "condition_value": 50,
+      "reward_money": "500.00",
+      "reward_experience": 250
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 4,
+    "fields": {
+      "name": "Коллекционер",
+      "description": "Поймайте 5 разных видов рыб.",
+      "category": "catch",
+      "icon": "\ud83d\udcda",
+      "condition_type": "species_count",
+      "condition_value": 5,
+      "reward_money": "200.00",
+      "reward_experience": 100
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 5,
+    "fields": {
+      "name": "Ихтиолог",
+      "description": "Поймайте 15 разных видов рыб.",
+      "category": "catch",
+      "icon": "\ud83e\uddec",
+      "condition_type": "species_count",
+      "condition_value": 15,
+      "reward_money": "1000.00",
+      "reward_experience": 500
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 6,
+    "fields": {
+      "name": "Центнер",
+      "description": "Наберите суммарный вес улова 100 кг.",
+      "category": "catch",
+      "icon": "\u2696\ufe0f",
+      "condition_type": "total_weight",
+      "condition_value": 100,
+      "reward_money": "800.00",
+      "reward_experience": 400
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 7,
+    "fields": {
+      "name": "Любитель",
+      "description": "Достигните 5 разряда.",
+      "category": "rank",
+      "icon": "\u2b50",
+      "condition_type": "rank",
+      "condition_value": 5,
+      "reward_money": "300.00",
+      "reward_experience": 0
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 8,
+    "fields": {
+      "name": "Рыболов",
+      "description": "Достигните 10 разряда.",
+      "category": "rank",
+      "icon": "\ud83c\udf1f",
+      "condition_type": "rank",
+      "condition_value": 10,
+      "reward_money": "1000.00",
+      "reward_experience": 0
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 9,
+    "fields": {
+      "name": "Добрая душа",
+      "description": "Наберите 10 кармы.",
+      "category": "karma",
+      "icon": "\ud83d\ude07",
+      "condition_type": "karma",
+      "condition_value": 10,
+      "reward_money": "200.00",
+      "reward_experience": 100
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 10,
+    "fields": {
+      "name": "Квестоман",
+      "description": "Выполните 5 квестов.",
+      "category": "quest",
+      "icon": "\ud83d\udcdc",
+      "condition_type": "quest_count",
+      "condition_value": 5,
+      "reward_money": "500.00",
+      "reward_experience": 250
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 11,
+    "fields": {
+      "name": "Рекордсмен",
+      "description": "Установите свой первый рекорд.",
+      "category": "record",
+      "icon": "\ud83e\udd47",
+      "condition_type": "record",
+      "condition_value": 1,
+      "reward_money": "300.00",
+      "reward_experience": 150
+    }
+  },
+  {
+    "model": "records.achievement",
+    "pk": 12,
+    "fields": {
+      "name": "Чемпион",
+      "description": "Установите 5 рекордов.",
+      "category": "record",
+      "icon": "\ud83c\udfc5",
+      "condition_type": "record",
+      "condition_value": 5,
+      "reward_money": "1500.00",
+      "reward_experience": 750
+    }
+  }
+]

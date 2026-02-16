@@ -1,0 +1,359 @@
+[
+  {
+    "model": "tackle.rodtype",
+    "pk": 1,
+    "fields": {
+      "name": "Удочка 'Новичок'",
+      "description": "Простая поплавочная удочка для начинающих рыболовов.",
+      "rod_class": "float",
+      "test_min": 0.1,
+      "test_max": 2.0,
+      "durability_max": 100,
+      "length": 3.0,
+      "price": "50.00",
+      "min_rank": 1,
+      "image": "tackle/rods/1.jpg"
+    }
+  },
+  {
+    "model": "tackle.rodtype",
+    "pk": 2,
+    "fields": {
+      "name": "Удилище 'Рыбак'",
+      "description": "Надёжное поплавочное удилище для опытных рыболовов.",
+      "rod_class": "float",
+      "test_min": 0.5,
+      "test_max": 5.0,
+      "durability_max": 100,
+      "length": 4.0,
+      "price": "200.00",
+      "min_rank": 5,
+      "image": "tackle/rods/2.jpg"
+    }
+  },
+  {
+    "model": "tackle.rodtype",
+    "pk": 3,
+    "fields": {
+      "name": "Спиннинг 'Щукарь'",
+      "description": "Спиннинг среднего класса для ловли хищной рыбы.",
+      "rod_class": "spinning",
+      "test_min": 2.0,
+      "test_max": 15.0,
+      "durability_max": 100,
+      "length": 2.4,
+      "price": "350.00",
+      "min_rank": 5,
+      "image": "tackle/rods/3.jpg"
+    }
+  },
+  {
+    "model": "tackle.rodtype",
+    "pk": 4,
+    "fields": {
+      "name": "Донка 'Классика'",
+      "description": "Классическая донная удочка для ловли со дна.",
+      "rod_class": "bottom",
+      "test_min": 1.0,
+      "test_max": 10.0,
+      "durability_max": 100,
+      "length": 3.6,
+      "price": "150.00",
+      "min_rank": 3,
+      "image": "tackle/rods/4.jpg"
+    }
+  },
+  {
+    "model": "tackle.rodtype",
+    "pk": 5,
+    "fields": {
+      "name": "Спиннинг 'Мастер'",
+      "description": "Мощный спиннинг для трофейной рыбалки.",
+      "rod_class": "spinning",
+      "test_min": 5.0,
+      "test_max": 30.0,
+      "durability_max": 100,
+      "length": 2.7,
+      "price": "800.00",
+      "min_rank": 15,
+      "image": "tackle/rods/5.jpg"
+    }
+  },
+  {
+    "model": "tackle.reel",
+    "pk": 1,
+    "fields": {
+      "name": "Катушка 'Стартёр'",
+      "description": "Лёгкая безынерционная катушка для начинающих.",
+      "drag_power": 3.0,
+      "line_capacity": 100,
+      "durability_max": 100,
+      "price": "80.00",
+      "image": "tackle/reels/1.png"
+    }
+  },
+  {
+    "model": "tackle.reel",
+    "pk": 2,
+    "fields": {
+      "name": "Катушка 'Надёжная'",
+      "description": "Универсальная катушка с хорошим тормозом.",
+      "drag_power": 5.0,
+      "line_capacity": 150,
+      "durability_max": 100,
+      "price": "200.00",
+      "image": "tackle/reels/2.png"
+    }
+  },
+  {
+    "model": "tackle.reel",
+    "pk": 3,
+    "fields": {
+      "name": "Катушка 'Про'",
+      "description": "Профессиональная катушка с высокой тягой и большой вместимостью.",
+      "drag_power": 8.0,
+      "line_capacity": 200,
+      "durability_max": 100,
+      "price": "500.00",
+      "image": "tackle/reels/3.png"
+    }
+  },
+  {
+    "model": "tackle.line",
+    "pk": 1,
+    "fields": {
+      "name": "Леска 0.15мм",
+      "description": "Тонкая леска для деликатной ловли мелкой рыбы.",
+      "breaking_strength": 2.0,
+      "thickness": 0.15,
+      "length": 100,
+      "price": "30.00",
+      "image": "tackle/lines/1.png"
+    }
+  },
+  {
+    "model": "tackle.line",
+    "pk": 2,
+    "fields": {
+      "name": "Леска 0.25мм",
+      "description": "Универсальная леска средней толщины для большинства условий.",
+      "breaking_strength": 5.0,
+      "thickness": 0.25,
+      "length": 100,
+      "price": "50.00",
+      "image": "tackle/lines/2.png"
+    }
+  },
+  {
+    "model": "tackle.line",
+    "pk": 3,
+    "fields": {
+      "name": "Леска 0.35мм",
+      "description": "Прочная леска для ловли крупной рыбы.",
+      "breaking_strength": 8.0,
+      "thickness": 0.35,
+      "length": 100,
+      "price": "80.00",
+      "image": "tackle/lines/3.png"
+    }
+  },
+  {
+    "model": "tackle.hook",
+    "pk": 1,
+    "fields": {
+      "name": "Крючок №10",
+      "size": 10,
+      "price": "5.00",
+      "image": "tackle/hooks/1.png"
+    }
+  },
+  {
+    "model": "tackle.hook",
+    "pk": 2,
+    "fields": {
+      "name": "Крючок №6",
+      "size": 6,
+      "price": "8.00",
+      "image": "tackle/hooks/2.png"
+    }
+  },
+  {
+    "model": "tackle.hook",
+    "pk": 3,
+    "fields": {
+      "name": "Крючок №2",
+      "size": 2,
+      "price": "12.00",
+      "image": "tackle/hooks/3.png"
+    }
+  },
+  {
+    "model": "tackle.hook",
+    "pk": 4,
+    "fields": {
+      "name": "Крючок №1/0",
+      "size": 1,
+      "price": "15.00",
+      "image": "tackle/hooks/4.png"
+    }
+  },
+  {
+    "model": "tackle.floattackle",
+    "pk": 1,
+    "fields": {
+      "name": "Поплавок 2г",
+      "capacity": 2.0,
+      "sensitivity": 7,
+      "price": "15.00",
+      "image": "tackle/floats/1.bmp"
+    }
+  },
+  {
+    "model": "tackle.floattackle",
+    "pk": 2,
+    "fields": {
+      "name": "Поплавок 4г",
+      "capacity": 4.0,
+      "sensitivity": 5,
+      "price": "20.00",
+      "image": "tackle/floats/2.bmp"
+    }
+  },
+  {
+    "model": "tackle.floattackle",
+    "pk": 3,
+    "fields": {
+      "name": "Поплавок 8г",
+      "capacity": 8.0,
+      "sensitivity": 3,
+      "price": "25.00",
+      "image": "tackle/floats/3.bmp"
+    }
+  },
+  {
+    "model": "tackle.bait",
+    "pk": 1,
+    "fields": {
+      "name": "Червь",
+      "quantity_per_pack": 20,
+      "price": "10.00",
+      "image": "tackle/baits/1.png"
+    }
+  },
+  {
+    "model": "tackle.bait",
+    "pk": 2,
+    "fields": {
+      "name": "Опарыш",
+      "quantity_per_pack": 30,
+      "price": "15.00",
+      "image": "tackle/baits/2.png"
+    }
+  },
+  {
+    "model": "tackle.bait",
+    "pk": 3,
+    "fields": {
+      "name": "Кукуруза",
+      "quantity_per_pack": 25,
+      "price": "8.00",
+      "image": "tackle/baits/3.jpg"
+    }
+  },
+  {
+    "model": "tackle.bait",
+    "pk": 4,
+    "fields": {
+      "name": "Тесто",
+      "quantity_per_pack": 15,
+      "price": "12.00",
+      "image": "tackle/baits/4.jpg"
+    }
+  },
+  {
+    "model": "tackle.bait",
+    "pk": 5,
+    "fields": {
+      "name": "Живец",
+      "quantity_per_pack": 5,
+      "price": "30.00",
+      "image": "tackle/baits/5.png"
+    }
+  },
+  {
+    "model": "tackle.lure",
+    "pk": 1,
+    "fields": {
+      "name": "Колебалка 'Атом'",
+      "lure_type": "spoon",
+      "depth_min": 1.0,
+      "depth_max": 3.0,
+      "price": "45.00",
+      "image": "tackle/lures/1.jpg"
+    }
+  },
+  {
+    "model": "tackle.lure",
+    "pk": 2,
+    "fields": {
+      "name": "Воблер 'Минноу'",
+      "lure_type": "wobbler",
+      "depth_min": 0.5,
+      "depth_max": 2.0,
+      "price": "80.00",
+      "image": "tackle/lures/2.jpg"
+    }
+  },
+  {
+    "model": "tackle.lure",
+    "pk": 3,
+    "fields": {
+      "name": "Джиг 'Риппер'",
+      "lure_type": "jig",
+      "depth_min": 2.0,
+      "depth_max": 5.0,
+      "price": "35.00",
+      "image": "tackle/lures/3.jpg"
+    }
+  },
+  {
+    "model": "tackle.food",
+    "pk": 1,
+    "fields": {
+      "name": "Хлеб",
+      "satiety": 15,
+      "price": "5.00",
+      "image": "food/1.png"
+    }
+  },
+  {
+    "model": "tackle.food",
+    "pk": 2,
+    "fields": {
+      "name": "Бутерброд с колбасой",
+      "satiety": 30,
+      "price": "15.00",
+      "image": "food/2.png"
+    }
+  },
+  {
+    "model": "tackle.food",
+    "pk": 3,
+    "fields": {
+      "name": "Уха",
+      "satiety": 50,
+      "price": "25.00",
+      "image": "food/3.png"
+    }
+  },
+  {
+    "model": "tackle.food",
+    "pk": 4,
+    "fields": {
+      "name": "Термос с чаем",
+      "satiety": 10,
+      "price": "10.00",
+      "image": "food/4.png"
+    }
+  }
+]
