@@ -14,6 +14,7 @@ export async function getStatus() {
   return data as {
     sessions: SessionData[]
     fights: Record<string, FightData>
+    game_time?: { hour: number; day: number; time_of_day: string }
   }
 }
 
@@ -47,6 +48,27 @@ export async function retrieveRod(sessionId: number) {
   return data as { status: string }
 }
 
+export async function updateRetrieve(sessionId: number, isRetrieving: boolean) {
+  const { data } = await api.post('/fishing/update-retrieve/', {
+    session_id: sessionId,
+    is_retrieving: isRetrieving,
+  })
+  return data as { status: string; is_retrieving: boolean }
+}
+
+export async function changeBait(sessionId: number, baitId: number) {
+  const { data } = await api.post('/fishing/change-bait/', {
+    session_id: sessionId,
+    bait_id: baitId,
+  })
+  return data as {
+    status: string
+    session_id: number
+    new_bait: string
+    bait_remaining: number
+  }
+}
+
 export async function getGameTime() {
   const { data } = await api.get('/fishing/time/')
   return data
@@ -60,6 +82,10 @@ export interface SessionData {
   location_name: string
   rod_id: number
   rod_name: string
+  rod_class: 'float' | 'spinning' | 'bottom'
+  retrieve_speed: number
+  is_retrieving: boolean
+  retrieve_progress: number
   cast_x: number
   cast_y: number
   cast_time: string | null

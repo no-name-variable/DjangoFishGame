@@ -45,6 +45,11 @@ class Tournament(models.Model):
     max_participants = models.IntegerField('Макс. участников', default=100)
     is_active = models.BooleanField('Активен', default=True)
     is_finished = models.BooleanField('Завершён', default=False)
+    created_by = models.ForeignKey(
+        'accounts.Player', on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='Создатель',
+        related_name='created_tournaments',
+    )
 
     class Meta:
         verbose_name = 'Турнир'

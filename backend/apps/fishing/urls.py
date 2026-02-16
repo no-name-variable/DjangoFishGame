@@ -1,8 +1,8 @@
 from django.urls import path
 
 from .views import (
-    CastView, FishingStatusView, GameTimeView, GroundbaitView, KeepFishView,
-    PullRodView, ReelInView, ReleaseFishView, RetrieveRodView, StrikeView,
+    CastView, ChangeBaitView, FishingStatusView, GameTimeView, GroundbaitView, KeepFishView,
+    PullRodView, ReelInView, ReleaseFishView, RetrieveRodView, StrikeView, UpdateRetrieveView,
 )
 
 urlpatterns = [
@@ -14,6 +14,8 @@ urlpatterns = [
     path('fishing/keep/', KeepFishView.as_view(), name='fishing-keep'),
     path('fishing/release/', ReleaseFishView.as_view(), name='fishing-release'),
     path('fishing/retrieve/', RetrieveRodView.as_view(), name='fishing-retrieve'),
+    path('fishing/update-retrieve/', UpdateRetrieveView.as_view(), name='fishing-update-retrieve'),
+    path('fishing/change-bait/', ChangeBaitView.as_view(), name='fishing-change-bait'),
     path('fishing/groundbait/', GroundbaitView.as_view(), name='fishing-groundbait'),
     path('fishing/time/', GameTimeView.as_view(), name='game-time'),
 ]

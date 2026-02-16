@@ -23,6 +23,19 @@ class Player(models.Model):
         'world.Location', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='players', verbose_name='Текущая локация',
     )
+    # Слоты для удочек (максимум 3)
+    rod_slot_1 = models.ForeignKey(
+        'inventory.PlayerRod', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='player_slot_1', verbose_name='Слот удочки 1',
+    )
+    rod_slot_2 = models.ForeignKey(
+        'inventory.PlayerRod', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='player_slot_2', verbose_name='Слот удочки 2',
+    )
+    rod_slot_3 = models.ForeignKey(
+        'inventory.PlayerRod', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='player_slot_3', verbose_name='Слот удочки 3',
+    )
     created_at = models.DateTimeField('Создан', auto_now_add=True)
     updated_at = models.DateTimeField('Обновлён', auto_now=True)
 

@@ -140,56 +140,77 @@ function drawWaitingFloat(
 }
 
 function drawBiteFloat(
-  g: Graphics, x: number, y: number, f: number, _phase: number,
+  g: Graphics, x: number, y: number, f: number, phase: number,
   biteAngle: number, alpha: number,
 ) {
-  // Время с начала поклёвки (приблизительно по кадрам, ~60fps)
-  // Фазы определяются через модулированные кадры
-  const biteFrame = f % 300 // Циклическая анимация поклёвки
+  // СУПЕР медленная анимация - поклевка должна длиться 20-30 секунд
+  const slowTime = (f + phase * 100) * 0.005 // В 200 раз медленнее!
 
-  if (biteFrame < 18) {
-    // Фаза 1: Пробные тычки (0-300мс ~18 кадров)
-    const dip = Math.sin(biteFrame * 1.5) * 4
-    const bobY = y + dip
+  // Основная волна покачивания - едва заметная
+  const mainWave = Math.sin(slowTime) * 1.5
 
-    // Укороченная антенна (дёргается)
-    g.moveTo(x, bobY - 10 + Math.abs(dip))
-    g.lineTo(x, bobY)
-    g.stroke({ color: 0xff3333, width: 2, alpha })
+  // Вторичная волна для "игры" - минимальная
+  const secondWave = Math.sin(slowTime * 0.4) * 1
 
-    g.ellipse(x, bobY + 4, 3, 6)
-    g.fill({ color: 0xff4444, alpha })
-    g.ellipse(x, bobY + 10, 2, 4)
-    g.fill({ color: 0xffffff, alpha })
+  // Постепенное погружение - ОЧЕНЬ медленное (20-30 секунд)
+  const sinkProgress = Math.min(1, slowTime * 0.05)
+  const smoothSink = sinkProgress * sinkProgress * (3 - 2 * sinkProgress)
+  const sinkDepth = smoothSink * 12
 
-  } else if (biteFrame < 60) {
-    // Фаза 2: Утапливание (300-1000мс ~42 кадра)
-    const progress = (biteFrame - 18) / 42
-    const sinkY = y + progress * 12
-    const tiltX = Math.sin(biteAngle) * progress * 6
+  // Итоговая позиция Y - едва заметные движения
+  const bobY = y + mainWave + secondWave + sinkDepth
 
-    // Антенна укорачивается
-    const antennaLen = 14 * (1 - progress * 0.7)
-    g.moveTo(x + tiltX, sinkY - antennaLen)
-    g.lineTo(x + tiltX, sinkY)
-    g.stroke({ color: 0xff3333, width: 2, alpha })
+  // Минимальное горизонтальное покачивание
+  const bobX = x + Math.sin(slowTime * 0.5) * 1
 
-    g.ellipse(x + tiltX, sinkY + 4, 3, 6)
-    g.fill({ color: 0xff4444, alpha: alpha * (1 - progress * 0.3) })
+  if (smoothSink < 0.7) {
+    // Поплавок на поверхности (0-70% погружения)
+
+    // Антенна - укорачивается по мере погружения
+    const antennaLen = 14 * (1 - smoothSink * 0.5)
+    g.moveTo(bobX, bobY - antennaLen)
+    g.lineTo(bobX, bobY)
+    g.stroke({ color: 0xff4444, width: 2, alpha: alpha * (1 - smoothSink * 0.2) })
+
+    // Тело поплавка
+    g.ellipse(bobX, bobY + 4, 3, 6)
+    g.fill({ color: 0xff5555, alpha: alpha * (1 - smoothSink * 0.3) })
+    g.ellipse(bobX, bobY + 10, 2, 4)
+    g.fill({ color: 0xffffff, alpha: alpha * (1 - smoothSink * 0.2) })
+
+    // Мягкие волны вокруг
+    if (Math.abs(mainWave) > 1.5) {
+      const waveSize = 6 + Math.abs(mainWave)
+      g.circle(bobX, bobY + 12, waveSize)
+      g.stroke({ color: 0xffffff, alpha: 0.1, width: 1 })
+    }
 
   } else {
-    // Фаза 3: Под водой — торчит только 3px антенны
-    const wobble = Math.sin(f * 0.5) * 3
-    const sinkY = y + 12
+    // Поплавок под водой (70-100% погружения)
 
-    g.moveTo(x + wobble, sinkY - 3)
-    g.lineTo(x + wobble, sinkY)
-    g.stroke({ color: 0xff3333, width: 2, alpha })
+    // Только кончик антенны торчит
+    const tipLength = 5 * (1 - (smoothSink - 0.7) / 0.3)
+    if (tipLength > 0) {
+      g.moveTo(bobX, bobY - tipLength)
+      g.lineTo(bobX, bobY)
+      g.stroke({ color: 0xff2222, width: 2, alpha: alpha * 0.7 })
+    }
 
-    // Красный ореол
-    const pulse = Math.sin(f * 0.15) * 0.5 + 0.5
-    g.circle(x + wobble, sinkY, 8 + pulse * 4)
-    g.fill({ color: 0xff0000, alpha: 0.1 + pulse * 0.15 })
+    // Красный ореол - очень медленная пульсация
+    const pulse = Math.sin(slowTime * 0.5) * 0.3 + 0.7
+    g.circle(bobX, bobY, 12 * pulse)
+    g.fill({ color: 0xff0000, alpha: 0.2 * pulse })
+
+    // Медленные пузырьки
+    const bubblePhase = Math.floor(slowTime) % 4
+    if (bubblePhase < 2) {
+      for (let i = 0; i < 2; i++) {
+        const bx = bobX + Math.sin(slowTime + i) * 3
+        const by = bobY - bubblePhase * 8 - i * 6
+        g.circle(bx, by, 1.5)
+        g.fill({ color: 0xffffff, alpha: 0.4 })
+      }
+    }
   }
 }
 

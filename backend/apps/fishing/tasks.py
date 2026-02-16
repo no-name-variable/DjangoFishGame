@@ -30,3 +30,23 @@ def hunger_tick():
         current_location__isnull=False, hunger__gt=0,
     ).update(hunger=F('hunger') - decrease)
     Player.objects.filter(hunger__lt=0).update(hunger=0)
+
+
+@shared_task
+def cleanup_expired_groundbait():
+    """Удалить истёкшие прикормочные пятна."""
+    from .models import GameTime, GroundbaitSpot
+
+    gt = GameTime.get_instance()
+
+    # Удаляем прикормку, у которой истёк срок
+    expired = GroundbaitSpot.objects.filter(
+        expires_at_day__lt=gt.current_day,
+    ) | GroundbaitSpot.objects.filter(
+        expires_at_day=gt.current_day,
+        expires_at_hour__lte=gt.current_hour,
+    )
+
+    count = expired.count()
+    expired.delete()
+    return f'Удалено {count} истёкших прикормочных пятен.'

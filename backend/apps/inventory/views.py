@@ -223,3 +223,165 @@ class ChangeTackleView(APIView):
 
         rod.save()
         return Response(PlayerRodSerializer(rod).data)
+
+
+class DisassembleRodView(APIView):
+    """Разобрать удочку (возврат компонентов в инвентарь)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, rod_id):
+        player = request.user.player
+        rod = get_object_or_404(PlayerRod, pk=rod_id, player=player)
+
+        # Нельзя разобрать удочку в слоте или в воде
+        if FishingSession.objects.filter(rod=rod).exists():
+            return Response(
+                {'error': 'Вытащите удочку перед разборкой.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Проверка, не в слоте ли удочка
+        if player.rod_slot_1 == rod or player.rod_slot_2 == rod or player.rod_slot_3 == rod:
+            return Response(
+                {'error': 'Снимите удочку из слота перед разборкой.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Возвращаем компоненты в инвентарь (кроме наживки - она расходник)
+        components = [
+            ('rod_type', rod.rod_type),
+            ('reel', rod.reel),
+            ('line', rod.line),
+            ('hook', rod.hook),
+            ('float_tackle', rod.float_tackle),
+            ('lure', rod.lure),
+        ]
+
+        for _, component in components:
+            if component:
+                ct = ContentType.objects.get_for_model(component)
+                inv, created = InventoryItem.objects.get_or_create(
+                    player=player,
+                    content_type=ct,
+                    object_id=component.pk,
+                    defaults={'quantity': 0},
+                )
+                inv.quantity += 1
+                inv.save(update_fields=['quantity'])
+
+        # Удаляем удочку
+        rod.delete()
+
+        return Response({'status': 'disassembled'}, status=status.HTTP_200_OK)
+
+
+class DeleteRodView(APIView):
+    """Удалить удочку без возврата компонентов."""
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, rod_id):
+        player = request.user.player
+        rod = get_object_or_404(PlayerRod, pk=rod_id, player=player)
+
+        # Нельзя удалить удочку в воде
+        if FishingSession.objects.filter(rod=rod).exists():
+            return Response(
+                {'error': 'Вытащите удочку перед удалением.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Удаляем из слота если там
+        if player.rod_slot_1 == rod:
+            player.rod_slot_1 = None
+        if player.rod_slot_2 == rod:
+            player.rod_slot_2 = None
+        if player.rod_slot_3 == rod:
+            player.rod_slot_3 = None
+        player.save(update_fields=['rod_slot_1', 'rod_slot_2', 'rod_slot_3'])
+
+        rod.delete()
+
+        return Response({'status': 'deleted'}, status=status.HTTP_200_OK)
+
+
+class EquipRodView(APIView):
+    """Экипировать удочку в слот (1, 2 или 3)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, rod_id):
+        player = request.user.player
+        rod = get_object_or_404(PlayerRod, pk=rod_id, player=player)
+
+        slot = request.data.get('slot')
+        if slot not in [1, 2, 3]:
+            return Response(
+                {'error': 'Укажите слот 1, 2 или 3.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Проверяем, что удочка готова к использованию
+        if not rod.is_ready:
+            return Response(
+                {'error': 'Снасть не собрана или некомплектна.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Проверяем, не занята ли удочка уже в другом слоте
+        if player.rod_slot_1 == rod or player.rod_slot_2 == rod or player.rod_slot_3 == rod:
+            return Response(
+                {'error': 'Удочка уже экипирована в другой слот.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Экипируем в указанный слот
+        slot_field = f'rod_slot_{slot}'
+        setattr(player, slot_field, rod)
+        player.save(update_fields=[slot_field])
+
+        return Response({
+            'status': 'equipped',
+            'slot': slot,
+            'rod': PlayerRodSerializer(rod).data,
+        })
+
+
+class UnequipRodView(APIView):
+    """Снять удочку из слота."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, rod_id):
+        player = request.user.player
+        rod = get_object_or_404(PlayerRod, pk=rod_id, player=player)
+
+        # Нельзя снять удочку, которая в воде
+        if FishingSession.objects.filter(rod=rod).exists():
+            return Response(
+                {'error': 'Вытащите удочку перед снятием из слота.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Находим и очищаем слот
+        unequipped = False
+        if player.rod_slot_1 == rod:
+            player.rod_slot_1 = None
+            unequipped = True
+        if player.rod_slot_2 == rod:
+            player.rod_slot_2 = None
+            unequipped = True
+        if player.rod_slot_3 == rod:
+            player.rod_slot_3 = None
+            unequipped = True
+
+        if not unequipped:
+            return Response(
+                {'error': 'Удочка не экипирована.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        player.save(update_fields=['rod_slot_1', 'rod_slot_2', 'rod_slot_3'])
+
+        return Response({'status': 'unequipped'})

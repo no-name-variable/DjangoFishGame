@@ -4,6 +4,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+interface PlayerRod {
+  id: number
+  rod_type_name: string
+  rod_class: 'float' | 'spinning' | 'bottom'
+  custom_name: string | null
+  is_ready: boolean
+}
+
 interface Player {
   id: number
   username: string
@@ -21,6 +29,9 @@ interface Player {
   current_location: number | null
   current_location_name: string | null
   current_location_image: string | null
+  rod_slot_1: PlayerRod | null
+  rod_slot_2: PlayerRod | null
+  rod_slot_3: PlayerRod | null
 }
 
 interface PlayerState {

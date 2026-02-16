@@ -6,7 +6,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Tournament, TournamentEntry
-from .serializers import JoinTournamentSerializer, TournamentEntrySerializer, TournamentSerializer
+from .serializers import (
+    CreateTournamentSerializer,
+    JoinTournamentSerializer,
+    TournamentEntrySerializer,
+    TournamentSerializer,
+)
 
 
 class TournamentListView(generics.ListAPIView):
@@ -16,6 +21,43 @@ class TournamentListView(generics.ListAPIView):
     queryset = Tournament.objects.filter(
         is_finished=False,
     ).select_related('target_species', 'target_location').prefetch_related('entries')
+
+
+class CreateTournamentView(APIView):
+    """Создание турнира игроком."""
+
+    def post(self, request):
+        player = request.user.player
+        serializer = CreateTournamentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Ограничения на создание турнира
+        MIN_RANK_TO_CREATE = 3  # Минимальный разряд для создания турниров
+        CREATION_FEE = 100  # Стоимость создания турнира
+
+        if player.rank < MIN_RANK_TO_CREATE:
+            return Response(
+                {'error': f'Для создания турниров требуется минимум {MIN_RANK_TO_CREATE} разряд.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if player.money < CREATION_FEE:
+            return Response(
+                {'error': f'Недостаточно денег. Создание турнира стоит {CREATION_FEE}$.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Списание платы за создание
+        player.money -= CREATION_FEE
+        player.save(update_fields=['money'])
+
+        # Создание турнира
+        tournament = serializer.save(created_by=player, is_active=True)
+
+        return Response(
+            TournamentSerializer(tournament).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class TournamentDetailView(generics.RetrieveAPIView):

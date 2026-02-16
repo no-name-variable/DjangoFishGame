@@ -50,7 +50,7 @@ class PlayerRodSerializer(serializers.ModelSerializer):
             'hook', 'hook_name', 'float_tackle', 'float_name',
             'lure', 'lure_name', 'bait', 'bait_name',
             'bait_remaining', 'durability_current', 'is_assembled', 'is_ready',
-            'depth_setting', 'retrieve_speed',
+            'depth_setting', 'retrieve_speed', 'clip_distance',
         ]
 
 
@@ -68,6 +68,7 @@ class AssembleRodSerializer(serializers.Serializer):
     bait_id = serializers.IntegerField(required=False)
     depth_setting = serializers.FloatField(required=False, default=1.5)
     retrieve_speed = serializers.IntegerField(required=False, default=5)
+    clip_distance = serializers.FloatField(required=False, default=30.0)
 
 
 class CaughtFishSerializer(serializers.ModelSerializer):

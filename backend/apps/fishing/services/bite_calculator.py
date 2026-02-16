@@ -5,12 +5,17 @@ import random
 from apps.fishing.services.time_service import get_time_of_day, get_time_of_day_modifier
 
 
-def calculate_bite_chance(player, location, rod_setup):
+def calculate_bite_chance(player, location, rod_setup, session=None):
     """
     Рассчитывает шанс поклёвки за один тик.
 
     Возвращает: float (0.0 - 1.0) — вероятность поклёвки.
     """
+    # Для спиннинга: поклёвка только во время активной проводки
+    if rod_setup.rod_type.rod_class == 'spinning':
+        if session and not session.is_retrieving:
+            return 0.0  # Нет проводки = нет поклёвки
+
     base_chance = 0.05  # 5% базовый шанс за тик
 
     modifiers = 1.0
@@ -88,7 +93,7 @@ def calculate_bite_chance(player, location, rod_setup):
     return min(base_chance * modifiers, 0.5)  # Не более 50% за тик
 
 
-def try_bite(player, location, rod_setup):
+def try_bite(player, location, rod_setup, session=None):
     """Попытка поклёвки. Возвращает True, если поклёвка произошла."""
-    chance = calculate_bite_chance(player, location, rod_setup)
+    chance = calculate_bite_chance(player, location, rod_setup, session)
     return random.random() < chance

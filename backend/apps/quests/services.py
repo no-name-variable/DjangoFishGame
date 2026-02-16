@@ -32,7 +32,7 @@ def update_quest_progress(player, species, weight, location):
             # Набрать суммарный вес
             if quest.target_species and quest.target_species_id != species.pk:
                 continue
-            pq.progress_weight += weight
+            pq.progress_weight += float(weight)
 
         elif quest.quest_type == 'catch_species':
             # Поймать конкретный вид (любой размер)
@@ -57,5 +57,5 @@ def _is_quest_complete(pq):
     if quest.quest_type in ('catch_fish', 'catch_species'):
         return pq.progress >= quest.target_count
     elif quest.quest_type == 'catch_weight':
-        return pq.progress_weight >= quest.target_weight
+        return pq.progress_weight >= float(quest.target_weight)
     return False

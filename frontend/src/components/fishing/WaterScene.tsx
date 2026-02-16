@@ -12,6 +12,9 @@ import {
   drawFloat, drawRipples, drawBiteIndicator,
   type FloatConfig,
 } from './water/FloatSprite'
+import {
+  drawLure, drawLureRipples, drawLureBiteIndicator,
+} from './water/LureSprite'
 import { drawLine } from './water/RodAndLine'
 import {
   drawCastAnimation, createCastAnim,
@@ -30,6 +33,7 @@ interface WaterSceneProps {
   activeSessionId: number | null
   timeOfDay?: string
   locationImageUrl?: string | null
+  retrievingSessions?: Set<number>
   onWaterClick: (normX: number, normY: number) => void
   onFloatClick: (sessionId: number) => void
 }
@@ -40,6 +44,7 @@ const FLOAT_HIT_RADIUS = 25
 export default function WaterScene({
   sessions, fights, activeSessionId,
   timeOfDay = 'day', locationImageUrl,
+  retrievingSessions = new Set(),
   onWaterClick, onFloatClick,
 }: WaterSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -51,6 +56,7 @@ export default function WaterScene({
   const fightsRef = useRef(fights)
   const activeIdRef = useRef(activeSessionId)
   const timeRef = useRef(timeOfDay)
+  const retrievingRef = useRef(retrievingSessions)
   const castAnimsRef = useRef<CastAnimState[]>([])
   const phasesRef = useRef<Record<number, { phase: number; biteAngle: number }>>({})
 
@@ -61,6 +67,7 @@ export default function WaterScene({
   fightsRef.current = fights
   activeIdRef.current = activeSessionId
   timeRef.current = timeOfDay
+  retrievingRef.current = retrievingSessions
 
   // Генерация/сохранение случайных фаз для каждой сессии
   const getPhases = useCallback((sessionId: number) => {
@@ -301,6 +308,8 @@ export default function WaterScene({
 
         // Леска
         const phases = getPhases(info.sessionId)
+        const isSpinning = info.session.rodClass === 'spinning'
+
         const cfg: FloatConfig = {
           sessionId: info.sessionId,
           castX: info.session.castX,
@@ -311,16 +320,25 @@ export default function WaterScene({
           phase: phases.phase,
           biteAngle: phases.biteAngle,
         }
+
         drawLine(lines, tip.x, tip.y, cfg, f, w, h, waterline)
 
-        // Поплавок
-        drawFloat(floats, cfg, f, w, h, waterline)
-
-        // Круги на воде
-        drawRipples(ripples, cfg, f, w, h, waterline)
-
-        // Индикатор поклёвки на неактивной удочке
-        drawBiteIndicator(indicators, cfg, f, w, h, waterline)
+        // Спиннинг = приманка, остальное = поплавок
+        if (isSpinning) {
+          const lureCfg = {
+            ...cfg,
+            retrieveSpeed: info.session.retrieveSpeed,
+            isRetrieving: retrievingRef.current.has(info.sessionId),
+            retrieveProgress: info.session.retrieveProgress,
+          }
+          drawLure(floats, lureCfg, f, w, h, waterline)
+          drawLureRipples(ripples, lureCfg, f, w, h, waterline)
+          drawLureBiteIndicator(indicators, lureCfg, f, w, h, waterline)
+        } else {
+          drawFloat(floats, cfg, f, w, h, waterline)
+          drawRipples(ripples, cfg, f, w, h, waterline)
+          drawBiteIndicator(indicators, cfg, f, w, h, waterline)
+        }
       }
 
       // Анимации заброса

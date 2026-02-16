@@ -6,6 +6,7 @@ import FightBar from './FightBar'
 import ChatWindow from '../chat/ChatWindow'
 import RodDock from './RodDock'
 import TackleChangePanel from './TackleChangePanel'
+import BaitChangeButton from './BaitChangeButton'
 import type { SessionInfo, FightInfo } from '../../store/fishingStore'
 
 export interface FullRod {
@@ -42,9 +43,12 @@ interface TacklePanelProps {
   onReelIn: () => void
   onPull: () => void
   onRetrieve: (sessionId: number) => void
+  onStartRetrieve?: (sessionId: number) => void
+  onStopRetrieve?: (sessionId: number) => void
   onLeave: () => void
   onUpdateSettings: (rodId: number, settings: { depth_setting?: number; retrieve_speed?: number }) => void
   onChangeTackle: (rodId: number, updatedRod: FullRod) => void
+  onMessage?: (msg: string) => void
   message: string
   chatChannelId: number | null
 }
@@ -120,7 +124,7 @@ function SettingSlider({ label, value, min, max, step, disabled, onChange }: {
         />
         <span className="text-xs text-wood-200 w-8 text-right tabular-nums">
           {step < 1 ? localValue.toFixed(1) : localValue}
-          {label === 'Глубина' ? 'м' : ''}
+          {(label === 'Глубина' || label === 'Клипса') ? 'м' : ''}
         </span>
       </div>
     </>
@@ -131,7 +135,8 @@ export default function TacklePanel({
   rods, availableRods, selectedRodId, onSelectRod,
   sessions, fights, activeSessionId, activeSession, activeFight,
   onSessionClick, onStrike, onReelIn, onPull, onRetrieve,
-  onLeave, onUpdateSettings, onChangeTackle, message, chatChannelId,
+  onStartRetrieve, onStopRetrieve,
+  onLeave, onUpdateSettings, onChangeTackle, onMessage, message, chatChannelId,
 }: TacklePanelProps) {
   const [tackleChangeRodId, setTackleChangeRodId] = useState<number | null>(null)
 
@@ -176,11 +181,22 @@ export default function TacklePanel({
           {activeRod.float_name && <TackleRow label="Поплавок" value={activeRod.float_name} />}
           {activeRod.lure_name && <TackleRow label="Приманка" value={activeRod.lure_name} />}
           {activeRod.bait_name && (
-            <TackleRow
-              label="Наживка"
-              value={`${activeRod.bait_name} (${activeRod.bait_remaining})`}
-              valueClass={activeRod.bait_remaining < 5 ? 'text-xs text-red-400' : 'text-xs text-wood-200'}
-            />
+            <>
+              <span className="text-wood-500 text-xs">Наживка:</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className={activeRod.bait_remaining < 5 ? 'text-xs text-red-400' : 'text-xs text-wood-200'}>
+                  {activeRod.bait_name} ({activeRod.bait_remaining})
+                </span>
+                {/* Кнопка смены наживки для WAITING сессий */}
+                {activeSession?.state === 'waiting' && activeSession.rodId === activeRod.id && (
+                  <BaitChangeButton
+                    sessionId={activeSession.id}
+                    currentBaitName={activeRod.bait_name}
+                    onSuccess={(msg) => onMessage?.(msg)}
+                  />
+                )}
+              </div>
+            </>
           )}
 
           {/* Слайдер глубины */}
@@ -198,15 +214,30 @@ export default function TacklePanel({
 
           {/* Слайдер проводки */}
           {showRetrieve && (
-            <SettingSlider
-              label="Проводка"
-              value={activeRod.retrieve_speed}
-              min={1}
-              max={10}
-              step={1}
-              disabled={slidersDisabled}
-              onChange={(v) => onUpdateSettings(activeRod.id, { retrieve_speed: v })}
-            />
+            <>
+              <SettingSlider
+                label="Проводка"
+                value={activeRod.retrieve_speed}
+                min={1}
+                max={10}
+                step={1}
+                disabled={slidersDisabled}
+                onChange={(v) => onUpdateSettings(activeRod.id, { retrieve_speed: v })}
+              />
+              {/* Индикатор оптимальной скорости */}
+              <span className="col-span-2 text-[9px] text-center">
+                {activeRod.retrieve_speed >= 4 && activeRod.retrieve_speed <= 7 && (
+                  <span className="text-green-400">✓ Оптимальная скорость (+20%)</span>
+                )}
+                {(activeRod.retrieve_speed <= 2 || activeRod.retrieve_speed >= 9) && (
+                  <span className="text-red-400">⚠ Слишком медленная/быстрая (-30%)</span>
+                )}
+                {activeRod.retrieve_speed === 3 || activeRod.retrieve_speed === 8 && (
+                  <span className="text-yellow-400">Средняя скорость</span>
+                )}
+              </span>
+
+            </>
           )}
 
           <TackleRow
@@ -270,17 +301,79 @@ export default function TacklePanel({
                 ? sessions[0]
                 : null
             if (!waitingSession) return null
+            const isSpinning = waitingSession.rodClass === 'spinning'
+            const nearShore = isSpinning && waitingSession.retrieveProgress > 0.85
             return (
-              <div className="w-full flex gap-2">
-                <span className="text-wood-500 text-sm font-serif animate-pulse py-1 flex-1 text-center">
-                  Ожидание поклёвки...
-                </span>
-                <button
-                  onClick={() => onRetrieve(waitingSession.id)}
-                  className="btn btn-secondary text-xs"
-                >
-                  Вытащить
-                </button>
+              <div className="w-full flex flex-col gap-2">
+                {/* Кнопка проводки для спиннинга */}
+                {isSpinning ? (
+                  <div className="flex flex-col gap-1">
+                    {nearShore ? (
+                      // Приманка у берега - показываем кнопку перезаброса
+                      <div className="text-center">
+                        <div className="text-yellow-400 text-xs mb-1 animate-pulse">
+                          🎣 Приманка у берега!
+                        </div>
+                        <button
+                          onClick={() => onRetrieve(waitingSession.id)}
+                          className="btn bg-yellow-700 hover:bg-yellow-600 border-yellow-600 text-white text-sm w-full"
+                        >
+                          Перезаброс
+                        </button>
+                      </div>
+                    ) : (
+                      // Обычная кнопка проводки
+                      <>
+                        <button
+                          onMouseDown={() => onStartRetrieve?.(waitingSession.id)}
+                          onMouseUp={() => onStopRetrieve?.(waitingSession.id)}
+                          onMouseLeave={() => onStopRetrieve?.(waitingSession.id)}
+                          onTouchStart={(e) => {
+                            e.preventDefault()
+                            onStartRetrieve?.(waitingSession.id)
+                          }}
+                          onTouchEnd={(e) => {
+                            e.preventDefault()
+                            onStopRetrieve?.(waitingSession.id)
+                          }}
+                          className={`btn flex-1 text-sm transition-colors ${
+                            waitingSession.isRetrieving
+                              ? 'bg-water-600 hover:bg-water-500 border-water-500 text-white animate-pulse'
+                              : 'bg-water-800 hover:bg-water-700 border-water-700 text-water-200'
+                          }`}
+                        >
+                          {waitingSession.isRetrieving ? '⚡ Проводка...' : 'Зажмите для проводки [R]'}
+                        </button>
+                        <div className="text-center text-[9px] text-water-500">
+                          Рыба клюёт только во время проводки
+                        </div>
+                        {/* Прогресс бар подматывания */}
+                        {waitingSession.retrieveProgress > 0.1 && (
+                          <div className="w-full bg-wood-800 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="bg-water-500 h-full transition-all duration-300"
+                              style={{ width: `${waitingSession.retrieveProgress * 100}%` }}
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-wood-500 text-sm font-serif animate-pulse py-1 text-center">
+                    Ожидание поклёвки...
+                  </span>
+                )}
+
+                {/* Кнопка вытащить (если не у берега) */}
+                {!nearShore && (
+                  <button
+                    onClick={() => onRetrieve(waitingSession.id)}
+                    className="btn btn-secondary text-xs"
+                  >
+                    Вытащить
+                  </button>
+                )}
               </div>
             )
           })()}

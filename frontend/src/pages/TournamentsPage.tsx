@@ -3,6 +3,7 @@
  */
 import { useEffect, useState } from 'react'
 import { getTournaments, joinTournament, getTournamentResults } from '../api/tournaments'
+import CreateTournamentForm from '../components/tournaments/CreateTournamentForm'
 
 interface Tournament {
   id: number; name: string; description: string; tournament_type: string; scoring: string
@@ -21,6 +22,7 @@ export default function TournamentsPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState('')
+  const [showCreateForm, setShowCreateForm] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -46,8 +48,33 @@ export default function TournamentsPage() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="gold-text text-xl mb-4">Турниры</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="gold-text text-xl">Турниры</h1>
+        {!showCreateForm && (
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="btn btn-primary text-xs"
+          >
+            ➕ Создать турнир
+          </button>
+        )}
+      </div>
+
       {msg && <div className="wood-panel px-3 py-2 mb-3 text-sm text-red-400">{msg}</div>}
+
+      {/* Форма создания турнира */}
+      {showCreateForm && (
+        <div className="mb-4">
+          <CreateTournamentForm
+            onSuccess={() => {
+              setShowCreateForm(false)
+              setMsg('Турнир создан! Стоимость: 100$')
+              load()
+            }}
+            onCancel={() => setShowCreateForm(false)}
+          />
+        </div>
+      )}
 
       <div className="space-y-3">
         {tournaments.map((t) => (

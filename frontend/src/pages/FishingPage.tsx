@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as fishingApi from '../api/fishing'
-import { getPlayerRods, leaveLocation, updateRodSettings } from '../api/player'
+import { leaveLocation, updateRodSettings } from '../api/player'
 import { getProfile } from '../api/auth'
 import { useFishingStore } from '../store/fishingStore'
 import { usePlayerStore } from '../store/playerStore'
@@ -42,22 +42,39 @@ export default function FishingPage() {
 
   useAmbience(!!player?.current_location)
 
-  // Загрузка удочек и игрового времени
+  // Загрузка удочек из слотов игрока - только когда меняются ID удочек
   useEffect(() => {
-    getPlayerRods()
-      .then((data) => {
-        const list = data.results || data
-        const readyRods = list.filter((r: FullRod) => r.is_ready)
-        setRods(readyRods)
-        if (readyRods.length > 0) setSelectedRodId(readyRods[0].id)
-      })
-      .catch(() => setMessage('Не удалось загрузить снасти'))
+    if (player) {
+      // Берём только удочки из слотов (максимум 3)
+      const slotRods = [
+        player.rod_slot_1,
+        player.rod_slot_2,
+        player.rod_slot_3,
+      ].filter((rod) => rod !== null && rod.is_ready) as FullRod[]
 
+      // Обновляем только если ID удочек изменились (избегаем мигания)
+      setRods((prev) => {
+        const prevIds = prev.map((r) => r.id).sort().join(',')
+        const newIds = slotRods.map((r) => r.id).sort().join(',')
+        return prevIds === newIds ? prev : slotRods
+      })
+
+      if (slotRods.length > 0 && !selectedRodId) {
+        setSelectedRodId(slotRods[0].id)
+      }
+    }
+  }, [player?.rod_slot_1?.id, player?.rod_slot_2?.id, player?.rod_slot_3?.id, selectedRodId])
+
+  // Инициализация: игровое время и начальный статус
+  useEffect(() => {
     fishingApi.getGameTime().then(setGameTime).catch(() => {})
 
     // Начальный статус
     fishingApi.getStatus()
-      .then((data) => setSessions(data.sessions, data.fights))
+      .then((data) => {
+        setSessions(data.sessions, data.fights)
+        if (data.game_time) setGameTime(data.game_time)
+      })
       .catch(() => {})
 
     return () => {
@@ -72,6 +89,7 @@ export default function FishingPage() {
       try {
         const data = await fishingApi.getStatus()
         setSessions(data.sessions, data.fights)
+        if (data.game_time) setGameTime(data.game_time)
 
         // Звук поклёвки для новых bite-сессий
         const newBiteIds = new Set(
@@ -139,6 +157,7 @@ export default function FishingPage() {
       // Обновляем статус
       const data = await fishingApi.getStatus()
       setSessions(data.sessions, data.fights)
+      if (data.game_time) setGameTime(data.game_time)
       setActiveSession(result.session_id)
       startPolling()
 
@@ -164,11 +183,13 @@ export default function FishingPage() {
       setMessage(`На крючке: ${result.fish}! Вываживай!`)
       const data = await fishingApi.getStatus()
       setSessions(data.sessions, data.fights)
+      if (data.game_time) setGameTime(data.game_time)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Рыба сошла'
       setMessage(msg)
       const data = await fishingApi.getStatus()
       setSessions(data.sessions, data.fights)
+      if (data.game_time) setGameTime(data.game_time)
     }
   }, [activeSessionId, setSessions])
 
@@ -199,10 +220,11 @@ export default function FishingPage() {
 
       const data = await fishingApi.getStatus()
       setSessions(data.sessions, data.fights)
+      if (data.game_time) setGameTime(data.game_time)
     } catch {
       setMessage('Ошибка')
     }
-  }, [activeSessionId, setSessions, setCaught, play])
+  }, [activeSessionId, setSessions, setCaught, setGameTime, play])
 
   const handleKeep = useCallback(async () => {
     if (!activeSessionId) return
@@ -239,12 +261,31 @@ export default function FishingPage() {
       setMessage('Удочка вытащена')
       // Обновляем статус с сервера для синхронизации
       fishingApi.getStatus()
-        .then((data) => setSessions(data.sessions, data.fights))
+        .then((data) => {
+          setSessions(data.sessions, data.fights)
+          if (data.game_time) setGameTime(data.game_time)
+        })
         .catch(() => {})
     } catch {
       setMessage('Ошибка')
     }
-  }, [removeSession, setSessions])
+  }, [removeSession, setSessions, setGameTime])
+
+  const handleStartRetrieve = useCallback(async (sessionId: number) => {
+    try {
+      await fishingApi.updateRetrieve(sessionId, true)
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const handleStopRetrieve = useCallback(async (sessionId: number) => {
+    try {
+      await fishingApi.updateRetrieve(sessionId, false)
+    } catch {
+      // ignore
+    }
+  }, [])
 
   const handleUpdateSettings = useCallback(async (
     rodId: number, settings: { depth_setting?: number; retrieve_speed?: number },
@@ -281,8 +322,9 @@ export default function FishingPage() {
   // Горячие клавиши
   useEffect(() => {
     const activeSession = activeSessionId ? sessions[activeSessionId] : null
-    const handler = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       if (!activeSession) return
+
       if (activeSession.state === 'fighting') {
         if (e.key === 'g' || e.key === 'G' || e.key === 'п' || e.key === 'П') {
           handleFightAction('reel')
@@ -293,11 +335,33 @@ export default function FishingPage() {
         if (e.key === ' ' || e.key === 'Enter') {
           handleStrike()
         }
+      } else if (activeSession.state === 'waiting' && activeSession.rodClass === 'spinning') {
+        // Проводка спиннинга - клавиша R (русская К)
+        if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
+          if (!activeSession.isRetrieving) {
+            await fishingApi.updateRetrieve(activeSession.id, true).catch(() => {})
+          }
+        }
       }
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  })
+
+    const handleKeyUp = async (e: KeyboardEvent) => {
+      if (!activeSession) return
+      // Остановка проводки при отпускании R
+      if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
+        if (activeSession.state === 'waiting' && activeSession.rodClass === 'spinning' && activeSession.isRetrieving) {
+          await fishingApi.updateRetrieve(activeSession.id, false).catch(() => {})
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [activeSessionId, sessions, handleFightAction, handleStrike])
 
   const gt = useFishingStore((s) => s.gameTime)
   const timeLabels: Record<string, string> = {
@@ -317,6 +381,11 @@ export default function FishingPage() {
   // Удочки, которые ещё не заброшены
   const castRodIds = new Set(sessionList.map((s) => s.rodId))
   const availableRods = rods.filter((r) => !castRodIds.has(r.id))
+
+  // Формируем Set из сессий которые в режиме проводки
+  const retrievingSessions = new Set(
+    sessionList.filter((s) => s.isRetrieving).map((s) => s.id),
+  )
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -341,6 +410,7 @@ export default function FishingPage() {
             activeSessionId={activeSessionId}
             timeOfDay={gt?.time_of_day || 'day'}
             locationImageUrl={locationImage}
+            retrievingSessions={retrievingSessions}
             onWaterClick={handleWaterClick}
             onFloatClick={handleFloatClick}
           />
@@ -391,9 +461,12 @@ export default function FishingPage() {
             onReelIn={() => handleFightAction('reel')}
             onPull={() => handleFightAction('pull')}
             onRetrieve={handleRetrieve}
+            onStartRetrieve={handleStartRetrieve}
+            onStopRetrieve={handleStopRetrieve}
             onLeave={handleLeave}
             onUpdateSettings={handleUpdateSettings}
             onChangeTackle={handleChangeTackle}
+            onMessage={setMessage}
             message={message}
             chatChannelId={player?.current_location || null}
           />

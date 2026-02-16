@@ -18,3 +18,8 @@ export async function sellFish(fishIds: number[]) {
   const { data } = await api.post('/shop/sell-fish/', { fish_ids: fishIds })
   return data
 }
+
+export async function getFishSpecies() {
+  const { data } = await api.get('/shop/fish/')
+  return data
+}

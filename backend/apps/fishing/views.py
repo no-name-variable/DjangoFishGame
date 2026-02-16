@@ -67,19 +67,29 @@ class CastView(APIView):
         if not rod.is_ready:
             return Response({'error': 'Снасть не полностью собрана.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Проверяем, что удочка экипирована в один из слотов
+        if rod not in [player.rod_slot_1, player.rod_slot_2, player.rod_slot_3]:
+            return Response(
+                {'error': 'Удочка должна быть экипирована в слот для использования.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Проверяем, что эта удочка ещё не заброшена
         if FishingSession.objects.filter(player=player, rod=rod).exists():
             return Response({'error': 'Эта удочка уже заброшена.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверяем лимит удочек
-        active_sessions = FishingSession.objects.filter(player=player)
+        # Проверяем лимит удочек (только активные состояния)
+        active_sessions = FishingSession.objects.filter(
+            player=player,
+            state__in=[FishingSession.State.WAITING, FishingSession.State.BITE, FishingSession.State.FIGHTING],
+        )
         if active_sessions.count() >= MAX_RODS:
             return Response(
                 {'error': f'Максимум {MAX_RODS} удочки одновременно.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Назначаем свободный слот
+        # Назначаем свободный слот (из активных сессий)
         used_slots = set(active_sessions.values_list('slot', flat=True))
         slot = next(s for s in range(1, MAX_RODS + 1) if s not in used_slots)
 
@@ -108,13 +118,37 @@ class FishingStatusView(APIView):
             .order_by('slot')
         )
 
-        if not sessions:
-            return Response({'sessions': [], 'fights': {}})
+        # Текущее игровое время (нужно даже если нет сессий)
+        gt = GameTime.get_instance()
 
-        # Для каждой WAITING — пробуем поклёвку
+        if not sessions:
+            return Response({
+                'sessions': [],
+                'fights': {},
+                'game_time': {
+                    'hour': gt.current_hour,
+                    'day': gt.current_day,
+                    'time_of_day': gt.time_of_day,
+                }
+            })
+
+        # Для каждой WAITING — пробуем поклёвку и обновляем прогресс проводки
         for session in sessions:
             if session.state == FishingSession.State.WAITING:
-                if try_bite(player, session.location, session.rod):
+                # Обновляем прогресс проводки для спиннинга
+                if session.rod.rod_class == 'spinning' and session.is_retrieving:
+                    # Увеличиваем прогресс на основе скорости проводки
+                    # Скорость 1-10, прогресс за тик: speed * 0.005 (за ~20 секунд до берега при speed=10)
+                    increment = session.rod.retrieve_speed * 0.005
+                    session.retrieve_progress = min(1.0, session.retrieve_progress + increment)
+                    session.save(update_fields=['retrieve_progress'])
+
+                    # Если приманка дошла до берега — автоматически вытаскиваем
+                    if session.retrieve_progress >= 1.0:
+                        session.delete()
+                        continue
+
+                if try_bite(player, session.location, session.rod, session):
                     fish = select_fish(session.location, session.rod)
                     if fish:
                         weight = generate_fish_weight(fish, player)
@@ -135,9 +169,13 @@ class FishingStatusView(APIView):
                 except FightState.DoesNotExist:
                     pass
 
+        # Добавляем текущее игровое время
+        gt = GameTime.get_instance()
+
         return Response(FishingMultiStatusSerializer({
             'sessions': sessions,
             'fights': fights,
+            'game_time': gt,
         }).data)
 
 
@@ -375,6 +413,34 @@ class RetrieveRodView(APIView):
         return Response({'status': 'retrieved'})
 
 
+class UpdateRetrieveView(APIView):
+    """Обновить статус проводки спиннинга (is_retrieving)."""
+
+    def post(self, request):
+        ser = SessionActionSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        player = request.user.player
+
+        session, err = _get_session(
+            player, ser.validated_data['session_id'],
+            allowed_states=[FishingSession.State.WAITING],
+        )
+        if err:
+            return err
+
+        is_retrieving = request.data.get('is_retrieving', False)
+        session.is_retrieving = bool(is_retrieving)
+
+        # При остановке проводки — сбрасываем прогресс (можно перезабросить)
+        if not is_retrieving:
+            session.retrieve_progress = 0.0
+            session.save(update_fields=['is_retrieving', 'retrieve_progress'])
+        else:
+            session.save(update_fields=['is_retrieving'])
+
+        return Response({'status': 'ok', 'is_retrieving': session.is_retrieving})
+
+
 class GroundbaitView(APIView):
     """Бросить прикормку в точку ловли."""
 
@@ -443,6 +509,71 @@ class GroundbaitView(APIView):
             'message': f'Прикормка "{groundbait.name}" брошена!',
             'duration_hours': groundbait.duration_hours,
             'flavoring': flavoring.name if flavoring else None,
+        })
+
+
+class ChangeBaitView(APIView):
+    """Сменить наживку на удочке во время рыбалки (только для WAITING сессий)."""
+
+    def post(self, request):
+        from django.contrib.contenttypes.models import ContentType
+        from apps.inventory.models import InventoryItem
+        from apps.tackle.models import Bait
+        from .serializers import ChangeBaitSerializer
+
+        serializer = ChangeBaitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        player = request.user.player
+
+        # Получаем сессию
+        session, err = _get_session(
+            player, data['session_id'],
+            allowed_states=[FishingSession.State.WAITING],
+        )
+        if err:
+            return err
+
+        # Получаем наживку
+        try:
+            bait = Bait.objects.get(pk=data['bait_id'])
+        except Bait.DoesNotExist:
+            return Response({'error': 'Наживка не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Проверяем наличие в инвентаре
+        ct = ContentType.objects.get_for_model(bait)
+        inv = InventoryItem.objects.filter(player=player, content_type=ct, object_id=bait.pk, quantity__gte=1).first()
+        if not inv:
+            return Response({'error': 'Нет наживки в инвентаре.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Возвращаем старую наживку в инвентарь (если была)
+        rod = session.rod
+        if rod.bait and rod.bait_remaining > 0:
+            old_ct = ContentType.objects.get_for_model(rod.bait)
+            old_inv, created = InventoryItem.objects.get_or_create(
+                player=player, content_type=old_ct, object_id=rod.bait.pk,
+                defaults={'quantity': 0},
+            )
+            old_inv.quantity += rod.bait_remaining
+            old_inv.save(update_fields=['quantity'])
+
+        # Обновляем удочку
+        rod.bait = bait
+        rod.bait_remaining = bait.quantity_per_pack
+        rod.save(update_fields=['bait', 'bait_remaining'])
+
+        # Списываем новую наживку из инвентаря
+        inv.quantity -= 1
+        if inv.quantity <= 0:
+            inv.delete()
+        else:
+            inv.save(update_fields=['quantity'])
+
+        return Response({
+            'status': 'bait_changed',
+            'session_id': session.pk,
+            'new_bait': bait.name,
+            'bait_remaining': rod.bait_remaining,
         })
 
 

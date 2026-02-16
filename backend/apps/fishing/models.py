@@ -23,6 +23,8 @@ class FishingSession(models.Model):
     cast_y = models.FloatField('Точка заброса Y', default=0)
     cast_time = models.DateTimeField('Время заброса', null=True, blank=True)
     bite_time = models.DateTimeField('Время поклёвки', null=True, blank=True)
+    is_retrieving = models.BooleanField('Проводка (для спиннинга)', default=False)
+    retrieve_progress = models.FloatField('Прогресс подматывания (0-1)', default=0.0)
     hooked_species = models.ForeignKey(
         'tackle.FishSpecies', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Клюнувшая рыба',
     )

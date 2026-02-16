@@ -37,11 +37,18 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class PlayerSerializer(serializers.ModelSerializer):
+    from apps.inventory.serializers import PlayerRodSerializer
+
     username = serializers.CharField(source='user.username', read_only=True)
     rank_title = serializers.ReadOnlyField()
     experience_to_next_rank = serializers.ReadOnlyField()
     current_base_name = serializers.CharField(source='current_base.name', read_only=True, default=None)
     current_location_name = serializers.CharField(source='current_location.name', read_only=True, default=None)
+
+    # Слоты удочек
+    rod_slot_1 = PlayerRodSerializer(read_only=True)
+    rod_slot_2 = PlayerRodSerializer(read_only=True)
+    rod_slot_3 = PlayerRodSerializer(read_only=True)
 
     class Meta:
         model = Player
@@ -49,5 +56,6 @@ class PlayerSerializer(serializers.ModelSerializer):
             'id', 'username', 'nickname', 'rank', 'rank_title', 'experience',
             'experience_to_next_rank', 'karma', 'money', 'gold', 'hunger',
             'current_base', 'current_base_name', 'current_location', 'current_location_name',
+            'rod_slot_1', 'rod_slot_2', 'rod_slot_3',
         ]
         read_only_fields = ['rank', 'experience', 'karma', 'money', 'gold', 'hunger']

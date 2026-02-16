@@ -2,28 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Современный glassmorphism эффект */
+  .glass {
+    backdrop-filter: blur(12px);
+    background: rgba(42, 26, 13, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Плавная анимация появления */
+  .fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Эффект свечения */
+  .glow-gold {
+    box-shadow:
+      0 0 10px rgba(212, 168, 74, 0.3),
+      0 0 20px rgba(212, 168, 74, 0.15),
+      0 0 30px rgba(212, 168, 74, 0.1);
+  }
+
+  /* Эффект нажатия */
+  .active-press {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
 @layer base {
   body {
     @apply min-h-screen bg-forest-900 text-wood-200;
     font-family: Georgia, 'PT Serif', serif;
+    background: linear-gradient(
+      135deg,
+      #0d1f0d 0%,
+      #122812 50%,
+      #0d1f0d 100%
+    );
+    background-attachment: fixed;
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
+    height: 10px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-forest-900;
+    @apply bg-forest-900/50;
+    border-radius: 8px;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-wood-700 rounded;
+    @apply bg-wood-700/80 rounded-lg;
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
   }
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-wood-600;
+    box-shadow:
+      0 3px 8px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 
   /* Стилизация select */
   select {
-    @apply bg-forest-800 border-wood-700 text-wood-200;
+    @apply bg-forest-800/85 border-wood-700/70 text-wood-200 rounded-lg
+           transition-all duration-300 backdrop-blur-sm;
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.2),
+      inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  select:focus {
+    @apply outline-none border-gold/70 ring-2 ring-gold/30;
   }
   option {
     @apply bg-forest-800 text-wood-200;
@@ -33,34 +96,91 @@
 @layer components {
   /* Базовые кнопки */
   .btn {
-    @apply px-4 py-2 rounded font-semibold transition-all duration-200 cursor-pointer
-           border text-sm;
+    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-300 cursor-pointer
+           border text-sm backdrop-blur-sm relative overflow-hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+  }
+  .btn:hover::before {
+    left: 100%;
   }
   .btn-primary {
-    @apply bg-forest-700 hover:bg-forest-600 text-gold border-gold/40
-           hover:border-gold/70 hover:shadow-lg;
+    @apply bg-forest-700/90 hover:bg-forest-600/90 text-gold border-gold/50
+           hover:border-gold hover:shadow-xl hover:scale-[1.02] active:scale-[0.98];
+    box-shadow: 0 4px 12px rgba(46, 125, 46, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
   .btn-secondary {
-    @apply bg-wood-800 hover:bg-wood-700 text-wood-200 border-wood-600
-           hover:border-wood-500;
+    @apply bg-wood-800/90 hover:bg-wood-700/90 text-wood-200 border-wood-600/50
+           hover:border-wood-500 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98];
+    box-shadow: 0 3px 10px rgba(58, 37, 18, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   .btn-danger {
-    @apply bg-red-900/80 hover:bg-red-800 text-red-200 border-red-700/50;
+    @apply bg-red-900/85 hover:bg-red-800/90 text-red-200 border-red-700/60
+           hover:border-red-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98];
+    box-shadow: 0 3px 10px rgba(127, 29, 29, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
   }
   .btn-action {
-    @apply bg-water-700 hover:bg-water-600 text-water-100 border-water-500/40
-           hover:border-water-400/60;
+    @apply bg-water-700/90 hover:bg-water-600/90 text-water-100 border-water-500/50
+           hover:border-water-400/80 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98];
+    box-shadow: 0 3px 10px rgba(42, 74, 106, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   /* Карточка — полупрозрачная с деревянной рамкой */
   .card {
-    @apply bg-wood-900/60 border border-wood-700/60 rounded-lg shadow-wood p-4
-           backdrop-blur-sm;
+    @apply bg-wood-900/70 border border-wood-700/70 rounded-xl p-4
+           backdrop-blur-md transition-all duration-300;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.25),
+      0 2px 8px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  .card:hover {
+    @apply border-wood-600/80 bg-wood-900/75;
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.3),
+      0 3px 10px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+  }
+
+  /* Увеличенная карточка */
+  .card-large {
+    @apply bg-wood-900/70 border border-wood-700/70 rounded-xl p-5
+           backdrop-blur-md transition-all duration-300;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.25),
+      0 2px 8px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: visible;
+    position: relative;
+  }
+  .card-large:hover {
+    @apply border-wood-600/80 bg-wood-900/75;
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.3),
+      0 3px 10px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   /* Панель — деревянная текстура */
   .panel {
-    @apply bg-wood-800/80 border border-wood-600/50 rounded-lg p-3 bg-wood-grain;
+    @apply bg-wood-800/85 border border-wood-600/60 rounded-xl p-3 bg-wood-grain
+           backdrop-blur-sm transition-all duration-300;
+    box-shadow:
+      0 3px 12px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
   /* Деревянная панель с текстурой */
@@ -75,71 +195,125 @@
       #5c3d1e 100%
     );
     background-size: 100% 12px;
-    @apply border-2 border-wood-600/80 rounded-lg shadow-wood;
+    @apply border-2 border-wood-600/90 rounded-xl backdrop-blur-sm;
     box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+      0 6px 20px rgba(0, 0, 0, 0.4),
+      0 3px 10px rgba(0, 0, 0, 0.3),
+      inset 0 2px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
   }
 
   /* Рамка в стиле игры */
   .game-frame {
-    @apply border-2 rounded-lg;
+    @apply border-2 rounded-xl backdrop-blur-sm;
     border-color: #5c3d1e;
     box-shadow:
       0 0 0 1px #2a1a0d,
       0 0 0 3px #5c3d1e,
       0 0 0 4px #2a1a0d,
-      0 4px 12px rgba(0, 0, 0, 0.6);
+      0 8px 24px rgba(0, 0, 0, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+  }
+  .game-frame:hover {
+    box-shadow:
+      0 0 0 1px #2a1a0d,
+      0 0 0 3px #d4a84a,
+      0 0 0 4px #2a1a0d,
+      0 10px 28px rgba(0, 0, 0, 0.5),
+      0 5px 14px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   /* Золотой текст */
   .gold-text {
     @apply text-gold font-serif;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    text-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.6),
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 0 8px rgba(212, 168, 74, 0.3);
   }
 
   /* Инпут в стиле игры */
   .game-input {
-    @apply w-full bg-forest-900/80 border border-wood-700/60 rounded px-3 py-2
+    @apply w-full bg-forest-900/85 border border-wood-700/70 rounded-lg px-3 py-2
            text-wood-100 placeholder-wood-600
-           focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20
-           transition-colors;
+           focus:outline-none focus:border-gold/70 focus:ring-2 focus:ring-gold/30
+           transition-all duration-300 backdrop-blur-sm;
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.2),
+      inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  .game-input:focus {
+    @apply bg-forest-900/90;
+    box-shadow:
+      0 3px 8px rgba(0, 0, 0, 0.25),
+      inset 0 1px 2px rgba(0, 0, 0, 0.3),
+      0 0 0 3px rgba(212, 168, 74, 0.15);
   }
 
   /* Вкладка */
   .game-tab {
-    @apply px-4 py-2 rounded-t font-serif text-sm transition-all cursor-pointer
-           border-b-2;
+    @apply px-4 py-2.5 rounded-t-xl font-serif text-sm transition-all duration-300 cursor-pointer
+           border-b-2 backdrop-blur-sm relative;
   }
   .game-tab-active {
-    @apply bg-wood-800/80 text-gold border-gold;
+    @apply bg-wood-800/85 text-gold border-gold;
+    box-shadow:
+      0 -2px 8px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
   .game-tab-inactive {
-    @apply bg-forest-800/60 text-wood-400 border-transparent
-           hover:text-wood-200 hover:bg-forest-700/60;
+    @apply bg-forest-800/65 text-wood-400 border-transparent
+           hover:text-wood-200 hover:bg-forest-700/70 hover:border-wood-600/30;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+  }
+  .game-tab:hover {
+    transform: translateY(-2px);
+  }
+  .game-tab-active:hover {
+    transform: none;
   }
 
   /* Разделитель */
   .divider {
-    @apply border-t border-wood-700/40 my-4;
+    @apply border-t border-wood-700/50 my-4;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
   }
 
   /* Бейдж */
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium
+           backdrop-blur-sm transition-all duration-200;
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
   .badge-green {
-    @apply bg-green-900/60 text-green-300 border border-green-700/40;
+    @apply bg-green-900/70 text-green-300 border border-green-700/50;
+  }
+  .badge-green:hover {
+    @apply bg-green-900/80 border-green-600/60;
   }
   .badge-blue {
-    @apply bg-water-800/60 text-water-300 border border-water-600/40;
+    @apply bg-water-800/70 text-water-300 border border-water-600/50;
+  }
+  .badge-blue:hover {
+    @apply bg-water-800/80 border-water-500/60;
   }
   .badge-yellow {
-    @apply bg-yellow-900/60 text-yellow-300 border border-yellow-700/40;
+    @apply bg-yellow-900/70 text-yellow-300 border border-yellow-700/50;
+  }
+  .badge-yellow:hover {
+    @apply bg-yellow-900/80 border-yellow-600/60;
   }
   .badge-red {
-    @apply bg-red-900/60 text-red-300 border border-red-700/40;
+    @apply bg-red-900/70 text-red-300 border border-red-700/50;
+  }
+  .badge-red:hover {
+    @apply bg-red-900/80 border-red-600/60;
   }
 
   /* Таблица в стиле игры */
@@ -147,15 +321,21 @@
     @apply w-full text-left;
   }
   .game-table thead tr {
-    @apply border-b border-wood-700/60;
+    @apply border-b-2 border-wood-700/70;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   .game-table th {
-    @apply py-2 px-3 text-wood-400 text-sm font-serif;
+    @apply py-3 px-4 text-wood-400 text-sm font-serif;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
   .game-table tbody tr {
-    @apply border-b border-wood-800/40 hover:bg-wood-900/40 transition-colors;
+    @apply border-b border-wood-800/50 hover:bg-wood-900/50 transition-all duration-200;
+  }
+  .game-table tbody tr:hover {
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.15);
+    transform: scale(1.01);
   }
   .game-table td {
-    @apply py-2 px-3 text-sm;
+    @apply py-3 px-4 text-sm;
   }
 }

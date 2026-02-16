@@ -1,8 +1,7 @@
 import api from './client'
 
 export async function getInventory() {
-  const { data } = await api.get('/player/inventory/')
-  return data
+  return api.get('/player/inventory/')
 }
 
 export async function getPlayerRods() {
@@ -25,6 +24,7 @@ export async function assembleRod(params: {
   bait_id?: number
   depth_setting?: number
   retrieve_speed?: number
+  clip_distance?: number
 }) {
   const { data } = await api.post('/fishing/assemble-rod/', params)
   return data
@@ -37,7 +37,7 @@ export async function renameRod(rodId: number, customName: string) {
 
 export async function updateRodSettings(
   rodId: number,
-  settings: { depth_setting?: number; retrieve_speed?: number },
+  settings: { depth_setting?: number; retrieve_speed?: number; clip_distance?: number },
 ) {
   const { data } = await api.patch(`/player/rods/${rodId}/settings/`, settings)
   return data

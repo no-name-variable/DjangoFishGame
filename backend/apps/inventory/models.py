@@ -24,6 +24,7 @@ class PlayerRod(models.Model):
     is_assembled = models.BooleanField('Собрана', default=False)
     depth_setting = models.FloatField('Глубина (м)', default=1.5)
     retrieve_speed = models.IntegerField('Скорость проводки (1-10)', default=5)
+    clip_distance = models.FloatField('Клипса - дистанция заброса (м)', default=30.0)
 
     class Meta:
         verbose_name = 'Снасть игрока'
@@ -47,11 +48,11 @@ class PlayerRod(models.Model):
         """Проверяет, что снасть полностью собрана для ловли."""
         base_ready = self.rod_type and self.line and self.hook
         if self.rod_type.rod_class == 'float':
-            return base_ready and self.float_tackle and self.bait and self.bait_remaining > 0
+            return bool(base_ready and self.float_tackle and self.bait and self.bait_remaining > 0)
         elif self.rod_type.rod_class == 'spinning':
-            return base_ready and self.reel and self.lure
+            return bool(base_ready and self.reel and self.lure)
         elif self.rod_type.rod_class == 'bottom':
-            return base_ready and self.bait and self.bait_remaining > 0
+            return bool(base_ready and self.bait and self.bait_remaining > 0)
         return False
 
 

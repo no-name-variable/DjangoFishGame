@@ -2,7 +2,8 @@
  * Барахолка — торговля между игроками, стиль РР3.
  */
 import { useEffect, useState } from 'react'
-import { buyListing, cancelListing, getListings, getMyListings } from '../api/bazaar'
+import { buyListing, cancelListing, createListing, getListings, getMyListings } from '../api/bazaar'
+import { getInventory } from '../api/player'
 import GameImage from '../components/ui/GameImage'
 import { getFallbackUrl } from '../utils/getAssetUrl'
 
@@ -10,6 +11,15 @@ interface Listing {
   id: number; seller_nickname: string; item_name: string; item_type: string
   item_image: string | null
   quantity: number; price: string; created_at: string; is_active: boolean
+}
+
+interface InventoryItem {
+  id: number
+  item_type: string
+  object_id: number
+  item_name: string
+  item_image: string | null
+  quantity: number
 }
 
 type Tab = 'market' | 'my'
@@ -28,6 +38,13 @@ export default function BazaarPage() {
   const [filter, setFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState('')
+
+  // Создание лота
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
+  const [sellQuantity, setSellQuantity] = useState(1)
+  const [sellPrice, setSellPrice] = useState(100)
 
   const loadMarket = () => {
     setLoading(true)
@@ -51,6 +68,47 @@ export default function BazaarPage() {
   const handleCancel = async (id: number) => {
     try { await cancelListing(id); loadMy() }
     catch (e: unknown) { setMsg((e as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Ошибка') }
+  }
+
+  const openCreateModal = async () => {
+    setShowCreateModal(true)
+    try {
+      const res = await getInventory()
+      console.log('Inventory response:', res.data)
+      const items = (res.data.results || res.data) as InventoryItem[]
+      // Фильтруем только допустимые типы
+      const allowed = ['bait', 'lure', 'groundbait', 'flavoring', 'food', 'hook', 'floattackle', 'line', 'reel', 'rodtype']
+      const filtered = items.filter((i) => allowed.includes(i.item_type))
+      console.log('Filtered items:', filtered)
+      setInventory(filtered)
+    } catch (err) {
+      console.error('Inventory load error:', err)
+      setMsg(`Ошибка загрузки инвентаря: ${(err as Error).message}`)
+    }
+  }
+
+  const handleCreate = async () => {
+    if (!selectedItem) return
+    if (sellQuantity < 1 || sellQuantity > selectedItem.quantity) {
+      setMsg('Некорректное количество')
+      return
+    }
+    if (sellPrice < 1) {
+      setMsg('Цена должна быть больше 0')
+      return
+    }
+
+    try {
+      await createListing(selectedItem.item_type, selectedItem.object_id, sellQuantity, sellPrice)
+      setMsg('Лот создан!')
+      setShowCreateModal(false)
+      setSelectedItem(null)
+      setSellQuantity(1)
+      setSellPrice(100)
+      loadMy()
+    } catch (e: unknown) {
+      setMsg((e as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Ошибка')
+    }
   }
 
   return (
@@ -114,6 +172,10 @@ export default function BazaarPage() {
 
       {tab === 'my' && (
         <>
+          <button className="btn btn-primary mb-3 text-sm" onClick={openCreateModal}>
+            📦 Выставить предмет
+          </button>
+
           {loading ? (
             <div className="text-center text-wood-500 text-sm py-8">Загрузка...</div>
           ) : (
@@ -136,6 +198,101 @@ export default function BazaarPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Модальное окно создания лота */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCreateModal(false)}>
+          <div className="wood-panel p-4 max-w-md w-full max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}>
+            <h2 className="gold-text text-lg mb-3">Создать лот</h2>
+
+            {/* Выбор предмета */}
+            <div className="mb-3">
+              <label className="text-wood-400 text-xs block mb-1">Выберите предмет:</label>
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {inventory.map((item) => (
+                  <div key={`${item.item_type}-${item.object_id}`}
+                    className={`card cursor-pointer flex items-center gap-2 ${
+                      selectedItem?.object_id === item.object_id && selectedItem?.item_type === item.item_type
+                        ? 'ring-2 ring-gold'
+                        : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedItem(item)
+                      setSellQuantity(Math.min(1, item.quantity))
+                    }}>
+                    <GameImage
+                      src={item.item_image || getFallbackUrl('tackle')}
+                      fallback={getFallbackUrl('tackle')}
+                      alt={item.item_type}
+                      className="w-6 h-6 object-contain"
+                    />
+                    <div className="flex-1">
+                      <div className="text-wood-200 text-xs">{item.item_name}</div>
+                      <div className="text-wood-600 text-[10px]">В наличии: {item.quantity} шт.</div>
+                    </div>
+                  </div>
+                ))}
+                {inventory.length === 0 && (
+                  <p className="text-wood-500 text-xs text-center py-3">Нет предметов для продажи</p>
+                )}
+              </div>
+            </div>
+
+            {selectedItem && (
+              <>
+                {/* Количество */}
+                <div className="mb-3">
+                  <label className="text-wood-400 text-xs block mb-1">
+                    Количество (макс. {selectedItem.quantity}):
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={selectedItem.quantity}
+                    value={sellQuantity}
+                    onChange={(e) => setSellQuantity(Math.max(1, Math.min(selectedItem.quantity, Number(e.target.value))))}
+                    className="game-input w-full"
+                  />
+                </div>
+
+                {/* Цена */}
+                <div className="mb-3">
+                  <label className="text-wood-400 text-xs block mb-1">Цена ($):</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={sellPrice}
+                    onChange={(e) => setSellPrice(Math.max(1, Number(e.target.value)))}
+                    className="game-input w-full"
+                  />
+                </div>
+
+                {/* Итого */}
+                <div className="mb-3 p-2 bg-forest-900/30 rounded text-xs text-wood-300">
+                  Вы получите: <span className="text-gold font-serif">{sellPrice}$</span>
+                </div>
+              </>
+            )}
+
+            {/* Кнопки */}
+            <div className="flex gap-2">
+              <button
+                className="btn btn-primary flex-1 text-sm"
+                disabled={!selectedItem}
+                onClick={handleCreate}>
+                Выставить
+              </button>
+              <button
+                className="btn btn-secondary flex-1 text-sm"
+                onClick={() => setShowCreateModal(false)}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
