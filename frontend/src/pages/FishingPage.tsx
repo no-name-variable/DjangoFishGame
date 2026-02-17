@@ -154,14 +154,16 @@ export default function FishingPage() {
   }, [activeSessionId, send, play])
 
   const handleKeep = useCallback(() => {
-    if (!activeSessionId) return
-    send('keep', { session_id: activeSessionId })
-  }, [activeSessionId, send])
+    const sid = caughtInfo?.sessionId
+    if (!sid) return
+    send('keep', { session_id: sid })
+  }, [caughtInfo?.sessionId, send])
 
   const handleRelease = useCallback(() => {
-    if (!activeSessionId) return
-    send('release', { session_id: activeSessionId })
-  }, [activeSessionId, send])
+    const sid = caughtInfo?.sessionId
+    if (!sid) return
+    send('release', { session_id: sid })
+  }, [caughtInfo?.sessionId, send])
 
   const handleRetrieve = useCallback((sessionId: number) => {
     send('retrieve', { session_id: sessionId })
