@@ -1,5 +1,7 @@
 """Views магазина."""
 
+from decimal import Decimal
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -82,6 +84,57 @@ class ShopBuyView(APIView):
             'item': result.item_name,
             'quantity': result.quantity,
             'money_left': result.money_left,
+        })
+
+
+class RepairRodView(APIView):
+    """Ремонт удилища. Стоимость: 5 монет за каждую единицу прочности."""
+
+    # Стоимость ремонта за единицу прочности
+    REPAIR_COST_PER_POINT = Decimal('5')
+
+    def post(self, request):
+        from apps.inventory.models import PlayerRod
+
+        rod_id = request.data.get('rod_id')
+        if not rod_id:
+            return Response({'error': 'Укажите rod_id.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            rod = PlayerRod.objects.select_related('rod_type').get(
+                pk=rod_id, player=request.user.player,
+            )
+        except PlayerRod.DoesNotExist:
+            return Response({'error': 'Удочка не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+
+        durability_max = rod.rod_type.durability_max
+        damage = durability_max - rod.durability_current
+
+        if damage <= 0:
+            return Response({'error': 'Удочка не нуждается в ремонте.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        cost = self.REPAIR_COST_PER_POINT * damage
+        player = request.user.player
+
+        if player.money < cost:
+            return Response(
+                {'error': f'Недостаточно денег. Нужно {cost:.0f}, есть {player.money:.0f}.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        player.money -= cost
+        player.save(update_fields=['money'])
+
+        rod.durability_current = durability_max
+        rod.save(update_fields=['durability_current'])
+
+        return Response({
+            'status': 'ok',
+            'rod_id': rod.pk,
+            'durability': rod.durability_current,
+            'cost': float(cost),
+            'money_left': float(player.money),
         })
 
 

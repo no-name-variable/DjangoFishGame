@@ -23,3 +23,8 @@ export async function getFishSpecies() {
   const { data } = await api.get('/shop/fish/')
   return data
 }
+
+export async function repairRod(rodId: number) {
+  const { data } = await api.post('/shop/repair-rod/', { rod_id: rodId })
+  return data as { status: string; rod_id: number; durability: number; cost: number; money_left: number }
+}

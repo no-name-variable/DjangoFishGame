@@ -38,6 +38,7 @@ class Location(models.Model):
     depth_map = models.JSONField('Карта глубин', default=dict, blank=True)
     min_rank = models.IntegerField('Мин. разряд', default=1)
     requires_ticket = models.BooleanField('Требует путёвку', default=False)
+    travel_cost = models.DecimalField('Стоимость входа', max_digits=10, decimal_places=2, default=0)
     fish_species = models.ManyToManyField(
         'tackle.FishSpecies',
         through='LocationFish',

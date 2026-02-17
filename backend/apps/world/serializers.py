@@ -22,7 +22,7 @@ class LocationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'base', 'base_name', 'name', 'description',
             'image_morning', 'image_day', 'image_evening', 'image_night',
-            'depth_map', 'min_rank', 'requires_ticket',
+            'depth_map', 'min_rank', 'requires_ticket', 'travel_cost',
         ]
 
 

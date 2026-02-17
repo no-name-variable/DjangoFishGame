@@ -25,5 +25,5 @@ def fish_inspection():
     )
 
     for player in active_players:
-        if random.random() < 0.10:
+        if random.random() < 0.20:
             svc.inspect_player(player)

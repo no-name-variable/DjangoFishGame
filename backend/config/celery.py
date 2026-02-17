@@ -44,4 +44,9 @@ app.conf.beat_schedule = {
         'task': 'apps.inspection.tasks.fish_inspection',
         'schedule': 1800.0,  # 30 минут
     },
+    # Сброс динамических цен рыбы - каждые 24 часа (полночь по UTC)
+    'reset-fish-prices': {
+        'task': 'apps.tackle.tasks.reset_fish_prices',
+        'schedule': crontab(hour=0, minute=0),
+    },
 }

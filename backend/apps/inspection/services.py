@@ -43,7 +43,7 @@ class InspectionService:
         if creel_count > max_creel:
             violation_found = True
             violation_type = FishInspection.ViolationType.CREEL_LIMIT
-            fine_amount += Decimal('500')
+            fine_amount += Decimal('1000')
             karma_penalty -= 20
             details_parts.append(
                 f'В садке {creel_count} рыб при лимите {max_creel}.'
@@ -57,7 +57,7 @@ class InspectionService:
         if undersized_fish:
             violation_found = True
             violation_type = FishInspection.ViolationType.SIZE_LIMIT
-            fine_per_fish = Decimal('200')
+            fine_per_fish = Decimal('400')
             fine_amount += fine_per_fish * len(undersized_fish)
             karma_penalty -= 10
             names = ', '.join(
@@ -75,7 +75,7 @@ class InspectionService:
         if forbidden_fish:
             violation_found = True
             violation_type = FishInspection.ViolationType.FORBIDDEN_SPECIES
-            fine_amount += Decimal('1000')
+            fine_amount += Decimal('2000')
             karma_penalty -= 50
             names = ', '.join(f.species.name_ru for f in forbidden_fish)
             details_parts.append(

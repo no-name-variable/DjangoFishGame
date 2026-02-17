@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Bait, FishSpecies, Flavoring, FloatTackle, Food, Groundbait, Hook, Line, Lure, Reel, RodType
+from .models import Bait, FishPriceDynamic, FishSpecies, Flavoring, FloatTackle, Food, Groundbait, Hook, Line, Lure, Reel, RodType
 
 
 @admin.register(FishSpecies)
@@ -60,3 +60,14 @@ class FlavoringAdmin(admin.ModelAdmin):
 @admin.register(Food)
 class FoodAdmin(admin.ModelAdmin):
     list_display = ('name', 'satiety', 'price')
+
+
+@admin.register(FishPriceDynamic)
+class FishPriceDynamicAdmin(admin.ModelAdmin):
+    list_display = ('species', 'location', 'sold_weight_today', 'current_modifier')
+    list_filter = ('location',)
+    readonly_fields = ('current_modifier',)
+
+    def current_modifier(self, obj):
+        return f'{obj.current_modifier:.2f}x'
+    current_modifier.short_description = 'Модификатор цены'

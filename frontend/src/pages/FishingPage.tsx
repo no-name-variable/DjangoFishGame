@@ -13,6 +13,7 @@ import { useFishingSocket } from '../hooks/useFishingSocket'
 import WaterScene from '../components/fishing/WaterScene'
 import CaughtFishModal from '../components/fishing/CaughtFishModal'
 import TacklePanel, { type FullRod } from '../components/fishing/TacklePanel'
+import FishingGearModal from '../components/fishing/FishingGearModal'
 import { useSound } from '../hooks/useSound'
 import { useAmbience } from '../hooks/useAmbience'
 import { getLocationImageUrl, normalizeMediaUrl } from '../utils/getAssetUrl'
@@ -35,6 +36,7 @@ export default function FishingPage() {
   const [rods, setRods] = useState<FullRod[]>([])
   const [selectedRodId, setSelectedRodId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const [gearOpen, setGearOpen] = useState(false)
   const waterRef = useRef<HTMLDivElement>(null)
   const lastCastRodClassRef = useRef<string | null>(null)
   const { play } = useSound()
@@ -314,6 +316,17 @@ export default function FishingPage() {
               {' '}{timeLabels[gt.time_of_day] || gt.time_of_day} {gt.hour}:00 · День {gt.day}
             </span>
           )}
+          <button
+            onClick={() => setGearOpen(true)}
+            title="Управление снастями"
+            style={{
+              background: 'rgba(92,61,30,0.25)', border: '1px solid rgba(92,61,30,0.4)',
+              borderRadius: '6px', color: '#a8894e', fontSize: '0.8rem',
+              padding: '2px 8px', cursor: 'pointer', lineHeight: 1.4,
+            }}
+          >
+            🎒
+          </button>
           <span
             title={connected ? 'Подключено' : 'Нет соединения'}
             style={{
@@ -433,6 +446,16 @@ export default function FishingPage() {
           rarity={caughtInfo.rarity}
           onKeep={handleKeep}
           onRelease={handleRelease}
+        />
+      )}
+
+      {gearOpen && (
+        <FishingGearModal
+          sessions={sessionList}
+          rods={rods}
+          onUpdateSettings={handleUpdateSettings}
+          onChangeTackle={handleChangeTackle}
+          onClose={() => setGearOpen(false)}
         />
       )}
     </div>

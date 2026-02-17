@@ -37,6 +37,9 @@ class CastUseCase:
         if not rod.is_ready:
             raise ValueError('Снасть не полностью собрана.')
 
+        if rod.durability_current <= 0:
+            raise ValueError('Удилище сломано. Отремонтируйте его в магазине.')
+
         # Проверяем, что удочка экипирована в один из слотов
         if rod not in [player.rod_slot_1, player.rod_slot_2, player.rod_slot_3]:
             raise ValueError('Удочка должна быть экипирована в слот для использования.')

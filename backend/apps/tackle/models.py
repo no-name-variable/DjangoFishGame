@@ -41,6 +41,63 @@ class FishSpecies(models.Model):
         return self.name_ru
 
 
+class FishPriceDynamic(models.Model):
+    """
+    Динамическая цена рыбы по локации.
+    Цена падает при массовых продажах и восстанавливается каждый игровой день.
+    """
+
+    species = models.ForeignKey(
+        FishSpecies, on_delete=models.CASCADE,
+        related_name='price_dynamics', verbose_name='Вид рыбы',
+    )
+    location = models.ForeignKey(
+        'world.Location', on_delete=models.CASCADE,
+        related_name='price_dynamics', verbose_name='Локация',
+    )
+    sold_weight_today = models.FloatField('Продано кг сегодня', default=0.0)
+
+    class Meta:
+        verbose_name = 'Динамика цены рыбы'
+        verbose_name_plural = 'Динамика цен рыбы'
+        unique_together = ('species', 'location')
+
+    def __str__(self):
+        return f'{self.species.name_ru} @ {self.location} — {self.current_modifier:.2f}x'
+
+    @property
+    def current_modifier(self) -> float:
+        """
+        Модификатор цены: снижается на 1% за каждые 5 кг проданной рыбы.
+        Минимум 50% от базовой цены.
+        """
+        return max(0.50, 1.0 - self.sold_weight_today * 0.002)
+
+    @classmethod
+    def get_modifier(cls, species, location) -> float:
+        """Вернуть текущий модификатор цены. Без записи — полная цена."""
+        if not location:
+            return 1.0
+        try:
+            record = cls.objects.get(species=species, location=location)
+            return record.current_modifier
+        except cls.DoesNotExist:
+            return 1.0
+
+    @classmethod
+    def record_sale(cls, species, location, weight: float) -> None:
+        """Зарегистрировать продажу рыбы — увеличить sold_weight_today."""
+        if not location:
+            return
+        cls.objects.update_or_create(
+            species=species, location=location,
+            defaults={},
+        )
+        cls.objects.filter(species=species, location=location).update(
+            sold_weight_today=models.F('sold_weight_today') + weight,
+        )
+
+
 class RodType(models.Model):
     """Тип удилища."""
 

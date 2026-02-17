@@ -55,8 +55,19 @@ class LocationEnterView(APIView):
         if player.current_base_id != location.base_id:
             return Response({'error': 'Вы на другой базе.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        player.current_location = location
-        player.save(update_fields=['current_location'])
+        if location.travel_cost > 0 and player.money < location.travel_cost:
+            return Response(
+                {'error': f'Недостаточно денег. Вход стоит {location.travel_cost:.0f} монет.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if location.travel_cost > 0:
+            player.money -= location.travel_cost
+            player.current_location = location
+            player.save(update_fields=['money', 'current_location'])
+        else:
+            player.current_location = location
+            player.save(update_fields=['current_location'])
 
         return Response(LocationDetailSerializer(location).data)
 

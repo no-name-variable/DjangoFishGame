@@ -63,6 +63,11 @@ def _fight_action(player, session_id, action_func) -> FightActionResult:
     result = action_func(fight)
 
     if result == 'caught':
+        # Сохраняем износ удилища после вываживания
+        rod = session.rod
+        rod.durability_current = max(0, int(fight.rod_durability))
+        rod.save(update_fields=['durability_current'])
+
         session.state = FishingSession.State.CAUGHT
         session.save()
         species = session.hooked_species
@@ -78,10 +83,13 @@ def _fight_action(player, session_id, action_func) -> FightActionResult:
         )
 
     if result in ('line_break', 'rod_break'):
+        rod = session.rod
         if result == 'rod_break':
-            rod = session.rod
             rod.durability_current = 0
-            rod.save(update_fields=['durability_current'])
+        else:
+            # Обрыв лески тоже изнашивает удилище
+            rod.durability_current = max(0, int(fight.rod_durability))
+        rod.save(update_fields=['durability_current'])
         session.delete()
         return FightActionResult(result=result, session_id=session_id)
 
