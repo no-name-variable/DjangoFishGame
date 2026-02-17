@@ -1,5 +1,6 @@
 /**
  * Основной экран рыбалки — мульти-удочки, клик-заброс.
+ * Использует WebSocket вместо REST polling.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +9,7 @@ import { leaveLocation, updateRodSettings } from '../api/player'
 import { getProfile } from '../api/auth'
 import { useFishingStore } from '../store/fishingStore'
 import { usePlayerStore } from '../store/playerStore'
+import { useFishingSocket } from '../hooks/useFishingSocket'
 import WaterScene from '../components/fishing/WaterScene'
 import CaughtFishModal from '../components/fishing/CaughtFishModal'
 import TacklePanel, { type FullRod } from '../components/fishing/TacklePanel'
@@ -25,34 +27,78 @@ export default function FishingPage() {
   const fights = useFishingStore((s) => s.fights)
   const activeSessionId = useFishingStore((s) => s.activeSessionId)
   const caughtInfo = useFishingStore((s) => s.caughtInfo)
-  const setSessions = useFishingStore((s) => s.setSessions)
   const setActiveSession = useFishingStore((s) => s.setActiveSession)
   const setCaught = useFishingStore((s) => s.setCaught)
   const removeSession = useFishingStore((s) => s.removeSession)
-  const setGameTime = useFishingStore((s) => s.setGameTime)
   const reset = useFishingStore((s) => s.reset)
 
   const [rods, setRods] = useState<FullRod[]>([])
   const [selectedRodId, setSelectedRodId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const waterRef = useRef<HTMLDivElement>(null)
   const { play } = useSound()
-  const prevBiteIdsRef = useRef<Set<number>>(new Set())
 
   useAmbience(!!player?.current_location)
 
-  // Загрузка удочек из слотов игрока - только когда меняются ID удочек
+  // WebSocket — колбэки для событий
+  const { send, connected } = useFishingSocket({
+    onBite: (sessionId) => {
+      play('bite')
+      setMessage('ПОКЛЁВКА! Подсекай!')
+      const store = useFishingStore.getState()
+      if (!store.hasFighting()) {
+        setActiveSession(sessionId)
+      }
+    },
+    onCastOk: (sessionId) => {
+      play('cast')
+      setMessage('Заброс! Ожидаем поклёвку...')
+      setActiveSession(sessionId)
+    },
+    onStrikeOk: (data) => {
+      setMessage(`На крючке: ${data.fish}! Вываживай!`)
+    },
+    onCaught: (data) => {
+      play('catch')
+      setCaught({
+        sessionId: data.session_id,
+        fish: data.fish,
+        speciesImage: data.species_image || null,
+        weight: data.weight,
+        length: data.length,
+        rarity: data.rarity,
+      })
+      setMessage('Рыба поймана!')
+    },
+    onBreak: (result) => {
+      play('break')
+      setMessage(result === 'line_break' ? 'Обрыв лески!' : 'Удилище сломалось!')
+    },
+    onKeepResult: (data) => {
+      const d = data as Record<string, unknown>
+      setMessage(`${d.species_name} ${Number(d.weight).toFixed(2)}кг в садке! +${d.experience_reward} опыта`)
+      setCaught(null)
+      getProfile().then(setPlayer).catch(() => {})
+    },
+    onReleaseResult: (data) => {
+      setMessage(`Отпущена! +${data.karma_bonus} кармы`)
+      setCaught(null)
+      getProfile().then(setPlayer).catch(() => {})
+    },
+    onError: (msg) => {
+      setMessage(msg)
+    },
+  })
+
+  // Загрузка удочек из слотов игрока
   useEffect(() => {
     if (player) {
-      // Берём только удочки из слотов (максимум 3)
       const slotRods = [
         player.rod_slot_1,
         player.rod_slot_2,
         player.rod_slot_3,
       ].filter((rod) => rod !== null && rod.is_ready) as FullRod[]
 
-      // Обновляем только если ID удочек изменились (избегаем мигания)
       setRods((prev) => {
         const prevIds = prev.map((r) => r.id).sort().join(',')
         const newIds = slotRods.map((r) => r.id).sort().join(',')
@@ -65,74 +111,12 @@ export default function FishingPage() {
     }
   }, [player?.rod_slot_1?.id, player?.rod_slot_2?.id, player?.rod_slot_3?.id, selectedRodId])
 
-  // Инициализация: игровое время и начальный статус
-  useEffect(() => {
-    fishingApi.getGameTime().then(setGameTime).catch(() => {})
-
-    // Начальный статус
-    fishingApi.getStatus()
-      .then((data) => {
-        setSessions(data.sessions, data.fights)
-        if (data.game_time) setGameTime(data.game_time)
-      })
-      .catch(() => {})
-
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current)
-    }
-  }, [setGameTime, setSessions])
-
-  // Polling
-  const startPolling = useCallback(() => {
-    if (pollingRef.current) clearInterval(pollingRef.current)
-    pollingRef.current = setInterval(async () => {
-      try {
-        const data = await fishingApi.getStatus()
-        setSessions(data.sessions, data.fights)
-        if (data.game_time) setGameTime(data.game_time)
-
-        // Звук поклёвки для новых bite-сессий
-        const newBiteIds = new Set(
-          data.sessions.filter((s) => s.state === 'bite').map((s) => s.id),
-        )
-        for (const id of newBiteIds) {
-          if (!prevBiteIdsRef.current.has(id)) {
-            play('bite')
-            setMessage('ПОКЛЁВКА! Подсекай!')
-            // Автовыбор сессии с поклёвкой
-            const store = useFishingStore.getState()
-            if (!store.hasFighting()) {
-              setActiveSession(id)
-            }
-          }
-        }
-        prevBiteIdsRef.current = newBiteIds
-      } catch {
-        // ignore
-      }
-    }, 1500)
-  }, [setSessions, setActiveSession, play])
-
-  // Запускаем polling при наличии сессий
-  useEffect(() => {
-    const sessionList = Object.values(sessions)
-    if (sessionList.length > 0) {
-      startPolling()
-    } else {
-      if (pollingRef.current) clearInterval(pollingRef.current)
-    }
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current)
-    }
-  }, [Object.keys(sessions).length > 0, startPolling])
-
   // Клик по воде = заброс
-  const handleWaterClick = useCallback(async (normX: number, normY: number) => {
+  const handleWaterClick = useCallback((normX: number, normY: number) => {
     if (!selectedRodId) {
       setMessage('Выберите снасть')
       return
     }
-    // Проверка что удочка не заброшена
     const sessionList = Object.values(sessions)
     if (sessionList.some((s) => s.rodId === selectedRodId)) {
       setMessage('Эта удочка уже заброшена')
@@ -143,149 +127,55 @@ export default function FishingPage() {
       return
     }
 
-    try {
-      const result = await fishingApi.cast(selectedRodId, normX, normY)
-      play('cast')
-      setMessage('Заброс! Ожидаем поклёвку...')
+    send('cast', { rod_id: selectedRodId, point_x: normX, point_y: normY })
 
-      // Запускаем анимацию заброса
-      const waterEl = waterRef.current?.querySelector('div') as HTMLDivElement & {
-        __addCastAnim?: (sid: number, x: number, y: number) => void
-      } | null
-      waterEl?.__addCastAnim?.(result.session_id, normX, normY)
-
-      // Обновляем статус
-      const data = await fishingApi.getStatus()
-      setSessions(data.sessions, data.fights)
-      if (data.game_time) setGameTime(data.game_time)
-      setActiveSession(result.session_id)
-      startPolling()
-
-      // Автовыбор следующей незаброшенной удочки
-      const castRodIds = new Set(data.sessions.map((s) => s.rod_id))
-      const nextRod = rods.find((r) => !castRodIds.has(r.id))
-      if (nextRod) setSelectedRodId(nextRod.id)
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Ошибка заброса'
-      setMessage(msg)
-    }
-  }, [selectedRodId, sessions, rods, setSessions, setActiveSession, startPolling, play])
+    // Автовыбор следующей незаброшенной удочки
+    const castRodIds = new Set(sessionList.map((s) => s.rodId))
+    castRodIds.add(selectedRodId)
+    const nextRod = rods.find((r) => !castRodIds.has(r.id))
+    if (nextRod) setSelectedRodId(nextRod.id)
+  }, [selectedRodId, sessions, rods, send])
 
   // Клик по поплавку = выбор сессии
   const handleFloatClick = useCallback((sessionId: number) => {
     setActiveSession(sessionId)
   }, [setActiveSession])
 
-  const handleStrike = useCallback(async () => {
+  const handleStrike = useCallback(() => {
     if (!activeSessionId) return
-    try {
-      const result = await fishingApi.strike(activeSessionId)
-      setMessage(`На крючке: ${result.fish}! Вываживай!`)
-      const data = await fishingApi.getStatus()
-      setSessions(data.sessions, data.fights)
-      if (data.game_time) setGameTime(data.game_time)
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Рыба сошла'
-      setMessage(msg)
-      const data = await fishingApi.getStatus()
-      setSessions(data.sessions, data.fights)
-      if (data.game_time) setGameTime(data.game_time)
-    }
-  }, [activeSessionId, setSessions])
+    send('strike', { session_id: activeSessionId })
+  }, [activeSessionId, send])
 
-  const handleFightAction = useCallback(async (action: 'reel' | 'pull') => {
+  const handleFightAction = useCallback((action: 'reel' | 'pull') => {
     if (!activeSessionId) return
-    try {
-      const result = action === 'reel'
-        ? await fishingApi.reelIn(activeSessionId)
-        : await fishingApi.pullRod(activeSessionId)
+    const wsAction = action === 'reel' ? 'reel_in' : 'pull'
+    send(wsAction, { session_id: activeSessionId })
+    if (action === 'reel') play('reel')
+  }, [activeSessionId, send, play])
 
-      if (result.result === 'caught') {
-        play('catch')
-        setCaught({
-          sessionId: activeSessionId,
-          fish: result.fish,
-          speciesImage: result.species_image || null,
-          weight: result.weight,
-          length: result.length,
-          rarity: result.rarity,
-        })
-        setMessage('Рыба поймана!')
-      } else if (result.result === 'fighting') {
-        play('reel')
-      } else {
-        play('break')
-        setMessage(result.result === 'line_break' ? 'Обрыв лески!' : 'Удилище сломалось!')
-      }
-
-      const data = await fishingApi.getStatus()
-      setSessions(data.sessions, data.fights)
-      if (data.game_time) setGameTime(data.game_time)
-    } catch {
-      setMessage('Ошибка')
-    }
-  }, [activeSessionId, setSessions, setCaught, setGameTime, play])
-
-  const handleKeep = useCallback(async () => {
+  const handleKeep = useCallback(() => {
     if (!activeSessionId) return
-    try {
-      const result = await fishingApi.keepFish(activeSessionId)
-      setMessage(`${result.species_name} ${result.weight.toFixed(2)}кг в садке! +${result.experience_reward} опыта`)
-      setCaught(null)
-      removeSession(activeSessionId)
-      const profile = await getProfile()
-      setPlayer(profile)
-    } catch {
-      setMessage('Ошибка')
-    }
-  }, [activeSessionId, setCaught, removeSession, setPlayer])
+    send('keep', { session_id: activeSessionId })
+  }, [activeSessionId, send])
 
-  const handleRelease = useCallback(async () => {
+  const handleRelease = useCallback(() => {
     if (!activeSessionId) return
-    try {
-      const result = await fishingApi.releaseFish(activeSessionId)
-      setMessage(`Отпущена! +${result.karma_bonus} кармы`)
-      setCaught(null)
-      removeSession(activeSessionId)
-      const profile = await getProfile()
-      setPlayer(profile)
-    } catch {
-      setMessage('Ошибка')
-    }
-  }, [activeSessionId, setCaught, removeSession, setPlayer])
+    send('release', { session_id: activeSessionId })
+  }, [activeSessionId, send])
 
-  const handleRetrieve = useCallback(async (sessionId: number) => {
-    try {
-      await fishingApi.retrieveRod(sessionId)
-      removeSession(sessionId)
-      setMessage('Удочка вытащена')
-      // Обновляем статус с сервера для синхронизации
-      fishingApi.getStatus()
-        .then((data) => {
-          setSessions(data.sessions, data.fights)
-          if (data.game_time) setGameTime(data.game_time)
-        })
-        .catch(() => {})
-    } catch {
-      setMessage('Ошибка')
-    }
-  }, [removeSession, setSessions, setGameTime])
+  const handleRetrieve = useCallback((sessionId: number) => {
+    send('retrieve', { session_id: sessionId })
+    removeSession(sessionId)
+    setMessage('Удочка вытащена')
+  }, [send, removeSession])
 
-  const handleStartRetrieve = useCallback(async (sessionId: number) => {
-    try {
-      await fishingApi.updateRetrieve(sessionId, true)
-    } catch {
-      // ignore
-    }
-  }, [])
+  const handleStartRetrieve = useCallback((sessionId: number) => {
+    send('update_retrieve', { session_id: sessionId, is_retrieving: true })
+  }, [send])
 
-  const handleStopRetrieve = useCallback(async (sessionId: number) => {
-    try {
-      await fishingApi.updateRetrieve(sessionId, false)
-    } catch {
-      // ignore
-    }
-  }, [])
+  const handleStopRetrieve = useCallback((sessionId: number) => {
+    send('update_retrieve', { session_id: sessionId, is_retrieving: false })
+  }, [send])
 
   const handleUpdateSettings = useCallback(async (
     rodId: number, settings: { depth_setting?: number; retrieve_speed?: number },
@@ -303,8 +193,7 @@ export default function FishingPage() {
   }, [])
 
   const handleLeave = useCallback(async () => {
-    if (pollingRef.current) clearInterval(pollingRef.current)
-    // Вытаскиваем все удочки
+    // Вытаскиваем все удочки через REST (WS может быть уже не нужен)
     const sessionList = Object.values(sessions)
     for (const s of sessionList) {
       if (s.state === 'waiting' || s.state === 'idle') {
@@ -322,7 +211,7 @@ export default function FishingPage() {
   // Горячие клавиши
   useEffect(() => {
     const activeSession = activeSessionId ? sessions[activeSessionId] : null
-    const handleKeyDown = async (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (!activeSession) return
 
       if (activeSession.state === 'fighting') {
@@ -336,21 +225,19 @@ export default function FishingPage() {
           handleStrike()
         }
       } else if (activeSession.state === 'waiting' && activeSession.rodClass === 'spinning') {
-        // Проводка спиннинга - клавиша R (русская К)
         if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
           if (!activeSession.isRetrieving) {
-            await fishingApi.updateRetrieve(activeSession.id, true).catch(() => {})
+            send('update_retrieve', { session_id: activeSession.id, is_retrieving: true })
           }
         }
       }
     }
 
-    const handleKeyUp = async (e: KeyboardEvent) => {
+    const handleKeyUp = (e: KeyboardEvent) => {
       if (!activeSession) return
-      // Остановка проводки при отпускании R
       if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
         if (activeSession.state === 'waiting' && activeSession.rodClass === 'spinning' && activeSession.isRetrieving) {
-          await fishingApi.updateRetrieve(activeSession.id, false).catch(() => {})
+          send('update_retrieve', { session_id: activeSession.id, is_retrieving: false })
         }
       }
     }
@@ -361,7 +248,7 @@ export default function FishingPage() {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [activeSessionId, sessions, handleFightAction, handleStrike])
+  }, [activeSessionId, sessions, handleFightAction, handleStrike, send])
 
   const gt = useFishingStore((s) => s.gameTime)
   const timeLabels: Record<string, string> = {
@@ -392,11 +279,14 @@ export default function FishingPage() {
       {/* Инфо-панель */}
       <div className="bg-forest-900/80 px-3 py-1 flex items-center justify-between text-xs border-b border-wood-800/40">
         <span className="text-wood-400 font-serif">{player?.current_location_name}</span>
-        {gt && (
-          <span className="text-water-400">
-            {timeLabels[gt.time_of_day] || gt.time_of_day} — {gt.hour}:00
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {gt && (
+            <span className="text-water-400">
+              {timeLabels[gt.time_of_day] || gt.time_of_day} — {gt.hour}:00
+            </span>
+          )}
+          <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
+        </div>
       </div>
 
       {/* Основная область: водоём + правая панель */}
