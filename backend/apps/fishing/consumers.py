@@ -5,6 +5,7 @@ import logging
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.core.serializers.json import DjangoJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,12 @@ def _resolve(use_case_cls):
 
 class FishingConsumer(AsyncJsonWebsocketConsumer):
     """WebSocket consumer для рыбалки с серверным tick loop."""
+
+    @classmethod
+    async def encode_json(cls, content):
+        """Используем DjangoJSONEncoder для поддержки Decimal, datetime и т.д."""
+        import json
+        return json.dumps(content, cls=DjangoJSONEncoder)
 
     async def connect(self):
         user = self.scope.get('user')
