@@ -156,12 +156,16 @@ def flavoring():
 
 @pytest.fixture
 def player_rod(player, rod_type, line, hook, float_tackle, bait):
-    return PlayerRod.objects.create(
+    rod = PlayerRod.objects.create(
         player=player, rod_type=rod_type,
         line=line, hook=hook, float_tackle=float_tackle,
         bait=bait, bait_remaining=20,
         is_assembled=True, depth_setting=1.5, retrieve_speed=5,
     )
+    # Экипируем удочку в первый слот (CastView требует)
+    player.rod_slot_1 = rod
+    player.save(update_fields=['rod_slot_1'])
+    return rod
 
 
 @pytest.fixture
@@ -227,7 +231,7 @@ def fishing_session_fighting(fishing_session_bite, fish_species):
     FightState.objects.create(
         session=session,
         fish_strength=session.hooked_weight * 3,
-        line_tension=30, distance=15.0, rod_durability=100,
+        line_tension=20, distance=25.0, rod_durability=100,
     )
     return session
 

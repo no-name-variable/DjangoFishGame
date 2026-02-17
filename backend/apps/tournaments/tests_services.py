@@ -75,6 +75,18 @@ def create_player(username, nickname):
     )
 
 
+def create_caught_fish(player, species, weight, length, location, caught_at, **kwargs):
+    """Хелпер для создания CaughtFish с нужным caught_at (auto_now_add игнорирует параметр)."""
+    fish = CaughtFish.objects.create(
+        player=player, species=species,
+        weight=weight, length=length, location=location,
+        **kwargs,
+    )
+    CaughtFish.objects.filter(pk=fish.pk).update(caught_at=caught_at)
+    fish.refresh_from_db()
+    return fish
+
+
 @pytest.mark.django_db
 class TestFinalizeIndividualTournament:
     """Тесты подведения итогов индивидуального турнира."""
@@ -88,19 +100,19 @@ class TestFinalizeIndividualTournament:
         entry2 = TournamentEntry.objects.create(tournament=finished_tournament, player=player2)
 
         # Игрок 1: 5 кг
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player1, species=fish_species,
             weight=Decimal('3.0'), length=30, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=30),
         )
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player1, species=fish_species,
             weight=Decimal('2.0'), length=25, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=60),
         )
 
         # Игрок 2: 4 кг
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player2, species=fish_species,
             weight=Decimal('4.0'), length=35, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=45),
@@ -132,7 +144,7 @@ class TestFinalizeIndividualTournament:
 
         # Игрок 1: 3 рыбы
         for i in range(3):
-            CaughtFish.objects.create(
+            create_caught_fish(
                 player=player1, species=fish_species,
                 weight=Decimal('1.0'), length=20, location=tournament_location,
                 caught_at=finished_tournament.start_time + timedelta(minutes=i * 10),
@@ -140,7 +152,7 @@ class TestFinalizeIndividualTournament:
 
         # Игрок 2: 2 рыбы
         for i in range(2):
-            CaughtFish.objects.create(
+            create_caught_fish(
                 player=player2, species=fish_species,
                 weight=Decimal('2.0'), length=25, location=tournament_location,
                 caught_at=finished_tournament.start_time + timedelta(minutes=i * 10),
@@ -162,21 +174,21 @@ class TestFinalizeIndividualTournament:
         entry = TournamentEntry.objects.create(tournament=finished_tournament, player=player)
 
         # До турнира
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player, species=fish_species,
             weight=Decimal('5.0'), length=40, location=tournament_location,
             caught_at=finished_tournament.start_time - timedelta(hours=1),
         )
 
         # После турнира
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player, species=fish_species,
             weight=Decimal('5.0'), length=40, location=tournament_location,
             caught_at=finished_tournament.end_time + timedelta(hours=1),
         )
 
         # Во время турнира
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player, species=fish_species,
             weight=Decimal('3.0'), length=30, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=30),
@@ -192,7 +204,7 @@ class TestFinalizeIndividualTournament:
         player = create_player('p1', 'Игрок 1')
         entry = TournamentEntry.objects.create(tournament=finished_tournament, player=player)
 
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player, species=fish_species,
             weight=Decimal('3.0'), length=30, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=30),
@@ -217,14 +229,14 @@ class TestFinalizeIndividualTournament:
         entry = TournamentEntry.objects.create(tournament=finished_tournament, player=player)
 
         # В другой локации
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player, species=fish_species,
             weight=Decimal('5.0'), length=40, location=other_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=30),
         )
 
         # В целевой локации
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=player, species=fish_species,
             weight=Decimal('2.0'), length=25, location=finished_tournament.target_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=45),
@@ -241,7 +253,7 @@ class TestFinalizeIndividualTournament:
 
         for i, player in enumerate(players, 1):
             TournamentEntry.objects.create(tournament=finished_tournament, player=player)
-            CaughtFish.objects.create(
+            create_caught_fish(
                 player=player, species=fish_species,
                 weight=Decimal(str(10 - i)), length=30, location=tournament_location,
                 caught_at=finished_tournament.start_time + timedelta(minutes=30),
@@ -282,9 +294,9 @@ class TestFinalizeTeamTournament:
         finished_tournament.save()
 
         # Команда 1: 2 игрока
-        team1 = Team.objects.create(name='Команда 1', leader=None)
         p1 = create_player('p1', 'Игрок 1')
         p2 = create_player('p2', 'Игрок 2')
+        team1 = Team.objects.create(name='Команда 1', leader=p1)
         TeamMembership.objects.create(team=team1, player=p1, role='leader')
         TeamMembership.objects.create(team=team1, player=p2, role='member')
 
@@ -292,26 +304,26 @@ class TestFinalizeTeamTournament:
         entry2 = TournamentEntry.objects.create(tournament=finished_tournament, player=p2, team=team1)
 
         # Команда 2: 1 игрок
-        team2 = Team.objects.create(name='Команда 2', leader=None)
         p3 = create_player('p3', 'Игрок 3')
+        team2 = Team.objects.create(name='Команда 2', leader=p3)
         TeamMembership.objects.create(team=team2, player=p3, role='leader')
 
         entry3 = TournamentEntry.objects.create(tournament=finished_tournament, player=p3, team=team2)
 
         # Улов команды 1: 3 + 2 = 5 кг
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=p1, species=fish_species, weight=Decimal('3.0'),
             length=30, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=30),
         )
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=p2, species=fish_species, weight=Decimal('2.0'),
             length=25, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=45),
         )
 
         # Улов команды 2: 6 кг
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=p3, species=fish_species, weight=Decimal('6.0'),
             length=40, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=50),
@@ -336,9 +348,9 @@ class TestFinalizeTeamTournament:
         finished_tournament.prize_money = Decimal('600.00')
         finished_tournament.save()
 
-        team = Team.objects.create(name='Команда', leader=None)
         p1 = create_player('p1', 'Игрок 1')
         p2 = create_player('p2', 'Игрок 2')
+        team = Team.objects.create(name='Команда', leader=p1)
         TeamMembership.objects.create(team=team, player=p1, role='leader')
         TeamMembership.objects.create(team=team, player=p2, role='member')
 
@@ -346,7 +358,7 @@ class TestFinalizeTeamTournament:
         TournamentEntry.objects.create(tournament=finished_tournament, player=p2, team=team)
 
         # Улов
-        CaughtFish.objects.create(
+        create_caught_fish(
             player=p1, species=fish_species, weight=Decimal('5.0'),
             length=35, location=tournament_location,
             caught_at=finished_tournament.start_time + timedelta(minutes=30),

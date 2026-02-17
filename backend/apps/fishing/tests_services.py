@@ -282,6 +282,11 @@ class TestFightEngine:
 
     def test_reel_in_reduces_distance(self, fishing_session_fighting):
         fight = FightState.objects.get(session=fishing_session_fighting)
+        # Устанавливаем минимальную силу рыбы, чтобы рывок не перекрыл подмотку
+        fight.fish_strength = 0.1
+        fight.distance = 25.0
+        fight.line_tension = 10
+        fight.save()
         initial_distance = fight.distance
 
         result = fight_engine.reel_in(fight)
@@ -310,16 +315,21 @@ class TestFightEngine:
         # Подтяжка снижает прочность удилища
         assert fight.rod_durability < initial_durability or result == 'rod_break'
 
-    def test_wait_action_reduces_tension(self, fishing_session_fighting):
+    @patch('apps.fishing.services.fight_engine.random')
+    def test_wait_action_reduces_tension(self, mock_random, fishing_session_fighting):
         fight = FightState.objects.get(session=fishing_session_fighting)
         fight.line_tension = 50
+        fight.fish_strength = 5.0
         fight.save()
+
+        # random.random() > 0.3 — рывка нет
+        mock_random.random.return_value = 0.5
 
         fight_engine.wait_action(fight)
         fight.refresh_from_db()
 
-        # Ожидание снижает натяжение (но fish_action может добавить)
-        assert fight.line_tension <= 50
+        # wait снижает на -5, _fish_action без рывка снижает на -2 = 43
+        assert fight.line_tension == 43
 
     def test_line_break_on_high_tension(self, fishing_session_fighting):
         fight = FightState.objects.get(session=fishing_session_fighting)

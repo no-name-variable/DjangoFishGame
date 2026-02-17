@@ -160,6 +160,10 @@ class TestDisassembleRod:
         ct_line = ContentType.objects.get_for_model(line)
         ct_hook = ContentType.objects.get_for_model(hook)
 
+        # Снимаем удочку из слота перед разборкой
+        player.rod_slot_1 = None
+        player.save(update_fields=['rod_slot_1'])
+
         resp = api_client.post(f'/api/player/rods/{player_rod.id}/disassemble/')
         assert resp.status_code == 200
 

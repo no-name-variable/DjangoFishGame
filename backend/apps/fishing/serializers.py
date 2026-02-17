@@ -16,6 +16,12 @@ class SessionActionSerializer(serializers.Serializer):
     session_id = serializers.IntegerField()
 
 
+class UpdateRetrieveSerializer(serializers.Serializer):
+    """Включение/выключение проводки спиннинга."""
+    session_id = serializers.IntegerField()
+    is_retrieving = serializers.BooleanField()
+
+
 class ChangeBaitSerializer(serializers.Serializer):
     """Смена наживки на удочке во время рыбалки."""
     session_id = serializers.IntegerField()

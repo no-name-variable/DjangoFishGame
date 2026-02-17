@@ -13,7 +13,7 @@ from apps.quests.services import update_quest_progress
 from apps.records.services import check_achievements, check_record
 
 from .models import FightState, FishingSession, GameTime, GroundbaitSpot
-from .serializers import CastSerializer, FishingMultiStatusSerializer, SessionActionSerializer
+from .serializers import CastSerializer, FishingMultiStatusSerializer, SessionActionSerializer, UpdateRetrieveSerializer
 from .services.bite_calculator import try_bite
 from .services.fight_engine import create_fight, pull_rod, reel_in, wait_action
 from .services.fish_selector import generate_fish_length, generate_fish_weight, select_fish
@@ -425,22 +425,22 @@ class UpdateRetrieveView(APIView):
     """Обновить статус проводки спиннинга (is_retrieving)."""
 
     def post(self, request):
-        ser = SessionActionSerializer(data=request.data)
+        ser = UpdateRetrieveSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
+        data = ser.validated_data
         player = request.user.player
 
         session, err = _get_session(
-            player, ser.validated_data['session_id'],
+            player, data['session_id'],
             allowed_states=[FishingSession.State.WAITING],
         )
         if err:
             return err
 
-        is_retrieving = request.data.get('is_retrieving', False)
-        session.is_retrieving = bool(is_retrieving)
+        session.is_retrieving = data['is_retrieving']
 
         # При остановке проводки — сбрасываем прогресс (можно перезабросить)
-        if not is_retrieving:
+        if not session.is_retrieving:
             session.retrieve_progress = 0.0
             session.save(update_fields=['is_retrieving', 'retrieve_progress'])
         else:
