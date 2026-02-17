@@ -371,6 +371,10 @@ class FishingConsumer(AsyncJsonWebsocketConsumer):
         result = await self._do_update_retrieve(session_id, is_retrieving)
         await self.send_json(result)
 
+        if result['type'] != 'error':
+            state = await self._get_state_snapshot()
+            await self.send_json({'type': 'state', **state})
+
     @database_sync_to_async
     def _do_update_retrieve(self, session_id, is_retrieving):
         from apps.fishing.models import FishingSession
@@ -384,11 +388,7 @@ class FishingConsumer(AsyncJsonWebsocketConsumer):
             return {'type': 'error', 'message': 'Сессия не найдена.'}
 
         session.is_retrieving = is_retrieving
-        if not is_retrieving:
-            session.retrieve_progress = 0.0
-            session.save(update_fields=['is_retrieving', 'retrieve_progress'])
-        else:
-            session.save(update_fields=['is_retrieving'])
+        session.save(update_fields=['is_retrieving'])
 
         return {'type': 'update_retrieve_ok', 'session_id': session_id, 'is_retrieving': session.is_retrieving}
 

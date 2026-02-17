@@ -58,6 +58,7 @@ class FishingStatusUseCase:
                     session.save()
 
         # Для каждой WAITING — пробуем поклёвку и обновляем прогресс проводки
+        deleted_ids = set()
         for session in sessions:
             if session.state == FishingSession.State.WAITING:
                 # Обновляем прогресс проводки для спиннинга
@@ -68,6 +69,7 @@ class FishingStatusUseCase:
 
                     # Если приманка дошла до берега — автоматически вытаскиваем
                     if session.retrieve_progress >= 1.0:
+                        deleted_ids.add(session.pk)
                         session.delete()
                         continue
 
@@ -91,5 +93,8 @@ class FishingStatusUseCase:
                     fights[session.pk] = session.fight
                 except FightState.DoesNotExist:
                     pass
+
+        # Убираем удалённые сессии из итогового списка
+        sessions = [s for s in sessions if s.pk not in deleted_ids]
 
         return FishingStatusResult(sessions=sessions, fights=fights, game_time=gt)

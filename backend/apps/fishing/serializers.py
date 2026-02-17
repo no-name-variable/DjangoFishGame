@@ -35,6 +35,16 @@ class FishingSessionSerializer(serializers.ModelSerializer):
     rod_class = serializers.CharField(source='rod.rod_class', read_only=True)
     retrieve_speed = serializers.IntegerField(source='rod.retrieve_speed', read_only=True)
     hooked_species_name = serializers.CharField(source='hooked_species.name_ru', read_only=True, default=None)
+    hooked_rarity = serializers.CharField(source='hooked_species.rarity', read_only=True, default=None)
+    hooked_species_image = serializers.SerializerMethodField()
+
+    def get_hooked_species_image(self, obj):
+        if obj.hooked_species and obj.hooked_species.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.hooked_species.image.url)
+            return obj.hooked_species.image.url
+        return None
 
     class Meta:
         model = FishingSession
@@ -43,6 +53,7 @@ class FishingSessionSerializer(serializers.ModelSerializer):
             'rod_id', 'rod_name', 'rod_class', 'retrieve_speed', 'is_retrieving', 'retrieve_progress',
             'cast_x', 'cast_y', 'cast_time', 'bite_time',
             'hooked_species_name', 'hooked_weight', 'hooked_length',
+            'hooked_rarity', 'hooked_species_image',
         ]
 
 

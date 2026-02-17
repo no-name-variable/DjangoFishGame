@@ -93,6 +93,8 @@ export interface SessionData {
   hooked_species_name: string | null
   hooked_weight: number | null
   hooked_length: number | null
+  hooked_rarity: string | null
+  hooked_species_image: string | null
 }
 
 export interface FightData {

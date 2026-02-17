@@ -36,6 +36,7 @@ export default function FishingPage() {
   const [selectedRodId, setSelectedRodId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const waterRef = useRef<HTMLDivElement>(null)
+  const lastCastRodClassRef = useRef<string | null>(null)
   const { play } = useSound()
 
   useAmbience(!!player?.current_location)
@@ -52,7 +53,11 @@ export default function FishingPage() {
     },
     onCastOk: (sessionId) => {
       play('cast')
-      setMessage('Заброс! Ожидаем поклёвку...')
+      if (lastCastRodClassRef.current === 'spinning') {
+        setMessage('🌀 Спиннинг заброшен! Зажмите [R] для проводки')
+      } else {
+        setMessage('🎣 Заброс! Ожидаем поклёвку...')
+      }
       setActiveSession(sessionId)
     },
     onStrikeOk: (data) => {
@@ -118,7 +123,12 @@ export default function FishingPage() {
       return
     }
     const sessionList = Object.values(sessions)
-    if (sessionList.some((s) => s.rodId === selectedRodId)) {
+    const existingSession = sessionList.find((s) => s.rodId === selectedRodId)
+    if (existingSession) {
+      // Для спиннинга в режиме проводки — тихо игнорируем, приманка уже в воде
+      if (existingSession.rodClass === 'spinning' && existingSession.state === 'waiting') {
+        return
+      }
       setMessage('Эта удочка уже заброшена')
       return
     }
@@ -127,6 +137,8 @@ export default function FishingPage() {
       return
     }
 
+    // Запоминаем класс удочки для правильного сообщения в onCastOk
+    lastCastRodClassRef.current = rods.find((r) => r.id === selectedRodId)?.rod_class ?? null
     send('cast', { rod_id: selectedRodId, point_x: normX, point_y: normY })
 
     // Автовыбор следующей незаброшенной удочки
@@ -154,22 +166,29 @@ export default function FishingPage() {
   }, [activeSessionId, send, play])
 
   const handleKeep = useCallback(() => {
-    const sid = caughtInfo?.sessionId
+    const sid = caughtInfo?.sessionId ?? activeSessionId
     if (!sid) return
     send('keep', { session_id: sid })
-  }, [caughtInfo?.sessionId, send])
+  }, [caughtInfo?.sessionId, activeSessionId, send])
 
   const handleRelease = useCallback(() => {
-    const sid = caughtInfo?.sessionId
+    const sid = caughtInfo?.sessionId ?? activeSessionId
     if (!sid) return
     send('release', { session_id: sid })
-  }, [caughtInfo?.sessionId, send])
+  }, [caughtInfo?.sessionId, activeSessionId, send])
 
   const handleRetrieve = useCallback((sessionId: number) => {
+    const session = sessions[sessionId]
     send('retrieve', { session_id: sessionId })
     removeSession(sessionId)
-    setMessage('Удочка вытащена')
-  }, [send, removeSession])
+    if (session?.rodClass === 'spinning') {
+      // Спиннинг — возвращаем выбор этой удочки для мгновенного перезаброса
+      setSelectedRodId(session.rodId)
+      setMessage('🌀 Приманка вытащена! Кликните по воде для нового заброса')
+    } else {
+      setMessage('Удочка вытащена')
+    }
+  }, [send, removeSession, sessions])
 
   const handleStartRetrieve = useCallback((sessionId: number) => {
     send('update_retrieve', { session_id: sessionId, is_retrieving: true })
@@ -389,6 +408,8 @@ export default function FishingPage() {
             onStrike={handleStrike}
             onReelIn={() => handleFightAction('reel')}
             onPull={() => handleFightAction('pull')}
+            onKeep={handleKeep}
+            onRelease={handleRelease}
             onRetrieve={handleRetrieve}
             onStartRetrieve={handleStartRetrieve}
             onStopRetrieve={handleStopRetrieve}

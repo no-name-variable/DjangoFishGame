@@ -1,6 +1,7 @@
 /**
- * Полоса натяжения лески в стиле РР3 — горизонтальный слайдер с градиентом.
+ * Полоса натяжения лески в стиле РР3 + бар дистанции (подводка к берегу).
  */
+import { useRef } from 'react'
 
 interface FightBarProps {
   tension: number
@@ -12,19 +13,27 @@ export default function FightBar({ tension, distance, rodDurability = 100 }: Fig
   const clampedTension = Math.min(100, Math.max(0, tension))
   const isCritical = clampedTension > 80
 
+  // Фиксируем начальную дистанцию для корректного вычисления процента
+  const initialDistRef = useRef<number | null>(null)
+  if (initialDistRef.current === null && distance > 0) {
+    initialDistRef.current = distance
+  }
+  const maxDist = initialDistRef.current ?? Math.max(distance, 10)
+  const distPct  = Math.min(100, Math.max(0, ((maxDist - distance) / maxDist) * 100))
+  const isClose  = distPct > 75
+
   return (
-    <div className="p-1">
-      {/* Полоса натяжения */}
-      <div className="relative">
+    <div className="p-1" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      {/* ── Полоса натяжения ── */}
+      <div>
         <div className="flex justify-between text-[10px] text-wood-500 mb-1 font-serif">
           <span>Безопасно</span>
           <span>Натяжение</span>
           <span>Обрыв!</span>
         </div>
 
-        {/* Градиентная полоса */}
         <div className="relative h-5 rounded border border-wood-600/60 overflow-hidden">
-          {/* Фон-градиент: зелёный → жёлтый → красный */}
+          {/* Фон-градиент */}
           <div
             className="absolute inset-0"
             style={{
@@ -36,15 +45,13 @@ export default function FightBar({ tension, distance, rodDurability = 100 }: Fig
             className="absolute inset-0 bg-black/60 transition-all duration-150"
             style={{ left: `${clampedTension}%` }}
           />
-
-          {/* Бегунок (стрелка) */}
+          {/* Бегунок */}
           <div
             className={`absolute top-0 bottom-0 w-1 bg-white transition-all duration-150 ${
               isCritical ? 'animate-pulse shadow-[0_0_8px_rgba(255,0,0,0.8)]' : ''
             }`}
             style={{ left: `${clampedTension}%`, transform: 'translateX(-50%)' }}
           >
-            {/* Треугольник сверху */}
             <div
               className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-0 h-0"
               style={{
@@ -54,7 +61,6 @@ export default function FightBar({ tension, distance, rodDurability = 100 }: Fig
               }}
             />
           </div>
-
           {/* Зоны */}
           <div className="absolute inset-0 flex pointer-events-none">
             <div className="w-[40%] border-r border-white/10" />
@@ -62,22 +68,44 @@ export default function FightBar({ tension, distance, rodDurability = 100 }: Fig
             <div className="w-[30%]" />
           </div>
         </div>
-      </div>
 
-      {/* Числа под полосой */}
-      <div className="flex justify-between mt-2 text-xs">
-        <div className="flex items-center gap-1">
-          <span className="text-wood-500">Дистанция:</span>
-          <span className="text-water-300 font-medium">{distance.toFixed(1)}м</span>
-        </div>
-        <div className={`font-medium ${isCritical ? 'text-red-400' : 'text-wood-300'}`}>
-          {clampedTension.toFixed(0)}%
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-wood-500">Прочность:</span>
-          <span className={`font-medium ${rodDurability < 30 ? 'text-red-400' : 'text-green-400'}`}>
+        <div className="flex justify-between mt-1 text-xs">
+          <span style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>Прочность:</span>
+          <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: isCritical ? '#f87171' : '#d4c5a9' }}>
+            {clampedTension.toFixed(0)}%
+          </span>
+          <span style={{ fontSize: '0.65rem', color: rodDurability < 30 ? '#f87171' : '#4ade80', fontWeight: 'bold' }}>
             {rodDurability}%
           </span>
+        </div>
+      </div>
+
+      {/* ── Полоса дистанции (подводка к берегу) ── */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+          <span style={{ fontSize: '0.6rem', color: '#5c3d1e' }}>📏 Дистанция</span>
+          <span style={{ fontSize: '0.68rem', color: '#7898b8', fontWeight: 'bold' }}>
+            {distance.toFixed(1)} м
+          </span>
+          <span style={{ fontSize: '0.6rem', color: isClose ? '#4ade80' : '#5c3d1e' }}>
+            {isClose ? '🎣 Почти!' : '🌊 Берег'}
+          </span>
+        </div>
+
+        {/* Бар дистанции */}
+        <div style={{
+          height: '6px', borderRadius: '6px', overflow: 'hidden',
+          background: 'rgba(12,74,110,0.25)', border: '1px solid rgba(96,165,250,0.15)',
+        }}>
+          <div style={{
+            height: '100%', borderRadius: '6px',
+            width: `${distPct}%`,
+            background: isClose
+              ? 'linear-gradient(to right, #0369a1, #4ade80)'
+              : 'linear-gradient(to right, #164e63, #0369a1)',
+            transition: 'width 0.3s ease',
+            boxShadow: isClose ? '0 0 6px rgba(74,222,128,0.4)' : 'none',
+          }} />
         </div>
       </div>
     </div>

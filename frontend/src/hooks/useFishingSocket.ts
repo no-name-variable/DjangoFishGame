@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePlayerStore } from '../store/playerStore'
-import { useFishingStore } from '../store/fishingStore'
+import { useFishingStore, type SessionInfo } from '../store/fishingStore'
 import type { SessionData, FightData } from '../api/fishing'
 
 interface FishingSocketCallbacks {
@@ -84,6 +84,19 @@ export function useFishingSocket(callbacks: FishingSocketCallbacks) {
           setSessions(sessions, fights)
           if (data.game_time) setGameTime(data.game_time)
 
+          // Восстановление caughtInfo при reconnect (если сессия в состоянии 'caught')
+          const caughtSession = sessions.find((s) => s.state === 'caught')
+          if (caughtSession && !useFishingStore.getState().caughtInfo) {
+            useFishingStore.getState().setCaught({
+              sessionId: caughtSession.id,
+              fish: caughtSession.hooked_species_name || 'Рыба',
+              speciesImage: caughtSession.hooked_species_image || null,
+              weight: caughtSession.hooked_weight || 0,
+              length: caughtSession.hooked_length || 0,
+              rarity: caughtSession.hooked_rarity || 'common',
+            })
+          }
+
           // Детекция новых поклёвок
           if (data.bites) {
             const newBiteIds = new Set<number>(data.bites)
@@ -127,6 +140,20 @@ export function useFishingSocket(callbacks: FishingSocketCallbacks) {
         case 'release_result':
           cb.onReleaseResult?.(data)
           break
+        case 'update_retrieve_ok': {
+          // Оптимистичное обновление isRetrieving — state snapshot придёт следом
+          const store = useFishingStore.getState()
+          const session: SessionInfo | undefined = store.sessions[data.session_id as number]
+          if (session) {
+            useFishingStore.setState({
+              sessions: {
+                ...store.sessions,
+                [data.session_id as number]: { ...session, isRetrieving: data.is_retrieving as boolean },
+              },
+            })
+          }
+          break
+        }
         case 'error':
           cb.onError?.(data.message)
           break
