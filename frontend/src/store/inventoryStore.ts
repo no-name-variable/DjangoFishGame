@@ -18,7 +18,7 @@ interface PlayerRod {
   rod_type_name: string
   display_name: string
   custom_name: string
-  rod_class: string
+  rod_class: 'float' | 'spinning' | 'bottom'
   reel: number | null
   reel_name: string | null
   line: number | null
