@@ -64,13 +64,16 @@ class AssembleRodView(APIView):
             return Response({'error': 'Удилище не найдено.'}, status=status.HTTP_404_NOT_FOUND)
 
         ct = ContentType.objects.get_for_model(rod_type)
-        if not InventoryItem.objects.filter(player=player, content_type=ct, object_id=rod_type.pk, quantity__gte=1).exists():
+        rod_type_inv = InventoryItem.objects.filter(
+            player=player, content_type=ct, object_id=rod_type.pk, quantity__gte=1,
+        ).first()
+        if not rod_type_inv:
             return Response({'error': 'Удилища нет в инвентаре.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Создаём снасть
         rod = PlayerRod(player=player, rod_type=rod_type)
 
-        # Опционально прикрепляем компоненты
+        # Опционально прикрепляем компоненты, собираем список для списания из инвентаря
         component_map = {
             'reel_id': ('reel', Reel),
             'line_id': ('line', Line),
@@ -80,6 +83,9 @@ class AssembleRodView(APIView):
             'bait_id': ('bait', Bait),
         }
 
+        # Список (InventoryItem, component) для списания после создания
+        to_deduct = [(rod_type_inv, rod_type)]
+
         for key, (field, model) in component_map.items():
             if key in data and data[key]:
                 try:
@@ -87,6 +93,13 @@ class AssembleRodView(APIView):
                     setattr(rod, field, component)
                     if field == 'bait':
                         rod.bait_remaining = component.quantity_per_pack
+                    # Ищем предмет в инвентаре для списания
+                    comp_ct = ContentType.objects.get_for_model(component)
+                    comp_inv = InventoryItem.objects.filter(
+                        player=player, content_type=comp_ct, object_id=component.pk, quantity__gte=1,
+                    ).first()
+                    if comp_inv:
+                        to_deduct.append((comp_inv, component))
                 except model.DoesNotExist:
                     return Response(
                         {'error': f'{model.__name__} не найден.'},
@@ -97,6 +110,14 @@ class AssembleRodView(APIView):
         rod.retrieve_speed = data.get('retrieve_speed', 5)
         rod.is_assembled = True
         rod.save()
+
+        # Списываем компоненты из инвентаря
+        for inv_item, _ in to_deduct:
+            inv_item.quantity -= 1
+            if inv_item.quantity <= 0:
+                inv_item.delete()
+            else:
+                inv_item.save(update_fields=['quantity'])
 
         return Response(PlayerRodSerializer(rod).data, status=status.HTTP_201_CREATED)
 

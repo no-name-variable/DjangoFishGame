@@ -89,9 +89,17 @@ class CastView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Назначаем свободный слот (из активных сессий)
-        used_slots = set(active_sessions.values_list('slot', flat=True))
-        slot = next(s for s in range(1, MAX_RODS + 1) if s not in used_slots)
+        # Назначаем свободный слот — учитываем ВСЕ существующие сессии (включая CAUGHT)
+        all_used_slots = set(
+            FishingSession.objects.filter(player=player).values_list('slot', flat=True)
+        )
+        free_slot = next((s for s in range(1, MAX_RODS + 1) if s not in all_used_slots), None)
+        if free_slot is None:
+            return Response(
+                {'error': 'Нет свободных слотов. Завершите текущие сессии.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        slot = free_slot
 
         session = FishingSession.objects.create(
             player=player,
