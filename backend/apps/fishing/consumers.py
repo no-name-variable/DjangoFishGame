@@ -74,9 +74,12 @@ class FishingConsumer(AsyncJsonWebsocketConsumer):
         try:
             while True:
                 await asyncio.sleep(1.5)
-                result = await self._do_tick()
-                if result:
-                    await self.send_json(result)
+                try:
+                    result = await self._do_tick()
+                    if result:
+                        await self.send_json(result)
+                except Exception:
+                    import traceback; traceback.print_exc()
         except asyncio.CancelledError:
             pass
 
