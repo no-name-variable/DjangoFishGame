@@ -10,7 +10,11 @@ from django.utils import timezone
 
 from apps.accounts.models import Player
 from apps.fishing.models import FightState, FishingSession, GameTime, GroundbaitSpot
-from apps.fishing.services import bite_calculator, fight_engine, fish_selector
+from apps.fishing.services.bite_calculator import BiteCalculatorService
+from apps.fishing.services.fight_engine import FightEngineService
+from apps.fishing.services.fish_selector import FishSelectorService
+from apps.fishing.services.time_service import TimeService
+from apps.potions.services import PotionService
 from apps.inventory.models import CaughtFish, InventoryItem, PlayerRod
 from apps.tackle.models import Bait, FishSpecies, Lure, RodType
 from apps.world.models import LocationFish
@@ -429,6 +433,9 @@ class TestFightFullCycle:
 class TestSpinningMechanics:
     """Тесты спиннинга."""
 
+    def setup_method(self):
+        self.bite_calc = BiteCalculatorService(TimeService(), PotionService())
+
     def test_no_bite_without_retrieve(self, player, location, spinning_rod, location_fish, game_time):
         """Без проводки (is_retrieving=False) шанс поклёвки = 0."""
         player.current_location = location
@@ -441,7 +448,7 @@ class TestSpinningMechanics:
             is_retrieving=False,
         )
 
-        chance = bite_calculator.calculate_bite_chance(player, location, spinning_rod, session)
+        chance = self.bite_calc.calculate_bite_chance(player, location, spinning_rod, session)
         assert chance == 0.0
 
     def test_bite_possible_with_retrieve(self, player, location, spinning_rod, location_fish, game_time):
@@ -456,7 +463,7 @@ class TestSpinningMechanics:
             is_retrieving=True,
         )
 
-        chance = bite_calculator.calculate_bite_chance(player, location, spinning_rod, session)
+        chance = self.bite_calc.calculate_bite_chance(player, location, spinning_rod, session)
         assert chance > 0.0
 
     def test_update_retrieve_on_off(self, api_client, player, location, spinning_rod, game_time):
@@ -624,6 +631,9 @@ class TestChangeBait:
 class TestGroundbaitMechanics:
     """Тесты прикормки."""
 
+    def setup_method(self):
+        self.bite_calc = BiteCalculatorService(TimeService(), PotionService())
+
     def test_groundbait_expires_by_game_time(self, player, location, groundbait, game_time):
         """Прикормка истекает по игровому времени."""
         game_time.current_hour = 10
@@ -707,7 +717,7 @@ class TestGroundbaitMechanics:
         player.current_location = location
         player.save(update_fields=['current_location'])
 
-        chance_without = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_without = self.bite_calc.calculate_bite_chance(player, location, player_rod)
 
         GroundbaitSpot.objects.create(
             player=player, location=location, groundbait=groundbait,
@@ -715,7 +725,7 @@ class TestGroundbaitMechanics:
             expires_at_day=game_time.current_day if (game_time.current_hour + 3) < 24 else game_time.current_day + 1,
         )
 
-        chance_with = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_with = self.bite_calc.calculate_bite_chance(player, location, player_rod)
         assert chance_with > chance_without
 
 
@@ -776,10 +786,10 @@ class TestStatusPolling:
         assert 'line_tension' in fight_data
         assert 'distance' in fight_data
 
-    @patch('apps.fishing.views.try_bite', return_value=True)
-    @patch('apps.fishing.views.select_fish')
-    @patch('apps.fishing.views.generate_fish_weight', return_value=1.2)
-    @patch('apps.fishing.views.generate_fish_length', return_value=22.0)
+    @patch.object(BiteCalculatorService, 'try_bite', return_value=True)
+    @patch.object(FishSelectorService, 'select_fish')
+    @patch.object(FishSelectorService, 'generate_fish_weight', return_value=1.2)
+    @patch.object(FishSelectorService, 'generate_fish_length', return_value=22.0)
     def test_status_triggers_bite(self, mock_length, mock_weight, mock_select, mock_bite,
                                    api_client, fishing_session_waiting, fish_species):
         """Polling может перевести WAITING → BITE."""
@@ -837,10 +847,10 @@ class TestRetrieveMechanics:
 class TestFullFishingCycle:
     """Интеграционный тест: полный цикл ловли."""
 
-    @patch('apps.fishing.views.try_bite', return_value=True)
-    @patch('apps.fishing.views.select_fish')
-    @patch('apps.fishing.views.generate_fish_weight', return_value=0.8)
-    @patch('apps.fishing.views.generate_fish_length', return_value=18.0)
+    @patch.object(BiteCalculatorService, 'try_bite', return_value=True)
+    @patch.object(FishSelectorService, 'select_fish')
+    @patch.object(FishSelectorService, 'generate_fish_weight', return_value=0.8)
+    @patch.object(FishSelectorService, 'generate_fish_length', return_value=18.0)
     def test_full_cycle_cast_to_keep(self, mock_length, mock_weight, mock_select, mock_bite,
                                       api_client, player, location, player_rod,
                                       fish_species, location_fish, game_time):
@@ -890,10 +900,10 @@ class TestFullFishingCycle:
         assert CaughtFish.objects.filter(player=player, species=fish_species).exists()
         assert not FishingSession.objects.filter(pk=session_id).exists()
 
-    @patch('apps.fishing.views.try_bite', return_value=True)
-    @patch('apps.fishing.views.select_fish')
-    @patch('apps.fishing.views.generate_fish_weight', return_value=2.0)
-    @patch('apps.fishing.views.generate_fish_length', return_value=30.0)
+    @patch.object(BiteCalculatorService, 'try_bite', return_value=True)
+    @patch.object(FishSelectorService, 'select_fish')
+    @patch.object(FishSelectorService, 'generate_fish_weight', return_value=2.0)
+    @patch.object(FishSelectorService, 'generate_fish_length', return_value=30.0)
     def test_full_cycle_cast_to_release(self, mock_length, mock_weight, mock_select, mock_bite,
                                          api_client, player, location, player_rod,
                                          fish_species, location_fish, game_time):
@@ -942,6 +952,9 @@ class TestFullFishingCycle:
 class TestBiteCalculatorEdgeCases:
     """Граничные случаи расчёта поклёвки."""
 
+    def setup_method(self):
+        self.bite_calc = BiteCalculatorService(TimeService(), PotionService())
+
     def test_chance_capped_at_50_percent(self, player, location, player_rod, location_fish, game_time):
         """Шанс поклёвки не превышает 50%."""
         player.rank = 100
@@ -949,7 +962,7 @@ class TestBiteCalculatorEdgeCases:
         player.hunger = 100
         player.save()
 
-        chance = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance = self.bite_calc.calculate_bite_chance(player, location, player_rod)
         assert chance <= 0.5
 
     def test_empty_location_returns_positive_chance(self, player, location, player_rod, game_time):
@@ -958,18 +971,18 @@ class TestBiteCalculatorEdgeCases:
         player.save(update_fields=['current_location'])
 
         # Без location_fish — нет рыб, но tod модификатор по дефолту
-        chance = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance = self.bite_calc.calculate_bite_chance(player, location, player_rod)
         assert chance >= 0.0
 
     def test_zero_hunger_reduces_chance(self, player, location, player_rod, location_fish, game_time):
         """Голод 0 снижает шанс до 0.7x."""
         player.hunger = 100
         player.save()
-        chance_full = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_full = self.bite_calc.calculate_bite_chance(player, location, player_rod)
 
         player.hunger = 0
         player.save()
-        chance_hungry = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_hungry = self.bite_calc.calculate_bite_chance(player, location, player_rod)
 
         # Соотношение: hungry/full ≈ 0.7
         ratio = chance_hungry / chance_full if chance_full > 0 else 0
@@ -980,22 +993,25 @@ class TestBiteCalculatorEdgeCases:
 class TestFishSelectorEdgeCases:
     """Граничные случаи выбора рыбы."""
 
+    def setup_method(self):
+        self.selector = FishSelectorService(TimeService(), PotionService())
+
     def test_empty_location_returns_none(self, location, player_rod):
         """Пустая локация — None."""
-        result = fish_selector.select_fish(location, player_rod)
+        result = self.selector.select_fish(location, player_rod)
         assert result is None
 
     def test_weight_always_in_range(self, fish_species):
         """Вес рыбы всегда в пределах min-max."""
         for _ in range(50):
-            w = fish_selector.generate_fish_weight(fish_species)
+            w = self.selector.generate_fish_weight(fish_species)
             assert fish_species.weight_min <= w <= fish_species.weight_max
 
     def test_length_always_in_range(self, fish_species):
         """Длина рыбы всегда в пределах min-max."""
         for _ in range(50):
-            w = fish_selector.generate_fish_weight(fish_species)
-            l = fish_selector.generate_fish_length(fish_species, w)
+            w = self.selector.generate_fish_weight(fish_species)
+            l = self.selector.generate_fish_length(fish_species, w)
             assert fish_species.length_min <= l <= fish_species.length_max
 
 
@@ -1003,17 +1019,20 @@ class TestFishSelectorEdgeCases:
 class TestFightEngineEdgeCases:
     """Граничные случаи вываживания."""
 
+    def setup_method(self):
+        self.engine = FightEngineService()
+
     def test_create_fight_common_vs_legendary(self, fishing_session_waiting, fish_species):
         """Легендарная рыба в 3x сильнее обычной."""
         fish_species.rarity = 'common'
         fish_species.save()
-        fight_c = fight_engine.create_fight(fishing_session_waiting, 1.0, fish_species)
+        fight_c = self.engine.create_fight(fishing_session_waiting, 1.0, fish_species)
         strength_c = fight_c.fish_strength
         fight_c.delete()
 
         fish_species.rarity = 'legendary'
         fish_species.save()
-        fight_l = fight_engine.create_fight(fishing_session_waiting, 1.0, fish_species)
+        fight_l = self.engine.create_fight(fishing_session_waiting, 1.0, fish_species)
         strength_l = fight_l.fish_strength
 
         assert strength_l == strength_c * 3.0
@@ -1021,7 +1040,7 @@ class TestFightEngineEdgeCases:
     def test_fight_distance_range(self, fishing_session_waiting, fish_species):
         """Начальная дистанция всегда 10-30м."""
         for _ in range(20):
-            fight = fight_engine.create_fight(fishing_session_waiting, 1.0, fish_species)
+            fight = self.engine.create_fight(fishing_session_waiting, 1.0, fish_species)
             assert 10 <= fight.distance <= 30
             fight.delete()
 
@@ -1034,7 +1053,7 @@ class TestFightEngineEdgeCases:
         fight.save()
 
         for _ in range(10):
-            result = fight_engine.wait_action(fight)
+            result = self.engine.wait_action(fight)
             fight.refresh_from_db()
             if result != 'fighting':
                 break
@@ -1049,7 +1068,7 @@ class TestFightEngineEdgeCases:
         fight.distance = 100
         fight.save()
 
-        fight_engine.wait_action(fight)
+        self.engine.wait_action(fight)
         fight.refresh_from_db()
 
         assert fight.line_tension >= 0
@@ -1062,7 +1081,7 @@ class TestFightEngineEdgeCases:
         fight.line_tension = 5
         fight.save()
 
-        fight_engine.reel_in(fight)
+        self.engine.reel_in(fight)
         fight.refresh_from_db()
 
         assert fight.distance >= 0

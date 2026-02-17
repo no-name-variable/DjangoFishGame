@@ -12,4 +12,5 @@ pytest>=8.0,<9.0
 pytest-django>=4.8,<5.0
 channels[daphne]>=4.1,<5.0
 channels-redis>=4.2,<5.0
+punq>=0.7,<1.0
 

@@ -3,7 +3,7 @@
 import pytest
 from decimal import Decimal
 
-from apps.records.services import check_record, check_achievements
+from apps.records.services import RecordService
 from apps.records.models import FishRecord, Achievement, PlayerAchievement
 from apps.inventory.models import CaughtFish
 from apps.quests.models import Quest, PlayerQuest
@@ -13,9 +13,12 @@ from apps.quests.models import Quest, PlayerQuest
 class TestCheckRecord:
     """Тесты проверки рекордов."""
 
+    def setup_method(self):
+        self.svc = RecordService()
+
     def test_first_record_created(self, player, fish_species, location):
         """Первая пойманная рыба автоматически становится рекордом."""
-        record = check_record(player, fish_species, 1.5, 25.0, location)
+        record = self.svc.check_record(player, fish_species, 1.5, 25.0, location)
 
         assert record is not None
         assert record.player == player
@@ -33,7 +36,7 @@ class TestCheckRecord:
         )
 
         # Пытаемся установить новый рекорд
-        record = check_record(player, fish_species, 2.0, 30.0, location)
+        record = self.svc.check_record(player, fish_species, 2.0, 30.0, location)
 
         assert record is not None
         assert record.weight == 2.0
@@ -47,7 +50,7 @@ class TestCheckRecord:
         )
 
         # Пытаемся установить рекорд меньшей рыбой
-        record = check_record(player, fish_species, 1.5, 25.0, location)
+        record = self.svc.check_record(player, fish_species, 1.5, 25.0, location)
 
         assert record is None
 
@@ -58,7 +61,7 @@ class TestCheckRecord:
             weight=1.5, length=25.0, location=location,
         )
 
-        record = check_record(player, fish_species, 1.5, 25.0, location)
+        record = self.svc.check_record(player, fish_species, 1.5, 25.0, location)
         assert record is None
 
     def test_record_by_different_player(self, player, fish_species, location):
@@ -79,7 +82,7 @@ class TestCheckRecord:
         )
 
         # Второй игрок бьёт рекорд
-        record = check_record(other_player, fish_species, 2.0, 30.0, location)
+        record = self.svc.check_record(other_player, fish_species, 2.0, 30.0, location)
 
         assert record is not None
         assert record.player == other_player
@@ -89,9 +92,12 @@ class TestCheckRecord:
 class TestCheckAchievements:
     """Тесты проверки достижений."""
 
+    def setup_method(self):
+        self.svc = RecordService()
+
     def test_no_achievements_initially(self, player):
         """Без достижений в базе ничего не выдаётся."""
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
     def test_fish_count_achievement(self, player, fish_species, location):
@@ -107,7 +113,7 @@ class TestCheckAchievements:
         )
 
         # Ещё не поймали
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
         # Поймали рыбу
@@ -116,7 +122,7 @@ class TestCheckAchievements:
             weight=1.0, length=20.0, location=location,
         )
 
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 1
         assert unlocked[0].achievement == achievement
 
@@ -140,7 +146,7 @@ class TestCheckAchievements:
             weight=1.0, length=20.0, location=location,
         )
 
-        check_achievements(player)
+        self.svc.check_achievements(player)
         player.refresh_from_db()
 
         assert player.money == initial_money + Decimal('100.00')
@@ -174,12 +180,12 @@ class TestCheckAchievements:
         CaughtFish.objects.create(player=player, species=species1, weight=0.5, length=10, location=location)
         CaughtFish.objects.create(player=player, species=species2, weight=0.5, length=10, location=location)
 
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
         CaughtFish.objects.create(player=player, species=species3, weight=0.5, length=10, location=location)
 
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 1
         assert unlocked[0].achievement == achievement
 
@@ -194,11 +200,11 @@ class TestCheckAchievements:
         )
 
         CaughtFish.objects.create(player=player, species=fish_species, weight=50.0, length=50, location=location)
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
         CaughtFish.objects.create(player=player, species=fish_species, weight=50.0, length=50, location=location)
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 1
 
     def test_rank_achievement(self, player):
@@ -213,12 +219,12 @@ class TestCheckAchievements:
 
         player.rank = 9
         player.save()
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
         player.rank = 10
         player.save()
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 1
 
     def test_karma_achievement(self, player):
@@ -233,12 +239,12 @@ class TestCheckAchievements:
 
         player.karma = 499
         player.save()
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
         player.karma = 500
         player.save()
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 1
 
     def test_quest_count_achievement(self, player):
@@ -263,7 +269,7 @@ class TestCheckAchievements:
                 player=player, quest=quest, status='completed',
             )
 
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
         quest = Quest.objects.create(
@@ -272,7 +278,7 @@ class TestCheckAchievements:
         )
         PlayerQuest.objects.create(player=player, quest=quest, status='completed')
 
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 1
 
     def test_record_achievement(self, player, fish_species, location):
@@ -297,7 +303,7 @@ class TestCheckAchievements:
                 weight=1.0, length=20.0, location=location,
             )
 
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
         species = FishSpecies.objects.create(
@@ -309,7 +315,7 @@ class TestCheckAchievements:
             weight=1.0, length=20.0, location=location,
         )
 
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 1
 
     def test_achievement_not_duplicated(self, player, fish_species, location):
@@ -328,11 +334,11 @@ class TestCheckAchievements:
         )
 
         # Первая проверка
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 1
 
         # Вторая проверка
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 0
 
     def test_multiple_achievements_unlocked(self, player, fish_species, location):
@@ -353,5 +359,5 @@ class TestCheckAchievements:
         player.rank = 1
         player.save()
 
-        unlocked = check_achievements(player)
+        unlocked = self.svc.check_achievements(player)
         assert len(unlocked) == 2

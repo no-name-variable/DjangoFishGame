@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import patch
 
-from apps.potions.services import drop_marine_star, has_active_potion, get_potion_effect_value
+from apps.potions.services import PotionService
 from apps.potions.models import MarineStar, PlayerStar, Potion, PlayerPotion
 
 
@@ -38,9 +38,12 @@ def potion_rank(db):
 class TestDropMarineStar:
     """Тесты дропа морских звёзд."""
 
+    def setup_method(self):
+        self.svc = PotionService()
+
     def test_no_stars_in_database(self, player):
         """Без звёзд в базе ничего не дропается."""
-        result = drop_marine_star(player)
+        result = self.svc.drop_marine_star(player)
         assert result is None
 
     @patch('random.random')
@@ -48,7 +51,7 @@ class TestDropMarineStar:
         """Звезда дропается при успешной проверке вероятности."""
         mock_random.return_value = 0.01  # меньше чем drop_chance
 
-        result = drop_marine_star(player)
+        result = self.svc.drop_marine_star(player)
 
         assert result is not None
         assert result['star_color'] == 'red'
@@ -63,7 +66,7 @@ class TestDropMarineStar:
         """Звезда не дропается при неудачной проверке."""
         mock_random.return_value = 0.99  # больше чем drop_chance
 
-        result = drop_marine_star(player)
+        result = self.svc.drop_marine_star(player)
 
         assert result is None
         assert not PlayerStar.objects.filter(player=player).exists()
@@ -74,7 +77,7 @@ class TestDropMarineStar:
         PlayerStar.objects.create(player=player, star=marine_star_red, quantity=5)
         mock_random.return_value = 0.01
 
-        drop_marine_star(player)
+        self.svc.drop_marine_star(player)
 
         ps = PlayerStar.objects.get(player=player, star=marine_star_red)
         assert ps.quantity == 6
@@ -85,7 +88,7 @@ class TestDropMarineStar:
         # Первая звезда дропнется, вторая не проверится
         mock_random.side_effect = [0.01, 0.99]
 
-        result = drop_marine_star(player)
+        result = self.svc.drop_marine_star(player)
 
         assert result is not None
         # Проверяем что только красная звезда дропнулась
@@ -104,7 +107,7 @@ class TestDropMarineStar:
         # Запускаем много раз для статистики
         drops = {'white': 0, 'gold': 0, 'none': 0}
         for _ in range(1000):
-            result = drop_marine_star(player)
+            result = self.svc.drop_marine_star(player)
             if result:
                 drops[result['star_color']] += 1
             else:
@@ -119,9 +122,12 @@ class TestDropMarineStar:
 class TestHasActivePotion:
     """Тесты проверки активных зелий."""
 
+    def setup_method(self):
+        self.svc = PotionService()
+
     def test_no_potions(self, player):
         """Без зелий возвращается None."""
-        result = has_active_potion(player, 'luck')
+        result = self.svc.has_active_potion(player, 'luck')
         assert result is None
 
     def test_active_potion_exists(self, player, potion_luck, game_time):
@@ -135,7 +141,7 @@ class TestHasActivePotion:
             expires_at_day=game_time.current_day,
         )
 
-        result = has_active_potion(player, 'luck')
+        result = self.svc.has_active_potion(player, 'luck')
         assert result is not None
         assert result == potion_luck
 
@@ -151,7 +157,7 @@ class TestHasActivePotion:
             expires_at_day=game_time.current_day - 1,
         )
 
-        result = has_active_potion(player, 'luck')
+        result = self.svc.has_active_potion(player, 'luck')
         assert result is None
 
     def test_wrong_effect_type(self, player, potion_luck, game_time):
@@ -165,7 +171,7 @@ class TestHasActivePotion:
             expires_at_day=game_time.current_day,
         )
 
-        result = has_active_potion(player, 'invisibility')
+        result = self.svc.has_active_potion(player, 'invisibility')
         assert result is None
 
     def test_multiple_active_potions_same_type(self, player, game_time):
@@ -194,7 +200,7 @@ class TestHasActivePotion:
             expires_at_day=game_time.current_day,
         )
 
-        result = has_active_potion(player, 'luck')
+        result = self.svc.has_active_potion(player, 'luck')
         assert result in (potion1, potion2)
 
 
@@ -202,9 +208,12 @@ class TestHasActivePotion:
 class TestGetPotionEffectValue:
     """Тесты получения значения эффекта зелья."""
 
+    def setup_method(self):
+        self.svc = PotionService()
+
     def test_no_active_potion(self, player):
         """Без активного зелья возвращается None."""
-        value = get_potion_effect_value(player, 'luck')
+        value = self.svc.get_potion_effect_value(player, 'luck')
         assert value is None
 
     def test_returns_effect_value(self, player, potion_luck, game_time):
@@ -218,7 +227,7 @@ class TestGetPotionEffectValue:
             expires_at_day=game_time.current_day,
         )
 
-        value = get_potion_effect_value(player, 'luck')
+        value = self.svc.get_potion_effect_value(player, 'luck')
         assert value == 1.3
 
     def test_expired_potion_returns_none(self, player, potion_luck, game_time):
@@ -232,7 +241,7 @@ class TestGetPotionEffectValue:
             expires_at_day=game_time.current_day - 1,
         )
 
-        value = get_potion_effect_value(player, 'luck')
+        value = self.svc.get_potion_effect_value(player, 'luck')
         assert value is None
 
     def test_different_effect_types(self, player, game_time):
@@ -261,8 +270,8 @@ class TestGetPotionEffectValue:
             expires_at_day=game_time.current_day,
         )
 
-        luck_value = get_potion_effect_value(player, 'luck')
-        rarity_value = get_potion_effect_value(player, 'rarity')
+        luck_value = self.svc.get_potion_effect_value(player, 'luck')
+        rarity_value = self.svc.get_potion_effect_value(player, 'rarity')
 
         assert luck_value == 1.3
         assert rarity_value == 2.0
@@ -271,5 +280,5 @@ class TestGetPotionEffectValue:
         """Одноразовое зелье (без длительности)."""
         # Одноразовые зелья не создают PlayerPotion записи
         # Их эффект применяется сразу
-        value = get_potion_effect_value(player, 'rank_boost')
+        value = self.svc.get_potion_effect_value(player, 'rank_boost')
         assert value is None

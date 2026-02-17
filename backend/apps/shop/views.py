@@ -1,12 +1,12 @@
 """Views магазина."""
 
-from django.contrib.contenttypes.models import ContentType
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.inventory.models import CaughtFish, InventoryItem
-from apps.tackle.models import Bait, FloatTackle, Food, Groundbait, Hook, Line, Lure, Reel, RodType, Flavoring
+from apps.tackle.models import (
+    Bait, FloatTackle, Food, Groundbait, Hook, Line, Lure, Reel, RodType, Flavoring,
+)
 from apps.tackle.serializers import (
     BaitSerializer, FloatTackleSerializer, FoodSerializer, GroundbaitSerializer,
     HookSerializer, LineSerializer, LureSerializer, ReelSerializer, RodTypeSerializer,
@@ -14,6 +14,8 @@ from apps.tackle.serializers import (
 )
 
 from .serializers import BuySerializer, SellFishSerializer
+from .use_cases.buy_item import BuyItemUseCase
+from .use_cases.sell_fish import SellFishUseCase
 
 # Маппинг категорий на модели и сериализаторы
 SHOP_CATEGORIES = {
@@ -29,12 +31,11 @@ SHOP_CATEGORIES = {
     'food': (Food, FoodSerializer),
 }
 
-# Маппинг item_type на модели
-ITEM_TYPE_MAP = {
-    'rod': RodType, 'reel': Reel, 'line': Line, 'hook': Hook,
-    'float': FloatTackle, 'lure': Lure, 'bait': Bait,
-    'groundbait': Groundbait, 'flavoring': Flavoring, 'food': Food,
-}
+
+def _resolve(use_case_cls):
+    """Резолвит use case из DI-контейнера."""
+    from config.container import container
+    return container.resolve(use_case_cls)
 
 
 class ShopCategoryView(APIView):
@@ -59,44 +60,28 @@ class ShopBuyView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        player = request.user.player
-        model_class = ITEM_TYPE_MAP.get(data['item_type'])
-        if not model_class:
-            return Response({'error': 'Неизвестный тип.'}, status=status.HTTP_400_BAD_REQUEST)
-
+        uc = _resolve(BuyItemUseCase)
         try:
-            item = model_class.objects.get(pk=data['item_id'])
-        except model_class.DoesNotExist:
-            return Response({'error': 'Товар не найден.'}, status=status.HTTP_404_NOT_FOUND)
-
-        total_cost = item.price * data['quantity']
-        if player.money < total_cost:
-            return Response({'error': 'Недостаточно денег.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Проверка разряда для удилищ
-        if hasattr(item, 'min_rank') and player.rank < item.min_rank:
-            return Response(
-                {'error': f'Требуется разряд {item.min_rank}.'},
-                status=status.HTTP_403_FORBIDDEN,
+            result = uc.execute(
+                request.user.player,
+                item_type=data['item_type'],
+                item_id=data['item_id'],
+                quantity=data['quantity'],
             )
-
-        player.money -= total_cost
-        player.save(update_fields=['money'])
-
-        ct = ContentType.objects.get_for_model(item)
-        inv_item, created = InventoryItem.objects.get_or_create(
-            player=player, content_type=ct, object_id=item.pk,
-            defaults={'quantity': data['quantity']},
-        )
-        if not created:
-            inv_item.quantity += data['quantity']
-            inv_item.save(update_fields=['quantity'])
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            if 'не найден' in str(e):
+                return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
+            raise
 
         return Response({
             'status': 'ok',
-            'item': str(item),
-            'quantity': data['quantity'],
-            'money_left': float(player.money),
+            'item': result.item_name,
+            'quantity': result.quantity,
+            'money_left': result.money_left,
         })
 
 
@@ -107,25 +92,15 @@ class SellFishView(APIView):
         serializer = SellFishSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        player = request.user.player
-        fish_qs = CaughtFish.objects.filter(
-            player=player, pk__in=serializer.validated_data['fish_ids'],
-            is_sold=False, is_released=False,
-        )
-
-        if not fish_qs.exists():
-            return Response({'error': 'Рыба не найдена в садке.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        total_money = sum(f.sell_price for f in fish_qs)
-        count = fish_qs.count()
-
-        fish_qs.update(is_sold=True)
-        player.money += total_money
-        player.save(update_fields=['money'])
+        uc = _resolve(SellFishUseCase)
+        try:
+            result = uc.execute(request.user.player, serializer.validated_data['fish_ids'])
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             'status': 'ok',
-            'fish_sold': count,
-            'money_earned': total_money,
-            'money_total': float(player.money),
+            'fish_sold': result.fish_sold,
+            'money_earned': result.money_earned,
+            'money_total': result.money_total,
         })

@@ -4,7 +4,7 @@ import pytest
 from decimal import Decimal
 from unittest.mock import patch
 
-from apps.inspection.services import inspect_player
+from apps.inspection.services import InspectionService
 from apps.inspection.models import FishInspection
 from apps.inventory.models import CaughtFish
 from apps.tackle.models import FishSpecies
@@ -13,6 +13,9 @@ from apps.tackle.models import FishSpecies
 @pytest.mark.django_db
 class TestInspectPlayer:
     """Тесты проверки рыбнадзора."""
+
+    def setup_method(self):
+        self.svc = InspectionService()
 
     def test_no_violations_clean_creel(self, player, fish_species, location):
         """Проверка без нарушений."""
@@ -24,7 +27,7 @@ class TestInspectPlayer:
             weight=1.5, length=25, location=location,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is False
         assert inspection.fine_amount == Decimal('0')
@@ -43,7 +46,7 @@ class TestInspectPlayer:
                 weight=1.5, length=25, location=location,
             )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is True
         assert inspection.violation_type == 'creel_limit'
@@ -61,7 +64,7 @@ class TestInspectPlayer:
             weight=0.1, length=8, location=location,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is True
         assert inspection.violation_type == 'size_limit'
@@ -79,7 +82,7 @@ class TestInspectPlayer:
                 weight=0.1, length=8, location=location,
             )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is True
         assert inspection.fine_amount == Decimal('600')  # 200 * 3
@@ -101,7 +104,7 @@ class TestInspectPlayer:
             weight=50.0, length=200, location=location,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is True
         assert inspection.violation_type == 'forbidden_species'
@@ -139,7 +142,7 @@ class TestInspectPlayer:
             weight=30.0, length=180, location=location,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         # Размерное + запрещённый вид
         assert inspection.violation_found is True
@@ -159,7 +162,7 @@ class TestInspectPlayer:
             weight=0.1, length=8, location=location,
         )
 
-        inspect_player(player)
+        self.svc.inspect_player(player)
 
         player.refresh_from_db()
         assert player.money == Decimal('800.00')  # 1000 - 200
@@ -177,7 +180,7 @@ class TestInspectPlayer:
             weight=0.1, length=8, location=location,
         )
 
-        inspect_player(player)
+        self.svc.inspect_player(player)
 
         player.refresh_from_db()
         assert player.money == Decimal('0.00')
@@ -193,7 +196,7 @@ class TestInspectPlayer:
             is_sold=True,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is False
 
@@ -208,7 +211,7 @@ class TestInspectPlayer:
             is_released=True,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is False
 
@@ -222,7 +225,7 @@ class TestInspectPlayer:
             weight=1.5, length=25, location=location,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert FishInspection.objects.filter(player=player).exists()
         assert inspection.location == location
@@ -238,7 +241,7 @@ class TestInspectPlayer:
             weight=0.1, length=8, location=location,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.details != ''
         assert 'Размерное' in inspection.details
@@ -256,7 +259,7 @@ class TestInspectPlayer:
             weight=0.5, length=15, location=location,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is False
 
@@ -273,7 +276,7 @@ class TestInspectPlayer:
             weight=1.5, length=25, location=location,
         )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is False
         assert 'forbidden' not in inspection.violation_type
@@ -290,6 +293,6 @@ class TestInspectPlayer:
                 weight=1.5, length=25, location=location,
             )
 
-        inspection = inspect_player(player)
+        inspection = self.svc.inspect_player(player)
 
         assert inspection.violation_found is False

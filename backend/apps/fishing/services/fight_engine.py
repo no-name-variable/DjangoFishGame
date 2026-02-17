@@ -5,79 +5,77 @@ import random
 from apps.fishing.models import FightState
 
 
-def create_fight(session, fish_weight, fish_species):
-    """Создать состояние вываживания."""
-    # Сила рыбы зависит от веса и редкости
-    rarity_mult = {
-        'common': 1.0, 'uncommon': 1.2, 'rare': 1.5,
-        'trophy': 2.0, 'legendary': 3.0,
-    }
-    strength = fish_weight * 3 * rarity_mult.get(fish_species.rarity, 1.0)
+class FightEngineService:
+    """Движок вываживания: создание боя, подмотка, подтяжка, ожидание."""
 
-    # Дистанция зависит от точки заброса (упрощённо — от 10 до 30 м)
-    distance = random.uniform(10, 30)
+    def create_fight(self, session, fish_weight, fish_species):
+        """Создать состояние вываживания."""
+        # Сила рыбы зависит от веса и редкости
+        rarity_mult = {
+            'common': 1.0, 'uncommon': 1.2, 'rare': 1.5,
+            'trophy': 2.0, 'legendary': 3.0,
+        }
+        strength = fish_weight * 3 * rarity_mult.get(fish_species.rarity, 1.0)
 
-    fight = FightState.objects.create(
-        session=session,
-        fish_strength=strength,
-        line_tension=20,
-        distance=distance,
-        rod_durability=session.rod.durability_current,
-    )
-    return fight
+        # Дистанция зависит от точки заброса (упрощённо — от 10 до 30 м)
+        distance = random.uniform(10, 30)
 
+        fight = FightState.objects.create(
+            session=session,
+            fish_strength=strength,
+            line_tension=20,
+            distance=distance,
+            rod_durability=session.rod.durability_current,
+        )
+        return fight
 
-def reel_in(fight):
-    """
-    Подмотка — приближает рыбу, увеличивает натяжение.
-    Возвращает результат: 'fighting', 'caught', 'line_break', 'rod_break'.
-    """
-    rod = fight.session.rod
+    def reel_in(self, fight):
+        """
+        Подмотка — приближает рыбу, увеличивает натяжение.
+        Возвращает результат: 'fighting', 'caught', 'line_break', 'rod_break'.
+        """
+        rod = fight.session.rod
 
-    # Тяга катушки
-    reel_power = rod.reel.drag_power if rod.reel else 2.0
-    pull_distance = reel_power * random.uniform(0.5, 1.5)
-    fight.distance = max(0, fight.distance - pull_distance)
+        # Тяга катушки
+        reel_power = rod.reel.drag_power if rod.reel else 2.0
+        pull_distance = reel_power * random.uniform(0.5, 1.5)
+        fight.distance = max(0, fight.distance - pull_distance)
 
-    # Натяжение увеличивается
-    tension_add = fight.fish_strength * random.uniform(0.3, 1.0)
-    fight.line_tension = min(100, fight.line_tension + tension_add)
+        # Натяжение увеличивается
+        tension_add = fight.fish_strength * random.uniform(0.3, 1.0)
+        fight.line_tension = min(100, fight.line_tension + tension_add)
 
-    # Рыба сопротивляется
-    _fish_action(fight)
+        # Рыба сопротивляется
+        _fish_action(fight)
 
-    fight.save()
-    return _check_result(fight)
+        fight.save()
+        return _check_result(fight)
 
+    def pull_rod(self, fight):
+        """Подтяжка удилищем — сильнее приближает, больше нагрузка."""
+        rod = fight.session.rod
+        reel_power = rod.reel.drag_power if rod.reel else 2.0
+        pull_distance = reel_power * random.uniform(1.0, 2.0)
+        fight.distance = max(0, fight.distance - pull_distance)
 
-def pull_rod(fight):
-    """
-    Подтяжка удилищем — сильнее приближает, больше нагрузка.
-    """
-    rod = fight.session.rod
-    reel_power = rod.reel.drag_power if rod.reel else 2.0
-    pull_distance = reel_power * random.uniform(1.0, 2.0)
-    fight.distance = max(0, fight.distance - pull_distance)
+        # Больше натяжение
+        tension_add = fight.fish_strength * random.uniform(0.5, 1.5)
+        fight.line_tension = min(100, fight.line_tension + tension_add)
 
-    # Больше натяжение
-    tension_add = fight.fish_strength * random.uniform(0.5, 1.5)
-    fight.line_tension = min(100, fight.line_tension + tension_add)
+        # Износ удилища
+        fight.rod_durability -= 1
 
-    # Износ удилища
-    fight.rod_durability -= 1
+        _fish_action(fight)
 
-    _fish_action(fight)
+        fight.save()
+        return _check_result(fight)
 
-    fight.save()
-    return _check_result(fight)
-
-
-def wait_action(fight):
-    """Ожидание — натяжение снижается, рыба может дёрнуть."""
-    fight.line_tension = max(0, fight.line_tension - 5)
-    _fish_action(fight)
-    fight.save()
-    return _check_result(fight)
+    def wait_action(self, fight):
+        """Ожидание — натяжение снижается, рыба может дёрнуть."""
+        fight.line_tension = max(0, fight.line_tension - 5)
+        _fish_action(fight)
+        fight.save()
+        return _check_result(fight)
 
 
 def _fish_action(fight):

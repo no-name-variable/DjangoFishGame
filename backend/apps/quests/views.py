@@ -6,6 +6,14 @@ from rest_framework.views import APIView
 
 from .models import PlayerQuest, Quest
 from .serializers import AcceptQuestSerializer, PlayerQuestSerializer, QuestSerializer
+from .use_cases.accept_quest import AcceptQuestUseCase
+from .use_cases.claim_reward import ClaimQuestRewardUseCase
+
+
+def _resolve(use_case_cls):
+    """Резолвит use case из DI-контейнера."""
+    from config.container import container
+    return container.resolve(use_case_cls)
 
 
 class AvailableQuestsView(generics.ListAPIView):
@@ -40,32 +48,15 @@ class AcceptQuestView(APIView):
     def post(self, request):
         serializer = AcceptQuestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        player = request.user.player
-        quest_id = serializer.validated_data['quest_id']
 
+        uc = _resolve(AcceptQuestUseCase)
         try:
-            quest = Quest.objects.get(pk=quest_id)
+            pq = uc.execute(request.user.player, serializer.validated_data['quest_id'])
         except Quest.DoesNotExist:
             return Response({'error': 'Квест не найден.'}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        if quest.min_rank > player.rank:
-            return Response({'error': 'Недостаточный разряд.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if quest.prerequisite_quest_id:
-            has_prereq = PlayerQuest.objects.filter(
-                player=player, quest=quest.prerequisite_quest,
-                status__in=[PlayerQuest.Status.COMPLETED, PlayerQuest.Status.CLAIMED],
-            ).exists()
-            if not has_prereq:
-                return Response(
-                    {'error': 'Сначала выполните предварительный квест.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        if PlayerQuest.objects.filter(player=player, quest=quest).exists():
-            return Response({'error': 'Квест уже взят.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        pq = PlayerQuest.objects.create(player=player, quest=quest)
         return Response(PlayerQuestSerializer(pq).data, status=status.HTTP_201_CREATED)
 
 
@@ -73,30 +64,17 @@ class ClaimQuestRewardView(APIView):
     """Получить награду за выполненный квест."""
 
     def post(self, request, pk):
+        uc = _resolve(ClaimQuestRewardUseCase)
         try:
-            pq = PlayerQuest.objects.select_related('quest').get(
-                pk=pk, player=request.user.player,
-            )
+            result = uc.execute(request.user.player, pk)
         except PlayerQuest.DoesNotExist:
             return Response({'error': 'Квест не найден.'}, status=status.HTTP_404_NOT_FOUND)
-
-        if pq.status != PlayerQuest.Status.COMPLETED:
-            return Response({'error': 'Квест ещё не завершён.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        player = request.user.player
-        quest = pq.quest
-
-        player.money += quest.reward_money
-        player.karma += quest.reward_karma
-        player.add_experience(quest.reward_experience)
-        player.save(update_fields=['money', 'karma', 'rank', 'experience'])
-
-        pq.status = PlayerQuest.Status.CLAIMED
-        pq.save(update_fields=['status'])
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'message': f'Награда за "{quest.name}" получена!',
-            'reward_money': quest.reward_money,
-            'reward_experience': quest.reward_experience,
-            'reward_karma': quest.reward_karma,
+            'message': f'Награда за "{result.quest_name}" получена!',
+            'reward_money': result.reward_money,
+            'reward_experience': result.reward_experience,
+            'reward_karma': result.reward_karma,
         })

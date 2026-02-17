@@ -4,9 +4,13 @@ import pytest
 from decimal import Decimal
 from unittest.mock import patch
 
-from apps.fishing.services import bite_calculator, fight_engine, fish_selector, time_service
+from apps.fishing.services.bite_calculator import BiteCalculatorService
+from apps.fishing.services.fight_engine import FightEngineService
+from apps.fishing.services.fish_selector import FishSelectorService
+from apps.fishing.services.time_service import TimeService
 from apps.fishing.models import FishingSession, FightState, GroundbaitSpot
 from apps.potions.models import PlayerPotion
+from apps.potions.services import PotionService
 
 
 # ──────────────────────── time_service ────────────────────────
@@ -15,25 +19,28 @@ from apps.potions.models import PlayerPotion
 class TestTimeService:
     """Тесты игрового времени и фаз суток."""
 
+    def setup_method(self):
+        self.svc = TimeService()
+
     def test_get_time_of_day_morning(self, game_time):
         game_time.current_hour = 6
         game_time.save()
-        assert time_service.get_time_of_day() == 'morning'
+        assert self.svc.get_time_of_day() == 'morning'
 
     def test_get_time_of_day_day(self, game_time):
         game_time.current_hour = 13
         game_time.save()
-        assert time_service.get_time_of_day() == 'day'
+        assert self.svc.get_time_of_day() == 'day'
 
     def test_get_time_of_day_evening(self, game_time):
         game_time.current_hour = 19
         game_time.save()
-        assert time_service.get_time_of_day() == 'evening'
+        assert self.svc.get_time_of_day() == 'evening'
 
     def test_get_time_of_day_night(self, game_time):
         game_time.current_hour = 2
         game_time.save()
-        assert time_service.get_time_of_day() == 'night'
+        assert self.svc.get_time_of_day() == 'night'
 
     def test_get_time_of_day_modifier_with_active_time(self, fish_species, game_time):
         game_time.current_hour = 6  # morning
@@ -42,7 +49,7 @@ class TestTimeService:
             'morning': 1.5, 'day': 0.8, 'evening': 1.0, 'night': 0.3
         }
         fish_species.save()
-        modifier = time_service.get_time_of_day_modifier(fish_species)
+        modifier = self.svc.get_time_of_day_modifier(fish_species)
         assert modifier == 1.5
 
     def test_get_time_of_day_modifier_default(self, fish_species, game_time):
@@ -50,7 +57,7 @@ class TestTimeService:
         game_time.save()
         fish_species.active_time = {}
         fish_species.save()
-        modifier = time_service.get_time_of_day_modifier(fish_species)
+        modifier = self.svc.get_time_of_day_modifier(fish_species)
         assert modifier == 0.5  # дефолтное значение
 
 
@@ -60,8 +67,11 @@ class TestTimeService:
 class TestBiteCalculator:
     """Тесты расчёта вероятности поклёвки."""
 
+    def setup_method(self):
+        self.svc = BiteCalculatorService(TimeService(), PotionService())
+
     def test_base_chance_calculation(self, player, location, player_rod, location_fish, game_time):
-        chance = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance = self.svc.calculate_bite_chance(player, location, player_rod)
         assert 0.0 <= chance <= 0.5
         assert chance > 0
 
@@ -69,60 +79,60 @@ class TestBiteCalculator:
         # Без совпадения наживки
         player_rod.bait = bait
         player_rod.save()
-        chance_without = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_without = self.svc.calculate_bite_chance(player, location, player_rod)
 
         # С совпадением наживки
         bait.target_species.add(fish_species)
-        chance_with = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_with = self.svc.calculate_bite_chance(player, location, player_rod)
 
         assert chance_with > chance_without
 
     def test_rank_modifier(self, player, location, player_rod, location_fish, game_time):
         player.rank = 0
         player.save()
-        chance_low = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_low = self.svc.calculate_bite_chance(player, location, player_rod)
 
         player.rank = 50
         player.save()
-        chance_high = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_high = self.svc.calculate_bite_chance(player, location, player_rod)
 
         assert chance_high > chance_low
 
     def test_karma_modifier_positive(self, player, location, player_rod, location_fish, game_time):
         player.karma = 0
         player.save()
-        chance_neutral = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_neutral = self.svc.calculate_bite_chance(player, location, player_rod)
 
         player.karma = 500
         player.save()
-        chance_positive = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_positive = self.svc.calculate_bite_chance(player, location, player_rod)
 
         assert chance_positive > chance_neutral
 
     def test_karma_modifier_negative(self, player, location, player_rod, location_fish, game_time):
         player.karma = 0
         player.save()
-        chance_neutral = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_neutral = self.svc.calculate_bite_chance(player, location, player_rod)
 
         player.karma = -100
         player.save()
-        chance_negative = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_negative = self.svc.calculate_bite_chance(player, location, player_rod)
 
         assert chance_negative < chance_neutral
 
     def test_hunger_modifier(self, player, location, player_rod, location_fish, game_time):
         player.hunger = 100
         player.save()
-        chance_full = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_full = self.svc.calculate_bite_chance(player, location, player_rod)
 
         player.hunger = 0
         player.save()
-        chance_hungry = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_hungry = self.svc.calculate_bite_chance(player, location, player_rod)
 
         assert chance_full > chance_hungry
 
     def test_groundbait_modifier(self, player, location, player_rod, groundbait, location_fish, game_time):
-        chance_without = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_without = self.svc.calculate_bite_chance(player, location, player_rod)
 
         # Создаём активную прикормку
         GroundbaitSpot.objects.create(
@@ -131,32 +141,32 @@ class TestBiteCalculator:
             expires_at_day=game_time.current_day,
         )
 
-        chance_with = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_with = self.svc.calculate_bite_chance(player, location, player_rod)
         assert chance_with > chance_without
 
     def test_spinning_speed_modifier_optimal(self, player, location, spinning_rod, location_fish, game_time):
         spinning_rod.retrieve_speed = 5  # оптимальная
         spinning_rod.save()
-        chance_optimal = bite_calculator.calculate_bite_chance(player, location, spinning_rod)
+        chance_optimal = self.svc.calculate_bite_chance(player, location, spinning_rod)
 
         spinning_rod.retrieve_speed = 1  # слишком медленная
         spinning_rod.save()
-        chance_slow = bite_calculator.calculate_bite_chance(player, location, spinning_rod)
+        chance_slow = self.svc.calculate_bite_chance(player, location, spinning_rod)
 
         assert chance_optimal > chance_slow
 
-    @patch('apps.potions.services.get_potion_effect_value')
+    @patch.object(PotionService, 'get_potion_effect_value')
     def test_luck_potion_modifier(self, mock_potion, player, location, player_rod, location_fish, game_time):
         mock_potion.return_value = None
-        chance_without = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_without = self.svc.calculate_bite_chance(player, location, player_rod)
 
         mock_potion.return_value = 1.3
-        chance_with = bite_calculator.calculate_bite_chance(player, location, player_rod)
+        chance_with = self.svc.calculate_bite_chance(player, location, player_rod)
 
         assert chance_with > chance_without
 
     def test_try_bite_returns_boolean(self, player, location, player_rod, location_fish, game_time):
-        result = bite_calculator.try_bite(player, location, player_rod)
+        result = self.svc.try_bite(player, location, player_rod)
         assert isinstance(result, bool)
 
 
@@ -166,13 +176,16 @@ class TestBiteCalculator:
 class TestFishSelector:
     """Тесты выбора вида рыбы при поклёвке."""
 
+    def setup_method(self):
+        self.svc = FishSelectorService(TimeService(), PotionService())
+
     def test_select_fish_returns_species(self, location, player_rod, location_fish):
-        fish = fish_selector.select_fish(location, player_rod)
+        fish = self.svc.select_fish(location, player_rod)
         assert fish is not None
         assert fish.name_ru == 'Карась'
 
     def test_select_fish_empty_location(self, location, player_rod):
-        fish = fish_selector.select_fish(location, player_rod)
+        fish = self.svc.select_fish(location, player_rod)
         assert fish is None
 
     def test_bait_matching_increases_weight(self, location, player_rod, bait, fish_species, location_fish):
@@ -181,7 +194,7 @@ class TestFishSelector:
         bait.target_species.add(fish_species)
 
         # Запускаем несколько раз для статистической проверки
-        results = [fish_selector.select_fish(location, player_rod) for _ in range(10)]
+        results = [self.svc.select_fish(location, player_rod) for _ in range(10)]
         assert all(r == fish_species for r in results if r)
 
     def test_depth_preference_spinning(self, location, spinning_rod, location_fish, fish_species):
@@ -195,7 +208,7 @@ class TestFishSelector:
         spinning_rod.retrieve_speed = 5
         spinning_rod.save()
 
-        fish = fish_selector.select_fish(location, spinning_rod)
+        fish = self.svc.select_fish(location, spinning_rod)
         assert fish is not None
 
     def test_groundbait_target_species_bonus(self, location, player_rod, groundbait, fish_species, location_fish, game_time):
@@ -206,10 +219,10 @@ class TestFishSelector:
             expires_at_day=game_time.current_day,
         )
 
-        fish = fish_selector.select_fish(location, player_rod)
+        fish = self.svc.select_fish(location, player_rod)
         assert fish == fish_species
 
-    @patch('apps.potions.services.get_potion_effect_value')
+    @patch.object(PotionService, 'get_potion_effect_value')
     def test_rarity_potion_modifier(self, mock_potion, location, player_rod, fish_species, location_fish):
         # Создаём редкую рыбу
         rare_fish = fish_species
@@ -218,20 +231,20 @@ class TestFishSelector:
 
         mock_potion.return_value = 2.0  # Удвоение веса редких рыб
 
-        fish = fish_selector.select_fish(location, player_rod)
+        fish = self.svc.select_fish(location, player_rod)
         assert fish is not None
 
     def test_generate_fish_weight_in_range(self, fish_species):
-        weight = fish_selector.generate_fish_weight(fish_species)
+        weight = self.svc.generate_fish_weight(fish_species)
         assert fish_species.weight_min <= weight <= fish_species.weight_max
 
-    @patch('apps.potions.services.get_potion_effect_value')
+    @patch.object(PotionService, 'get_potion_effect_value')
     def test_generate_fish_weight_trophy_potion(self, mock_potion, fish_species, player):
         mock_potion.return_value = None
-        weights_without = [fish_selector.generate_fish_weight(fish_species, player) for _ in range(20)]
+        weights_without = [self.svc.generate_fish_weight(fish_species, player) for _ in range(20)]
 
         mock_potion.return_value = 1.0
-        weights_with = [fish_selector.generate_fish_weight(fish_species, player) for _ in range(20)]
+        weights_with = [self.svc.generate_fish_weight(fish_species, player) for _ in range(20)]
 
         # С зельем трофея средний вес должен быть выше
         assert sum(weights_with) / len(weights_with) > sum(weights_without) / len(weights_without)
@@ -240,8 +253,8 @@ class TestFishSelector:
         small_weight = fish_species.weight_min
         large_weight = fish_species.weight_max
 
-        small_length = fish_selector.generate_fish_length(fish_species, small_weight)
-        large_length = fish_selector.generate_fish_length(fish_species, large_weight)
+        small_length = self.svc.generate_fish_length(fish_species, small_weight)
+        large_length = self.svc.generate_fish_length(fish_species, large_weight)
 
         assert small_length < large_length
         assert fish_species.length_min <= small_length <= fish_species.length_max
@@ -254,8 +267,11 @@ class TestFishSelector:
 class TestFightEngine:
     """Тесты движка вываживания."""
 
+    def setup_method(self):
+        self.svc = FightEngineService()
+
     def test_create_fight(self, fishing_session_waiting, fish_species):
-        fight = fight_engine.create_fight(
+        fight = self.svc.create_fight(
             fishing_session_waiting,
             fish_weight=1.5,
             fish_species=fish_species,
@@ -271,7 +287,7 @@ class TestFightEngine:
         fish_species.rarity = 'legendary'
         fish_species.save()
 
-        fight = fight_engine.create_fight(
+        fight = self.svc.create_fight(
             fishing_session_waiting,
             fish_weight=1.0,
             fish_species=fish_species,
@@ -289,7 +305,7 @@ class TestFightEngine:
         fight.save()
         initial_distance = fight.distance
 
-        result = fight_engine.reel_in(fight)
+        result = self.svc.reel_in(fight)
         fight.refresh_from_db()
 
         assert fight.distance < initial_distance or result == 'caught'
@@ -298,7 +314,7 @@ class TestFightEngine:
         fight = FightState.objects.get(session=fishing_session_fighting)
         initial_tension = fight.line_tension
 
-        result = fight_engine.reel_in(fight)
+        result = self.svc.reel_in(fight)
         fight.refresh_from_db()
 
         # Натяжение могло как увеличиться, так и уменьшиться из-за fish_action
@@ -309,7 +325,7 @@ class TestFightEngine:
         initial_distance = fight.distance
         initial_durability = fight.rod_durability
 
-        result = fight_engine.pull_rod(fight)
+        result = self.svc.pull_rod(fight)
         fight.refresh_from_db()
 
         # Подтяжка снижает прочность удилища
@@ -325,7 +341,7 @@ class TestFightEngine:
         # random.random() > 0.3 — рывка нет
         mock_random.random.return_value = 0.5
 
-        fight_engine.wait_action(fight)
+        self.svc.wait_action(fight)
         fight.refresh_from_db()
 
         # wait снижает на -5, _fish_action без рывка снижает на -2 = 43
@@ -337,7 +353,7 @@ class TestFightEngine:
         fight.fish_strength = 100
         fight.save()
 
-        result = fight_engine.reel_in(fight)
+        result = self.svc.reel_in(fight)
 
         # При высоком натяжении возможен обрыв
         assert result in ('line_break', 'fighting', 'caught')
@@ -349,7 +365,7 @@ class TestFightEngine:
         fight.line_tension = 10
         fight.save()
 
-        result = fight_engine.reel_in(fight)
+        result = self.svc.reel_in(fight)
         # После подмотки дистанция станет 0 или отрицательной
         assert result in ('caught', 'fighting')
 
@@ -358,7 +374,7 @@ class TestFightEngine:
         fight.rod_durability = 1
         fight.save()
 
-        result = fight_engine.pull_rod(fight)
+        result = self.svc.pull_rod(fight)
         assert result in ('rod_break', 'fighting', 'caught', 'line_break')
 
     def test_fish_strength_decreases_over_time(self, fishing_session_fighting):
@@ -367,7 +383,7 @@ class TestFightEngine:
 
         # Симулируем несколько раундов
         for _ in range(5):
-            if fight_engine.reel_in(fight) != 'fighting':
+            if self.svc.reel_in(fight) != 'fighting':
                 break
             fight.refresh_from_db()
 

@@ -1,6 +1,5 @@
 """Views турнирной системы."""
 
-from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,6 +11,14 @@ from .serializers import (
     TournamentEntrySerializer,
     TournamentSerializer,
 )
+from .use_cases.create_tournament import CreateTournamentUseCase
+from .use_cases.join_tournament import JoinTournamentUseCase
+
+
+def _resolve(use_case_cls):
+    """Резолвит use case из DI-контейнера."""
+    from config.container import container
+    return container.resolve(use_case_cls)
 
 
 class TournamentListView(generics.ListAPIView):
@@ -27,37 +34,16 @@ class CreateTournamentView(APIView):
     """Создание турнира игроком."""
 
     def post(self, request):
-        player = request.user.player
         serializer = CreateTournamentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Ограничения на создание турнира
-        MIN_RANK_TO_CREATE = 3  # Минимальный разряд для создания турниров
-        CREATION_FEE = 100  # Стоимость создания турнира
+        uc = _resolve(CreateTournamentUseCase)
+        try:
+            tournament = uc.execute(request.user.player, serializer.validated_data)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        if player.rank < MIN_RANK_TO_CREATE:
-            return Response(
-                {'error': f'Для создания турниров требуется минимум {MIN_RANK_TO_CREATE} разряд.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if player.money < CREATION_FEE:
-            return Response(
-                {'error': f'Недостаточно денег. Создание турнира стоит {CREATION_FEE}$.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Списание платы за создание
-        player.money -= CREATION_FEE
-        player.save(update_fields=['money'])
-
-        # Создание турнира
-        tournament = serializer.save(created_by=player, is_active=True)
-
-        return Response(
-            TournamentSerializer(tournament).data,
-            status=status.HTTP_201_CREATED,
-        )
+        return Response(TournamentSerializer(tournament).data, status=status.HTTP_201_CREATED)
 
 
 class TournamentDetailView(generics.RetrieveAPIView):
@@ -75,118 +61,22 @@ class JoinTournamentView(APIView):
     def post(self, request):
         serializer = JoinTournamentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        player = request.user.player
-        tournament_id = serializer.validated_data['tournament_id']
 
+        uc = _resolve(JoinTournamentUseCase)
         try:
-            tournament = Tournament.objects.get(pk=tournament_id)
+            result = uc.execute(request.user.player, serializer.validated_data['tournament_id'])
         except Tournament.DoesNotExist:
             return Response({'error': 'Турнир не найден.'}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверка: турнир ещё не начался
-        if timezone.now() >= tournament.start_time:
+        if result.is_team:
             return Response(
-                {'error': 'Регистрация закрыта — турнир уже начался.'},
-                status=status.HTTP_400_BAD_REQUEST,
+                {'message': f'Команда "{result.team_name}" зарегистрирована ({len(result.entries)} участников).'},
+                status=status.HTTP_201_CREATED,
             )
 
-        # Проверка: достаточный разряд
-        if player.rank < tournament.min_rank:
-            return Response(
-                {'error': f'Недостаточный разряд. Требуется: {tournament.min_rank}.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Проверка: лимит участников
-        if tournament.entries.count() >= tournament.max_participants:
-            return Response(
-                {'error': 'Турнир заполнен.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Проверка: не зарегистрирован ли уже
-        if TournamentEntry.objects.filter(tournament=tournament, player=player).exists():
-            return Response(
-                {'error': 'Вы уже зарегистрированы в этом турнире.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Проверка: достаточно денег для вступительного взноса
-        if player.money < tournament.entry_fee:
-            return Response(
-                {'error': 'Недостаточно денег для вступительного взноса.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Командный турнир — регистрируется вся команда
-        if tournament.tournament_type == Tournament.TournamentType.TEAM:
-            return self._join_team_tournament(player, tournament)
-
-        # Списание вступительного взноса
-        if tournament.entry_fee > 0:
-            player.money -= tournament.entry_fee
-            player.save(update_fields=['money'])
-
-        entry = TournamentEntry.objects.create(tournament=tournament, player=player)
-        return Response(TournamentEntrySerializer(entry).data, status=status.HTTP_201_CREATED)
-
-    def _join_team_tournament(self, player, tournament):
-        """Регистрация команды в командном турнире."""
-        from apps.teams.models import Team, TeamMembership
-
-        membership = TeamMembership.objects.filter(player=player).select_related('team').first()
-        if not membership:
-            return Response(
-                {'error': 'Вы не состоите в команде.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if membership.role != TeamMembership.Role.LEADER:
-            return Response(
-                {'error': 'Только лидер команды может зарегистрировать команду.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        team = membership.team
-        members = TeamMembership.objects.filter(team=team).select_related('player')
-
-        # Проверка: все участники соответствуют мин. разряду
-        for m in members:
-            if m.player.rank < tournament.min_rank:
-                return Response(
-                    {'error': f'{m.player.nickname} не соответствует мин. разряду ({tournament.min_rank}).'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        # Проверка: команда ещё не зарегистрирована
-        if TournamentEntry.objects.filter(tournament=tournament, team=team).exists():
-            return Response(
-                {'error': 'Ваша команда уже зарегистрирована.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Списание взноса с лидера
-        if tournament.entry_fee > 0:
-            if player.money < tournament.entry_fee:
-                return Response(
-                    {'error': 'Недостаточно денег для вступительного взноса.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            player.money -= tournament.entry_fee
-            player.save(update_fields=['money'])
-
-        # Регистрация всех членов команды
-        entries = []
-        for m in members:
-            entry = TournamentEntry.objects.create(
-                tournament=tournament, player=m.player, team=team,
-            )
-            entries.append(entry)
-
-        return Response(
-            {'message': f'Команда "{team.name}" зарегистрирована ({len(entries)} участников).'},
-            status=status.HTTP_201_CREATED,
-        )
+        return Response(TournamentEntrySerializer(result.entry).data, status=status.HTTP_201_CREATED)
 
 
 class TournamentResultsView(generics.ListAPIView):

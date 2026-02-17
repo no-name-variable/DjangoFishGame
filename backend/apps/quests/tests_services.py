@@ -3,13 +3,16 @@
 import pytest
 from decimal import Decimal
 
-from apps.quests.services import update_quest_progress
+from apps.quests.services import QuestService
 from apps.quests.models import Quest, PlayerQuest
 
 
 @pytest.mark.django_db
 class TestUpdateQuestProgress:
     """Тесты обновления прогресса квестов."""
+
+    def setup_method(self):
+        self.svc = QuestService()
 
     def test_catch_fish_any_species(self, player, fish_species, location):
         """Квест на поимку любой рыбы."""
@@ -22,19 +25,19 @@ class TestUpdateQuestProgress:
         pq = PlayerQuest.objects.create(player=player, quest=quest)
 
         # Первая рыба
-        completed = update_quest_progress(player, fish_species, 1.0, location)
+        completed = self.svc.update_quest_progress(player, fish_species, 1.0, location)
         pq.refresh_from_db()
         assert pq.progress == 1
         assert pq.status == 'active'
         assert len(completed) == 0
 
         # Вторая рыба
-        update_quest_progress(player, fish_species, 1.5, location)
+        self.svc.update_quest_progress(player, fish_species, 1.5, location)
         pq.refresh_from_db()
         assert pq.progress == 2
 
         # Третья рыба — завершение
-        completed = update_quest_progress(player, fish_species, 2.0, location)
+        completed = self.svc.update_quest_progress(player, fish_species, 2.0, location)
         pq.refresh_from_db()
         assert pq.progress == 3
         assert pq.status == 'completed'
@@ -64,17 +67,17 @@ class TestUpdateQuestProgress:
         pq = PlayerQuest.objects.create(player=player, quest=quest)
 
         # Окунь не засчитывается
-        update_quest_progress(player, other_species, 0.5, location)
+        self.svc.update_quest_progress(player, other_species, 0.5, location)
         pq.refresh_from_db()
         assert pq.progress == 0
 
         # Карп засчитывается
-        update_quest_progress(player, target_species, 3.0, location)
+        self.svc.update_quest_progress(player, target_species, 3.0, location)
         pq.refresh_from_db()
         assert pq.progress == 1
 
         # Второй карп — завершение
-        completed = update_quest_progress(player, target_species, 4.0, location)
+        completed = self.svc.update_quest_progress(player, target_species, 4.0, location)
         pq.refresh_from_db()
         assert pq.progress == 2
         assert pq.status == 'completed'
@@ -91,18 +94,18 @@ class TestUpdateQuestProgress:
         pq = PlayerQuest.objects.create(player=player, quest=quest)
 
         # Первая рыба 3 кг
-        update_quest_progress(player, fish_species, Decimal('3.0'), location)
+        self.svc.update_quest_progress(player, fish_species, Decimal('3.0'), location)
         pq.refresh_from_db()
         assert pq.progress_weight == Decimal('3.0')
         assert pq.status == 'active'
 
         # Вторая рыба 5 кг
-        update_quest_progress(player, fish_species, Decimal('5.0'), location)
+        self.svc.update_quest_progress(player, fish_species, Decimal('5.0'), location)
         pq.refresh_from_db()
         assert pq.progress_weight == Decimal('8.0')
 
         # Третья рыба 2 кг — завершение
-        completed = update_quest_progress(player, fish_species, Decimal('2.0'), location)
+        completed = self.svc.update_quest_progress(player, fish_species, Decimal('2.0'), location)
         pq.refresh_from_db()
         assert pq.progress_weight == Decimal('10.0')
         assert pq.status == 'completed'
@@ -131,16 +134,16 @@ class TestUpdateQuestProgress:
         pq = PlayerQuest.objects.create(player=player, quest=quest)
 
         # Плотва не засчитывается
-        update_quest_progress(player, other_species, Decimal('0.3'), location)
+        self.svc.update_quest_progress(player, other_species, Decimal('0.3'), location)
         pq.refresh_from_db()
         assert pq.progress_weight == Decimal('0.0')
 
         # Щука засчитывается
-        update_quest_progress(player, target_species, Decimal('3.0'), location)
+        self.svc.update_quest_progress(player, target_species, Decimal('3.0'), location)
         pq.refresh_from_db()
         assert pq.progress_weight == Decimal('3.0')
 
-        update_quest_progress(player, target_species, Decimal('2.0'), location)
+        self.svc.update_quest_progress(player, target_species, Decimal('2.0'), location)
         pq.refresh_from_db()
         assert pq.progress_weight == Decimal('5.0')
         assert pq.status == 'completed'
@@ -168,12 +171,12 @@ class TestUpdateQuestProgress:
         pq = PlayerQuest.objects.create(player=player, quest=quest)
 
         # Лещ не засчитывается
-        update_quest_progress(player, other_species, Decimal('1.5'), location)
+        self.svc.update_quest_progress(player, other_species, Decimal('1.5'), location)
         pq.refresh_from_db()
         assert pq.progress == 0
 
         # Сом засчитывается
-        completed = update_quest_progress(player, target_species, Decimal('10.0'), location)
+        completed = self.svc.update_quest_progress(player, target_species, Decimal('10.0'), location)
         pq.refresh_from_db()
         assert pq.progress == 1
         assert pq.status == 'completed'
@@ -204,16 +207,16 @@ class TestUpdateQuestProgress:
         pq = PlayerQuest.objects.create(player=player, quest=quest)
 
         # В другой локации не засчитывается
-        update_quest_progress(player, fish_species, Decimal('1.0'), other_location)
+        self.svc.update_quest_progress(player, fish_species, Decimal('1.0'), other_location)
         pq.refresh_from_db()
         assert pq.progress == 0
 
         # В целевой локации засчитывается
-        update_quest_progress(player, fish_species, Decimal('1.0'), target_location)
+        self.svc.update_quest_progress(player, fish_species, Decimal('1.0'), target_location)
         pq.refresh_from_db()
         assert pq.progress == 1
 
-        completed = update_quest_progress(player, fish_species, Decimal('1.0'), target_location)
+        completed = self.svc.update_quest_progress(player, fish_species, Decimal('1.0'), target_location)
         pq.refresh_from_db()
         assert pq.progress == 2
         assert pq.status == 'completed'
@@ -233,7 +236,7 @@ class TestUpdateQuestProgress:
         pq1 = PlayerQuest.objects.create(player=player, quest=quest1)
         pq2 = PlayerQuest.objects.create(player=player, quest=quest2)
 
-        completed = update_quest_progress(player, fish_species, Decimal('2.5'), location)
+        completed = self.svc.update_quest_progress(player, fish_species, Decimal('2.5'), location)
 
         pq1.refresh_from_db()
         pq2.refresh_from_db()
@@ -257,7 +260,7 @@ class TestUpdateQuestProgress:
             player=player, quest=quest, status='completed', progress=1,
         )
 
-        update_quest_progress(player, fish_species, Decimal('1.0'), location)
+        self.svc.update_quest_progress(player, fish_species, Decimal('1.0'), location)
         pq.refresh_from_db()
 
         # Прогресс не изменился
@@ -273,7 +276,7 @@ class TestUpdateQuestProgress:
             player=player, quest=quest, status='claimed', progress=1,
         )
 
-        update_quest_progress(player, fish_species, Decimal('1.0'), location)
+        self.svc.update_quest_progress(player, fish_species, Decimal('1.0'), location)
         pq.refresh_from_db()
 
         # Прогресс не изменился
@@ -281,7 +284,7 @@ class TestUpdateQuestProgress:
 
     def test_no_active_quests(self, player, fish_species, location):
         """Без активных квестов ничего не обновляется."""
-        completed = update_quest_progress(player, fish_species, Decimal('1.0'), location)
+        completed = self.svc.update_quest_progress(player, fish_species, Decimal('1.0'), location)
         assert len(completed) == 0
 
     def test_completed_at_timestamp(self, player, fish_species, location):
@@ -294,7 +297,7 @@ class TestUpdateQuestProgress:
 
         assert pq.completed_at is None
 
-        update_quest_progress(player, fish_species, Decimal('1.0'), location)
+        self.svc.update_quest_progress(player, fish_species, Decimal('1.0'), location)
         pq.refresh_from_db()
 
         assert pq.completed_at is not None

@@ -14,8 +14,11 @@ def fish_inspection():
     и с вероятностью 10% проводит проверку каждого.
     """
     from apps.accounts.models import Player
+    from config.container import container
 
-    from .services import inspect_player
+    from .services import InspectionService
+
+    svc = container.resolve(InspectionService)
 
     active_players = Player.objects.filter(
         current_location__isnull=False,
@@ -23,4 +26,4 @@ def fish_inspection():
 
     for player in active_players:
         if random.random() < 0.10:
-            inspect_player(player)
+            svc.inspect_player(player)

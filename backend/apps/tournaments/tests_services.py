@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.utils import timezone
 from django.contrib.auth.models import User
 
-from apps.tournaments.services import finalize_tournament
+from apps.tournaments.services import TournamentService
 from apps.tournaments.models import Tournament, TournamentEntry
 from apps.inventory.models import CaughtFish
 from apps.accounts.models import Player
@@ -91,6 +91,9 @@ def create_caught_fish(player, species, weight, length, location, caught_at, **k
 class TestFinalizeIndividualTournament:
     """Тесты подведения итогов индивидуального турнира."""
 
+    def setup_method(self):
+        self.svc = TournamentService()
+
     def test_scoring_by_weight(self, finished_tournament, fish_species, tournament_location):
         """Подсчёт очков по весу рыбы."""
         player1 = create_player('p1', 'Игрок 1')
@@ -118,7 +121,7 @@ class TestFinalizeIndividualTournament:
             caught_at=finished_tournament.start_time + timedelta(minutes=45),
         )
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         entry1.refresh_from_db()
         entry2.refresh_from_db()
@@ -158,7 +161,7 @@ class TestFinalizeIndividualTournament:
                 caught_at=finished_tournament.start_time + timedelta(minutes=i * 10),
             )
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         entry1.refresh_from_db()
         entry2.refresh_from_db()
@@ -194,7 +197,7 @@ class TestFinalizeIndividualTournament:
             caught_at=finished_tournament.start_time + timedelta(minutes=30),
         )
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         entry.refresh_from_db()
         assert entry.score == Decimal('3.0')
@@ -211,7 +214,7 @@ class TestFinalizeIndividualTournament:
             is_released=True,
         )
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         entry.refresh_from_db()
         assert entry.score == 0
@@ -242,7 +245,7 @@ class TestFinalizeIndividualTournament:
             caught_at=finished_tournament.start_time + timedelta(minutes=45),
         )
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         entry.refresh_from_db()
         assert entry.score == Decimal('2.0')
@@ -259,7 +262,7 @@ class TestFinalizeIndividualTournament:
                 caught_at=finished_tournament.start_time + timedelta(minutes=30),
             )
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         for player in players:
             player.refresh_from_db()
@@ -278,7 +281,7 @@ class TestFinalizeIndividualTournament:
 
         assert finished_tournament.is_finished is False
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         finished_tournament.refresh_from_db()
         assert finished_tournament.is_finished is True
@@ -287,6 +290,9 @@ class TestFinalizeIndividualTournament:
 @pytest.mark.django_db
 class TestFinalizeTeamTournament:
     """Тесты подведения итогов командного турнира."""
+
+    def setup_method(self):
+        self.svc = TournamentService()
 
     def test_team_scores_summed(self, finished_tournament, fish_species, tournament_location):
         """Очки команды суммируются."""
@@ -329,7 +335,7 @@ class TestFinalizeTeamTournament:
             caught_at=finished_tournament.start_time + timedelta(minutes=50),
         )
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         entry1.refresh_from_db()
         entry2.refresh_from_db()
@@ -364,7 +370,7 @@ class TestFinalizeTeamTournament:
             caught_at=finished_tournament.start_time + timedelta(minutes=30),
         )
 
-        finalize_tournament(finished_tournament.pk)
+        self.svc.finalize_tournament(finished_tournament.pk)
 
         p1.refresh_from_db()
         p2.refresh_from_db()
