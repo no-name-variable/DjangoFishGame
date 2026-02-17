@@ -279,15 +279,30 @@ export default function FishingPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Инфо-панель */}
-      <div className="bg-forest-900/80 px-3 py-1 flex items-center justify-between text-xs border-b border-wood-800/40">
-        <span className="text-wood-400 font-serif">{player?.current_location_name}</span>
-        <div className="flex items-center gap-2">
+      <div style={{
+        background: 'rgba(7,18,7,0.85)', backdropFilter: 'blur(4px)',
+        padding: '5px 12px', display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', borderBottom: '1px solid rgba(92,61,30,0.3)',
+        flexShrink: 0,
+      }}>
+        <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.78rem', color: '#a8894e' }}>
+          📍 {player?.current_location_name || 'Локация'}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {gt && (
-            <span className="text-water-400">
-              {timeLabels[gt.time_of_day] || gt.time_of_day} — {gt.hour}:00
+            <span style={{ fontSize: '0.72rem', color: '#7898b8' }}>
+              {gt.time_of_day === 'morning' ? '🌅' : gt.time_of_day === 'day' ? '☀️' : gt.time_of_day === 'evening' ? '🌆' : '🌙'}
+              {' '}{timeLabels[gt.time_of_day] || gt.time_of_day} {gt.hour}:00 · День {gt.day}
             </span>
           )}
-          <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
+          <span
+            title={connected ? 'Подключено' : 'Нет соединения'}
+            style={{
+              width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+              background: connected ? '#4ade80' : '#f87171',
+              boxShadow: connected ? '0 0 6px rgba(74,222,128,0.5)' : '0 0 6px rgba(248,113,113,0.5)',
+            }}
+          />
         </div>
       </div>
 
@@ -310,27 +325,49 @@ export default function FishingPage() {
           {/* Оверлей: нет снастей */}
           {sessionList.length === 0 && rods.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <p className="wood-panel px-6 py-3 text-wood-400">
-                Нет готовых снастей. Соберите удочку в рюкзаке.
-              </p>
+              <div style={{
+                background: 'rgba(7,18,7,0.82)', backdropFilter: 'blur(6px)',
+                border: '1px solid rgba(92,61,30,0.4)', borderRadius: '12px',
+                padding: '14px 24px', textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '1.6rem', marginBottom: '6px' }}>🎣</div>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '0.82rem', color: '#8b6d3f' }}>
+                  Нет готовых снастей
+                </p>
+                <p style={{ fontSize: '0.68rem', color: '#5c3d1e', marginTop: '3px' }}>
+                  Соберите удочку в рюкзаке
+                </p>
+              </div>
             </div>
           )}
 
           {/* Оверлей: подсказка заброса */}
           {sessionList.length === 0 && rods.length > 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <p className="wood-panel px-6 py-3 text-wood-400 animate-pulse">
-                Кликните по воде для заброса
-              </p>
+              <div style={{
+                background: 'rgba(7,18,7,0.75)', backdropFilter: 'blur(4px)',
+                border: '1px solid rgba(120,152,184,0.3)', borderRadius: '12px',
+                padding: '12px 22px', textAlign: 'center',
+                animation: 'pulse 2s ease-in-out infinite',
+              }}>
+                <div style={{ fontSize: '1.4rem', marginBottom: '4px' }}>🎯</div>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', color: '#7898b8' }}>
+                  Кликните по воде для заброса
+                </p>
+              </div>
             </div>
           )}
 
           {/* Оверлей: поклёвка на активной удочке */}
           {activeSession?.state === 'bite' && (
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-              <div className="text-red-400 text-4xl font-bold font-serif animate-bounce"
-                style={{ textShadow: '0 0 20px rgba(255,0,0,0.5), 0 2px 4px rgba(0,0,0,0.8)' }}>
-                ПОКЛЁВКА!
+              <div style={{
+                fontFamily: 'Georgia, serif', fontSize: '2.2rem', fontWeight: 'bold',
+                color: '#fca5a5', animation: 'bounce 0.5s infinite',
+                textShadow: '0 0 24px rgba(255,0,0,0.7), 0 0 48px rgba(255,0,0,0.3), 0 2px 6px rgba(0,0,0,0.9)',
+                letterSpacing: '0.08em',
+              }}>
+                ⚡ ПОКЛЁВКА!
               </div>
             </div>
           )}

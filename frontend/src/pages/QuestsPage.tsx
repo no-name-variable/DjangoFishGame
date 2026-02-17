@@ -1,5 +1,5 @@
 /**
- * Страница квестов — стиль РР3.
+ * Квесты — улучшенный UI с прогресс-барами и чёткими наградами.
  */
 import { useEffect, useState } from 'react'
 import { acceptQuest, claimQuestReward, getAvailableQuests, getPlayerQuests } from '../api/quests'
@@ -15,11 +15,16 @@ interface PlayerQuest {
   status: 'active' | 'completed' | 'claimed'; started_at: string; completed_at: string | null
 }
 
+const QUEST_TYPE_ICON: Record<string, string> = {
+  catch_fish: '🎣', catch_weight: '⚖️', catch_species: '🐟',
+}
+
 export default function QuestsPage() {
   const [available, setAvailable] = useState<Quest[]>([])
-  const [myQuests, setMyQuests] = useState<PlayerQuest[]>([])
-  const [tab, setTab] = useState<'my' | 'available'>('my')
-  const [loading, setLoading] = useState(true)
+  const [myQuests, setMyQuests]   = useState<PlayerQuest[]>([])
+  const [tab, setTab]             = useState<'my' | 'available'>('my')
+  const [loading, setLoading]     = useState(true)
+  const [claiming, setClaiming]   = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -33,88 +38,178 @@ export default function QuestsPage() {
   useEffect(load, [])
 
   const handleAccept = async (id: number) => { await acceptQuest(id); load() }
-  const handleClaim = async (id: number) => { await claimQuestReward(id); load() }
+  const handleClaim  = async (id: number) => {
+    setClaiming(id)
+    try { await claimQuestReward(id); load() }
+    finally { setClaiming(null) }
+  }
 
+  const progressValue = (pq: PlayerQuest) => {
+    if (pq.quest.quest_type === 'catch_weight') {
+      return Math.min(1, pq.progress_weight / pq.quest.target_weight)
+    }
+    return Math.min(1, pq.progress / pq.quest.target_count)
+  }
   const progressText = (pq: PlayerQuest) => {
-    if (pq.quest.quest_type === 'catch_weight') return `${pq.progress_weight.toFixed(2)} / ${pq.quest.target_weight} кг`
+    if (pq.quest.quest_type === 'catch_weight')
+      return `${pq.progress_weight.toFixed(2)} / ${pq.quest.target_weight} кг`
     return `${pq.progress} / ${pq.quest.target_count}`
   }
 
-  const statusBadge = (s: string) => {
-    if (s === 'active') return <span className="badge badge-blue">Активный</span>
-    if (s === 'completed') return <span className="badge badge-green">Выполнен</span>
-    return <span className="badge badge-yellow">Получен</span>
+  const statusConfig = {
+    active:    { label: 'Активный',  cls: 'badge badge-blue' },
+    completed: { label: 'Выполнен', cls: 'badge badge-green' },
+    claimed:   { label: 'Получен',  cls: 'badge badge-yellow' },
   }
 
-  if (loading) return <div className="p-8 text-center text-wood-500 text-sm">Загрузка...</div>
+  if (loading) return (
+    <div className="p-10 text-center text-wood-500 text-sm">
+      <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📜</div>
+      Загрузка квестов...
+    </div>
+  )
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="gold-text text-xl mb-4">Квесты</h1>
+      <h1 className="gold-text text-xl mb-4">📜 Квесты</h1>
 
+      {/* Табы */}
       <div className="flex gap-1 mb-4">
-        <button
-          className={`game-tab ${tab === 'my' ? 'game-tab-active' : 'game-tab-inactive'}`}
-          onClick={() => setTab('my')}
-        >Мои ({myQuests.length})</button>
-        <button
-          className={`game-tab ${tab === 'available' ? 'game-tab-active' : 'game-tab-inactive'}`}
-          onClick={() => setTab('available')}
-        >Доступные ({available.length})</button>
+        <button className={`game-tab ${tab === 'my' ? 'game-tab-active' : 'game-tab-inactive'}`}
+          onClick={() => setTab('my')}>
+          Мои ({myQuests.length})
+        </button>
+        <button className={`game-tab ${tab === 'available' ? 'game-tab-active' : 'game-tab-inactive'}`}
+          onClick={() => setTab('available')}>
+          Доступные ({available.length})
+        </button>
       </div>
 
+      {/* Мои квесты */}
       {tab === 'my' && (
         <div className="space-y-2">
-          {myQuests.map((pq) => (
-            <div key={pq.id} className="card">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="font-serif text-sm text-wood-200">{pq.quest.name}</h3>
-                  <p className="text-xs text-wood-500 mt-0.5">{pq.quest.description}</p>
-                  <div className="mt-1.5 text-xs">
-                    <span className="text-water-300">Прогресс: {progressText(pq)}</span>
+          {myQuests.map((pq) => {
+            const pct = progressValue(pq) * 100
+            const done = pq.status === 'completed' || pq.status === 'claimed'
+            const sc = statusConfig[pq.status] ?? statusConfig.active
+            return (
+              <div key={pq.id} className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                  {/* Иконка типа */}
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
+                    background: 'rgba(13,31,13,0.6)', border: '1px solid rgba(74,49,24,0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
+                  }}>
+                    {QUEST_TYPE_ICON[pq.quest.quest_type] ?? '📜'}
+                  </div>
+
+                  {/* Контент */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', color: '#d4c5a9', marginBottom: '2px' }}>
+                      {pq.quest.name}
+                    </h3>
+                    <p style={{ fontSize: '0.72rem', color: '#6b5030', marginBottom: '6px' }}>
+                      {pq.quest.description}
+                    </p>
+
+                    {/* Прогресс */}
+                    <div style={{ marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px',
+                        fontSize: '0.68rem', color: '#7898b8' }}>
+                        <span>Прогресс: {progressText(pq)}</span>
+                        <span>{Math.round(pct)}%</span>
+                      </div>
+                      <div style={{ height: '5px', borderRadius: '3px', background: 'rgba(13,31,13,0.8)',
+                        border: '1px solid rgba(74,49,24,0.4)', overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${pct}%`, height: '100%', borderRadius: '3px',
+                          background: done ? '#22c55e' : '#3a6088',
+                          transition: 'width 0.4s ease',
+                        }} />
+                      </div>
+                    </div>
+
+                    {/* Локация */}
                     {pq.quest.target_location_name && (
-                      <span className="text-wood-500 ml-2">{pq.quest.target_location_name}</span>
+                      <p style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>
+                        📍 {pq.quest.target_location_name}
+                      </p>
+                    )}
+
+                    {/* Награды */}
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '4px', fontSize: '0.68rem', color: '#5c3d1e' }}>
+                      <span>💰 {pq.quest.reward_money}$</span>
+                      <span>✨ {pq.quest.reward_experience} опыта</span>
+                      {pq.quest.reward_karma > 0 && <span>⚖️ +{pq.quest.reward_karma}</span>}
+                    </div>
+                  </div>
+
+                  {/* Статус + кнопка */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
+                    <span className={sc.cls}>{sc.label}</span>
+                    {pq.status === 'completed' && (
+                      <button
+                        className="btn btn-primary text-xs"
+                        style={{ minHeight: '32px' }}
+                        onClick={() => handleClaim(pq.id)}
+                        disabled={claiming === pq.id}
+                      >
+                        {claiming === pq.id ? '⏳' : '🎁 Забрать'}
+                      </button>
                     )}
                   </div>
                 </div>
-                <div className="text-right ml-3">
-                  {statusBadge(pq.status)}
-                  {pq.status === 'completed' && (
-                    <button className="btn btn-primary text-xs mt-1.5 block" onClick={() => handleClaim(pq.id)}>
-                      Награда
-                    </button>
-                  )}
-                </div>
               </div>
-              <div className="mt-1.5 text-[10px] text-wood-600">
-                {pq.quest.reward_money}$ | {pq.quest.reward_experience} опыта
-                {pq.quest.reward_karma > 0 && ` | +${pq.quest.reward_karma} кармы`}
-              </div>
+            )
+          })}
+          {myQuests.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📜</div>
+              <p style={{ fontSize: '0.85rem' }}>Нет активных квестов. Возьмите задание!</p>
             </div>
-          ))}
-          {myQuests.length === 0 && <p className="text-wood-500 text-sm text-center py-6">Нет активных квестов</p>}
+          )}
         </div>
       )}
 
+      {/* Доступные квесты */}
       {tab === 'available' && (
         <div className="space-y-2">
           {available.map((q) => (
-            <div key={q.id} className="card flex justify-between items-start">
-              <div className="flex-1">
-                <h3 className="font-serif text-sm text-wood-200">{q.name}</h3>
-                <p className="text-xs text-wood-500 mt-0.5">{q.description}</p>
-                <div className="mt-1 text-[10px] text-wood-600">
-                  {q.reward_money}$ | {q.reward_experience} опыта
-                  {q.reward_karma > 0 && ` | +${q.reward_karma} кармы`}
+            <div key={q.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
+                background: 'rgba(13,31,13,0.6)', border: '1px solid rgba(74,49,24,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
+              }}>
+                {QUEST_TYPE_ICON[q.quest_type] ?? '📜'}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', color: '#d4c5a9', marginBottom: '2px' }}>
+                  {q.name}
+                </h3>
+                <p style={{ fontSize: '0.72rem', color: '#6b5030', marginBottom: '6px' }}>
+                  {q.description}
+                </p>
+                <div style={{ display: 'flex', gap: '10px', fontSize: '0.68rem', color: '#5c3d1e' }}>
+                  <span>💰 {q.reward_money}$</span>
+                  <span>✨ {q.reward_experience} опыта</span>
+                  {q.reward_karma > 0 && <span>⚖️ +{q.reward_karma}</span>}
+                  {q.min_rank > 0 && <span>⭐ Разряд {q.min_rank}+</span>}
                 </div>
               </div>
-              <button className="btn btn-action text-xs ml-3" onClick={() => handleAccept(q.id)}>
+              <button className="btn btn-action text-xs" style={{ minHeight: '36px', flexShrink: 0 }}
+                onClick={() => handleAccept(q.id)}>
                 Взять
               </button>
             </div>
           ))}
-          {available.length === 0 && <p className="text-wood-500 text-sm text-center py-6">Нет доступных квестов</p>}
+          {available.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '8px' }}>✅</div>
+              <p style={{ fontSize: '0.85rem' }}>Вы взяли все доступные квесты!</p>
+            </div>
+          )}
         </div>
       )}
     </div>

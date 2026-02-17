@@ -1,5 +1,5 @@
 /**
- * Модальное окно пойманной рыбы — деревянная рамка, пергамент.
+ * Модальное окно пойманной рыбы — деревянная рамка, пергамент, анимации.
  */
 import GameImage from '../ui/GameImage'
 import { getFallbackUrl } from '../../utils/getAssetUrl'
@@ -14,81 +14,136 @@ interface CaughtFishModalProps {
   onRelease: () => void
 }
 
-const rarityColors: Record<string, string> = {
-  common: 'text-wood-300',
-  uncommon: 'text-green-400',
-  rare: 'text-blue-400',
-  trophy: 'text-purple-400',
-  legendary: 'text-yellow-400',
-}
-
-const rarityGlow: Record<string, string> = {
-  common: '',
-  uncommon: 'shadow-[0_0_10px_rgba(74,222,74,0.2)]',
-  rare: 'shadow-[0_0_15px_rgba(74,148,255,0.3)]',
-  trophy: 'shadow-[0_0_20px_rgba(168,85,247,0.3)]',
-  legendary: 'shadow-[0_0_25px_rgba(234,179,8,0.4)]',
-}
-
-const rarityNames: Record<string, string> = {
-  common: 'Обычная',
-  uncommon: 'Необычная',
-  rare: 'Редкая',
-  trophy: 'Трофейная',
-  legendary: 'Легендарная',
+const RARITY_CFG: Record<string, {
+  textColor: string
+  bg: string
+  border: string
+  glow: string
+  name: string
+  icon: string
+}> = {
+  common:    { textColor: '#a8894e', bg: 'rgba(92,61,30,0.25)',    border: 'rgba(92,61,30,0.5)',      glow: 'none',                                     name: 'Обычная',     icon: '🐟' },
+  uncommon:  { textColor: '#4ade80', bg: 'rgba(22,101,52,0.25)',   border: 'rgba(74,222,128,0.35)',   glow: '0 0 16px rgba(74,222,128,0.3)',             name: 'Необычная',   icon: '🐠' },
+  rare:      { textColor: '#60a5fa', bg: 'rgba(29,78,216,0.2)',    border: 'rgba(96,165,250,0.4)',    glow: '0 0 20px rgba(96,165,250,0.35)',            name: 'Редкая',      icon: '💎' },
+  trophy:    { textColor: '#c084fc', bg: 'rgba(107,33,168,0.2)',   border: 'rgba(192,132,252,0.4)',   glow: '0 0 28px rgba(192,132,252,0.4)',            name: 'Трофейная',   icon: '🏆' },
+  legendary: { textColor: '#facc15', bg: 'rgba(120,53,15,0.3)',    border: 'rgba(250,204,21,0.5)',    glow: '0 0 36px rgba(250,204,21,0.5)',             name: 'Легендарная', icon: '⭐' },
 }
 
 export default function CaughtFishModal({ fish, speciesImage, weight, length, rarity, onKeep, onRelease }: CaughtFishModalProps) {
+  const cfg = RARITY_CFG[rarity] ?? RARITY_CFG.common
+
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className={`game-frame max-w-md w-full mx-4 ${rarityGlow[rarity] || ''}`}>
-        {/* Пергаментный фон */}
-        <div
-          className="p-6 text-center rounded-lg"
-          style={{
-            background: 'linear-gradient(135deg, #3a2512 0%, #4a3118 30%, #3a2512 60%, #4a3118 100%)',
-          }}
-        >
-          <h2 className="gold-text text-2xl mb-1">Рыба поймана!</h2>
-          <div className={`text-sm mb-4 font-serif ${rarityColors[rarity] || 'text-wood-400'}`}>
-            {rarityNames[rarity] || rarity}
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50"
+      style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(4px)' }}
+    >
+      <div
+        className="max-w-sm w-full mx-4"
+        style={{
+          animation: 'modalIn 0.35s cubic-bezier(0.34, 1.36, 0.64, 1) both',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          border: `2px solid ${cfg.border}`,
+          boxShadow: cfg.glow !== 'none' ? `${cfg.glow}, 0 24px 48px rgba(0,0,0,0.7)` : '0 24px 48px rgba(0,0,0,0.7)',
+        }}
+      >
+        {/* Фон карточки */}
+        <div style={{
+          background: 'linear-gradient(160deg, #2d1a09 0%, #3d2410 35%, #2d1a09 70%, #3d2410 100%)',
+          padding: '20px',
+        }}>
+          {/* Заголовок */}
+          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+            <div className="gold-text" style={{ fontSize: '1.4rem', fontFamily: 'Georgia, serif', letterSpacing: '0.05em' }}>
+              Рыба поймана!
+            </div>
+          </div>
+
+          {/* Badge редкости */}
+          <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '5px',
+              padding: '4px 14px', borderRadius: '20px',
+              background: cfg.bg, border: `1px solid ${cfg.border}`,
+              color: cfg.textColor, fontSize: '0.8rem', fontFamily: 'Georgia, serif',
+              fontWeight: 'bold',
+            }}>
+              {cfg.icon} {cfg.name}
+            </span>
           </div>
 
           {/* Фото рыбы */}
-          <div className="mb-4">
-            <GameImage
-              src={speciesImage || getFallbackUrl('fish')}
-              fallback={getFallbackUrl('fish')}
-              alt={fish}
-              className="w-48 h-32 object-contain mx-auto drop-shadow-lg"
-            />
+          <div style={{
+            animation: 'catchPop 0.5s 0.1s cubic-bezier(0.34, 1.36, 0.64, 1) both',
+            marginBottom: '14px',
+            display: 'flex', justifyContent: 'center',
+          }}>
+            <div style={{
+              background: `${cfg.bg}`,
+              border: `1px solid ${cfg.border}`,
+              borderRadius: '12px', padding: '10px',
+              display: 'inline-block',
+            }}>
+              <GameImage
+                src={speciesImage || getFallbackUrl('fish')}
+                fallback={getFallbackUrl('fish')}
+                alt={fish}
+                className="w-40 h-28 object-contain block"
+              />
+            </div>
           </div>
 
           {/* Информация о рыбе */}
-          <div className="bg-forest-900/50 rounded-lg p-5 mb-4 border border-wood-700/30">
-            <h3 className="font-serif text-2xl text-wood-100 mb-3">{fish}</h3>
-            <div className="flex justify-center gap-8 text-lg">
-              <div>
-                <span className="text-wood-500 text-sm">Вес</span>
-                <p className="text-wood-100 font-bold font-serif">{weight.toFixed(3)} кг</p>
+          <div style={{
+            background: 'rgba(13,31,13,0.5)', borderRadius: '10px',
+            padding: '14px', marginBottom: '14px',
+            border: `1px solid ${cfg.border}`,
+          }}>
+            <h3 style={{
+              fontFamily: 'Georgia, serif', fontSize: '1.15rem',
+              color: '#d4c5a9', textAlign: 'center', marginBottom: '12px',
+            }}>
+              {fish}
+            </h3>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '28px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.65rem', color: '#6b5030', marginBottom: '3px' }}>⚖️ Вес</div>
+                <div className="gold-text" style={{ fontSize: '1.1rem', fontFamily: 'Georgia, serif', fontWeight: 'bold' }}>
+                  {weight.toFixed(3)} кг
+                </div>
               </div>
-              <div className="w-px bg-wood-700/40" />
-              <div>
-                <span className="text-wood-500 text-sm">Длина</span>
-                <p className="text-wood-100 font-bold font-serif">{length} см</p>
+              <div style={{ width: '1px', background: 'rgba(92,61,30,0.4)' }} />
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.65rem', color: '#6b5030', marginBottom: '3px' }}>📏 Длина</div>
+                <div style={{ fontSize: '1.1rem', fontFamily: 'Georgia, serif', color: '#a8894e', fontWeight: 'bold' }}>
+                  {length} см
+                </div>
               </div>
             </div>
           </div>
 
           {/* Кнопки */}
-          <div className="flex gap-3">
-            <button onClick={onKeep} className="btn btn-primary flex-1 py-2.5">
-              В садок
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={onKeep}
+              className="btn btn-primary"
+              style={{ flex: 1, minHeight: '44px', fontSize: '0.9rem' }}
+            >
+              🪣 В садок
             </button>
-            <button onClick={onRelease} className="btn btn-secondary flex-1 py-2.5">
-              Отпустить (+карма)
+            <button
+              onClick={onRelease}
+              className="btn btn-secondary"
+              style={{ flex: 1, minHeight: '44px', fontSize: '0.9rem' }}
+            >
+              🌊 Отпустить
             </button>
           </div>
+
+          {/* Подсказка */}
+          <p style={{ textAlign: 'center', fontSize: '0.6rem', color: '#4a3118', marginTop: '8px' }}>
+            Отпустить = +карма
+          </p>
         </div>
       </div>
     </div>

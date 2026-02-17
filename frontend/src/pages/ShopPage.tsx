@@ -1,5 +1,5 @@
 /**
- * Магазин снастей в стиле РР3.
+ * Магазин снастей — улучшенный UI с боковой навигацией и карточками товаров.
  */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -10,14 +10,14 @@ import GameImage from '../components/ui/GameImage'
 import { getFallbackUrl } from '../utils/getAssetUrl'
 
 const categories = [
-  { key: 'rods', label: 'Удилища', icon: '\u{1FA83}' },
-  { key: 'reels', label: 'Катушки', icon: '\u{2699}' },
-  { key: 'lines', label: 'Лески', icon: '\u{1F9F5}' },
-  { key: 'hooks', label: 'Крючки', icon: '\u{1FA9D}' },
-  { key: 'floats', label: 'Поплавки', icon: '\u{1F534}' },
-  { key: 'lures', label: 'Приманки', icon: '\u{1FAB1}' },
-  { key: 'baits', label: 'Наживки', icon: '\u{1FAB1}' },
-  { key: 'food', label: 'Еда', icon: '\u{1F35E}' },
+  { key: 'rods',   label: 'Удилища',  icon: '🪃' },
+  { key: 'reels',  label: 'Катушки',  icon: '⚙️' },
+  { key: 'lines',  label: 'Лески',    icon: '🧵' },
+  { key: 'hooks',  label: 'Крючки',   icon: '🪝' },
+  { key: 'floats', label: 'Поплавки', icon: '🔴' },
+  { key: 'lures',  label: 'Приманки', icon: '🪱' },
+  { key: 'baits',  label: 'Наживки',  icon: '🪱' },
+  { key: 'food',   label: 'Еда',      icon: '🍞' },
 ]
 
 const itemTypeMap: Record<string, string> = {
@@ -36,11 +36,12 @@ interface ShopItem {
 
 export default function ShopPage() {
   const [category, setCategory] = useState('rods')
-  const [items, setItems] = useState<ShopItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState('')
+  const [items, setItems]       = useState<ShopItem[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [message, setMessage]   = useState('')
+  const [buying, setBuying]     = useState<number | null>(null)
   const setPlayer = usePlayerStore((s) => s.setPlayer)
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
 
   useEffect(() => {
     setLoading(true)
@@ -50,81 +51,171 @@ export default function ShopPage() {
   }, [category])
 
   const handleBuy = async (item: ShopItem) => {
+    setBuying(item.id)
     try {
       const result = await buyItem(itemTypeMap[category], item.id)
-      setMessage(`Куплено: ${item.name}. Осталось ${result.money_left} серебра.`)
+      setMessage(`✅ Куплено: ${item.name}. Осталось ${result.money_left}$`)
       const profile = await getProfile()
       setPlayer(profile)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Ошибка покупки'
-      setMessage(msg)
+      setMessage(`⚠️ ${msg}`)
+    } finally {
+      setBuying(null)
     }
   }
 
+  const activeCat = categories.find((c) => c.key === category)
+
   return (
-    <div className="flex h-full">
-      {/* Категории слева */}
-      <aside className="w-44 bg-forest-900/50 border-r border-wood-800/40 p-2 flex flex-col">
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+
+      {/* ── Боковое меню категорий ────────────────────────────────── */}
+      <aside style={{
+        width: '160px',
+        flexShrink: 0,
+        background: 'rgba(7,18,7,0.6)',
+        borderRight: '1px solid rgba(74,49,24,0.4)',
+        padding: '8px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2px',
+        overflowY: 'auto',
+      }}>
         <button onClick={() => navigate('/')} className="btn btn-secondary w-full mb-3 text-xs">
-          Назад на базу
+          ← База
         </button>
-        <div className="space-y-0.5">
-          {categories.map((c) => (
+        {categories.map((c) => {
+          const active = category === c.key
+          return (
             <button
               key={c.key}
               onClick={() => setCategory(c.key)}
-              className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded transition-all text-sm font-serif ${
-                category === c.key
-                  ? 'bg-wood-800/80 text-gold border border-gold/30'
-                  : 'text-wood-400 hover:bg-forest-800/60 hover:text-wood-200 border border-transparent'
-              }`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                width: '100%', textAlign: 'left',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                border: active ? '1px solid rgba(212,168,74,0.35)' : '1px solid transparent',
+                background: active ? 'rgba(58,37,18,0.85)' : 'transparent',
+                color: active ? '#d4a84a' : '#8b6d3f',
+                fontSize: '0.8rem',
+                fontFamily: 'Georgia, serif',
+                cursor: 'pointer',
+                transition: 'all 0.18s ease',
+                WebkitTapHighlightColor: 'transparent',
+                minHeight: '40px',
+              }}
+              onMouseEnter={e => {
+                if (!active) Object.assign(e.currentTarget.style, { background: 'rgba(26,58,26,0.4)', color: '#d4c5a9' })
+              }}
+              onMouseLeave={e => {
+                if (!active) Object.assign(e.currentTarget.style, { background: 'transparent', color: '#8b6d3f' })
+              }}
             >
-              <span>{c.icon}</span>
+              <span style={{ fontSize: '1rem' }}>{c.icon}</span>
               <span>{c.label}</span>
             </button>
-          ))}
-        </div>
+          )
+        })}
       </aside>
 
-      {/* Товары */}
-      <main className="flex-1 p-4 overflow-y-auto">
-        <h1 className="gold-text text-xl mb-3">Магазин</h1>
-        {message && (
-          <div className="wood-panel px-3 py-2 mb-3 text-sm text-gold">{message}</div>
-        )}
+      {/* ── Основной контент ─────────────────────────────────────── */}
+      <main style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
+        {/* Заголовок */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <h1 className="gold-text text-xl">
+            {activeCat?.icon} {activeCat?.label}
+          </h1>
+          {message && (
+            <div style={{
+              fontSize: '0.75rem', padding: '4px 12px', borderRadius: '8px',
+              background: message.startsWith('✅') ? 'rgba(22,101,22,0.4)' : 'rgba(127,29,29,0.4)',
+              border: `1px solid ${message.startsWith('✅') ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)'}`,
+              color: message.startsWith('✅') ? '#4ade80' : '#f87171',
+              cursor: 'pointer',
+            }} onClick={() => setMessage('')}>
+              {message}
+            </div>
+          )}
+        </div>
+
         {loading ? (
-          <p className="text-wood-500 text-sm">Загрузка...</p>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e', fontSize: '0.85rem' }}>
+            🎣 Загрузка...
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {items.map((item) => (
-              <div key={item.id} className="card hover:border-wood-500/60 transition-colors">
-                <div className="flex gap-3 mb-2">
-                  <GameImage
-                    src={item.image || getFallbackUrl('tackle')}
-                    fallback={getFallbackUrl('tackle')}
-                    alt={item.name}
-                    className="w-16 h-16 object-contain rounded bg-forest-900/50 p-1 flex-shrink-0"
-                  />
-                  <h3 className="font-serif text-wood-200 text-sm self-center">{item.name}</h3>
+              <div key={item.id} className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+                {/* Верх: изображение + название */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '10px', alignItems: 'flex-start' }}>
+                  <div style={{
+                    width: '56px', height: '56px', flexShrink: 0,
+                    background: 'rgba(13,31,13,0.6)', borderRadius: '8px',
+                    border: '1px solid rgba(74,49,24,0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '4px',
+                  }}>
+                    <GameImage
+                      src={item.image || getFallbackUrl('tackle')}
+                      fallback={getFallbackUrl('tackle')}
+                      alt={item.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ fontFamily: 'Georgia, serif', color: '#d4c5a9', fontSize: '0.85rem', lineHeight: 1.3 }}>
+                      {item.name}
+                    </h3>
+                  </div>
                 </div>
-                <div className="text-xs text-wood-500 mb-3 space-y-0.5">
-                  {item.specs?.map((s) => (
-                    <div key={s.label}>
-                      <span className="text-wood-600">{s.label}:</span>{' '}
-                      <span className="text-wood-400">{s.value}</span>
+
+                {/* Характеристики */}
+                {item.specs && item.specs.length > 0 && (
+                  <div style={{ flex: 1, marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      {item.specs.map((s) => (
+                        <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between',
+                          fontSize: '0.7rem', borderBottom: '1px solid rgba(74,49,24,0.2)', paddingBottom: '2px' }}>
+                          <span style={{ color: '#5c3d1e' }}>{s.label}</span>
+                          <span style={{ color: '#a8894e' }}>{s.value}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-wood-800/40">
-                  <span className="text-yellow-400 font-bold text-sm">
-                    {Number(item.price).toFixed(0)}$
-                  </span>
-                  <button onClick={() => handleBuy(item)} className="btn btn-primary text-xs py-1">
-                    Купить
+                  </div>
+                )}
+
+                {/* Цена + кнопка */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  paddingTop: '10px', borderTop: '1px solid rgba(74,49,24,0.35)',
+                  marginTop: 'auto',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '0.8rem' }}>💰</span>
+                    <span style={{ color: '#eab308', fontWeight: 'bold', fontSize: '1rem', fontFamily: 'Georgia, serif' }}>
+                      {Number(item.price).toFixed(0)}$
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleBuy(item)}
+                    disabled={buying === item.id}
+                    className="btn btn-primary text-xs"
+                    style={{ minHeight: '32px', minWidth: '72px' }}
+                  >
+                    {buying === item.id ? '⏳' : '🛒 Купить'}
                   </button>
                 </div>
               </div>
             ))}
+
+            {items.length === 0 && (
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📦</div>
+                <p style={{ fontSize: '0.85rem' }}>Нет товаров в этой категории</p>
+              </div>
+            )}
           </div>
         )}
       </main>

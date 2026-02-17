@@ -1,7 +1,7 @@
 /**
  * Правая панель рыбалки — слоты удочек, выбор снасти, действия, вываживание, чат.
  */
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, type ChangeEvent } from 'react'
 import FightBar from './FightBar'
 import ChatWindow from '../chat/ChatWindow'
 import PlayerList from '../chat/PlayerList'
@@ -55,11 +55,11 @@ interface TacklePanelProps {
 }
 
 const rodClassLabel: Record<string, string> = {
-  float: 'Поплавочная',
-  spinning: 'Спиннинг',
-  bottom: 'Донная',
-  feeder: 'Фидер',
-  match: 'Матчевая',
+  float: '🪣 Поплавочная',
+  spinning: '🌀 Спиннинг',
+  bottom: '⚓ Донная',
+  feeder: '🔲 Фидер',
+  match: '🎯 Матчевая',
 }
 
 function TackleRow({ label, value, valueClass }: {
@@ -70,16 +70,16 @@ function TackleRow({ label, value, valueClass }: {
   if (!value && value !== 0) return null
   return (
     <>
-      <span className="text-wood-500 text-xs">{label}:</span>
-      <span className={`text-xs ${valueClass || 'text-wood-200'}`}>{value}</span>
+      <span style={{ fontSize: '0.65rem', color: '#6b5030' }}>{label}:</span>
+      <span style={{ fontSize: '0.65rem' }} className={valueClass || 'text-wood-200'}>{value}</span>
     </>
   )
 }
 
-function durabilityColor(d: number) {
-  if (d > 60) return 'text-green-400'
-  if (d > 30) return 'text-yellow-400'
-  return 'text-red-400'
+function durabilityColor(d: number): string {
+  if (d > 60) return '#4ade80'
+  if (d > 30) return '#facc15'
+  return '#f87171'
 }
 
 /** Слайдер глубины / проводки с debounce */
@@ -95,14 +95,13 @@ function SettingSlider({ label, value, min, max, step, disabled, onChange }: {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [localValue, setLocalValue] = useState(value)
 
-  // Синхронизация при изменении props (другая удочка выбрана)
   const prevValueRef = useRef(value)
   if (prevValueRef.current !== value) {
     prevValueRef.current = value
     setLocalValue(value)
   }
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value)
     setLocalValue(v)
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -111,8 +110,8 @@ function SettingSlider({ label, value, min, max, step, disabled, onChange }: {
 
   return (
     <>
-      <span className="text-wood-500 text-xs">{label}:</span>
-      <div className="flex items-center gap-1.5">
+      <span style={{ fontSize: '0.65rem', color: '#6b5030' }}>{label}:</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <input
           type="range"
           min={min}
@@ -123,7 +122,7 @@ function SettingSlider({ label, value, min, max, step, disabled, onChange }: {
           onChange={handleChange}
           className="flex-1 h-1 accent-water-500 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
         />
-        <span className="text-xs text-wood-200 w-8 text-right tabular-nums">
+        <span style={{ fontSize: '0.65rem', color: '#d4c5a9', minWidth: '28px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
           {step < 1 ? localValue.toFixed(1) : localValue}
           {(label === 'Глубина' || label === 'Клипса') ? 'м' : ''}
         </span>
@@ -143,27 +142,26 @@ export default function TacklePanel({
   const [chatTab, setChatTab] = useState<'chat' | 'players'>('chat')
   const [playerCount, setPlayerCount] = useState(0)
 
-  // Детали снасти: из активной сессии или выбранной удочки
   const activeRod = activeSession
     ? rods.find((r) => r.id === activeSession.rodId)
     : rods.find((r) => r.id === selectedRodId)
 
-  // Слайдеры заблокированы во время bite/fighting/caught
   const slidersDisabled = !!activeSession && ['bite', 'fighting', 'caught'].includes(activeSession.state)
 
-  // Удочка в воде — нельзя менять снасть
   const rodInWater = activeRod
     ? sessions.some((s) => s.rodId === activeRod.id)
     : false
 
-  // Показывать глубину: поплавочная, донная, фидер, матчевая
   const showDepth = activeRod && activeRod.rod_class !== 'spinning'
-  // Показывать проводку: спиннинг
   const showRetrieve = activeRod?.rod_class === 'spinning'
+
+  /* Цвет сообщения */
+  const msgIsError = message.startsWith('⚠') || message.includes('Обрыв') || message.includes('сломал') || message.includes('Ошибка')
+  const msgIsSuccess = message.startsWith('✅') || message.includes('пойман') || message.includes('Заброс') || message.includes('отпущена')
 
   return (
     <div className="wood-panel flex flex-col h-full overflow-hidden">
-      {/* Док удочек — слоты с визуальным выбором */}
+      {/* Слоты удочек */}
       <RodDock
         sessions={sessions}
         fights={fights}
@@ -176,91 +174,95 @@ export default function TacklePanel({
 
       {/* Детали снасти */}
       {activeRod && (
-        <div className="p-2 border-b border-wood-700/40 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
-          <TackleRow label="Класс" value={rodClassLabel[activeRod.rod_class] || activeRod.rod_class} />
-          <TackleRow label="Катушка" value={activeRod.reel_name} />
-          <TackleRow label="Леска" value={activeRod.line_name} />
-          <TackleRow label="Крючок" value={activeRod.hook_name} />
-          {activeRod.float_name && <TackleRow label="Поплавок" value={activeRod.float_name} />}
-          {activeRod.lure_name && <TackleRow label="Приманка" value={activeRod.lure_name} />}
-          {activeRod.bait_name && (
-            <>
-              <span className="text-wood-500 text-xs">Наживка:</span>
-              <div className="flex items-center justify-between gap-2">
-                <span className={activeRod.bait_remaining < 5 ? 'text-xs text-red-400' : 'text-xs text-wood-200'}>
-                  {activeRod.bait_name} ({activeRod.bait_remaining})
-                </span>
-                {/* Кнопка смены наживки для WAITING сессий */}
-                {activeSession?.state === 'waiting' && activeSession.rodId === activeRod.id && (
-                  <BaitChangeButton
-                    sessionId={activeSession.id}
-                    currentBaitName={activeRod.bait_name}
-                    onSuccess={(msg) => onMessage?.(msg)}
-                  />
-                )}
-              </div>
-            </>
-          )}
+        <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
+          {/* Заголовок снасти */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span style={{ fontSize: '0.7rem', color: '#8b6d3f', fontFamily: 'Georgia, serif' }}>
+              {rodClassLabel[activeRod.rod_class] || activeRod.rod_class}
+            </span>
+            <span style={{ fontSize: '0.65rem', color: durabilityColor(activeRod.durability_current), fontWeight: 'bold' }}>
+              {activeRod.durability_current}%
+            </span>
+          </div>
 
-          {/* Слайдер глубины */}
-          {showDepth && (
-            <SettingSlider
-              label="Глубина"
-              value={activeRod.depth_setting}
-              min={0.1}
-              max={10}
-              step={0.1}
-              disabled={slidersDisabled}
-              onChange={(v) => onUpdateSettings(activeRod.id, { depth_setting: v })}
-            />
-          )}
+          {/* Мини-бар прочности */}
+          <div style={{ height: '2px', background: 'rgba(92,61,30,0.3)', borderRadius: '2px', marginBottom: '6px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: '2px',
+              width: `${activeRod.durability_current}%`,
+              background: durabilityColor(activeRod.durability_current),
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
 
-          {/* Слайдер проводки */}
-          {showRetrieve && (
-            <>
+          {/* Детали в 2 колонки */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 10px' }}>
+            <TackleRow label="Катушка"  value={activeRod.reel_name} />
+            <TackleRow label="Леска"    value={activeRod.line_name} />
+            <TackleRow label="Крючок"   value={activeRod.hook_name} />
+            {activeRod.float_name && <TackleRow label="Поплавок" value={activeRod.float_name} />}
+            {activeRod.lure_name && <TackleRow label="Приманка" value={activeRod.lure_name} />}
+            {activeRod.bait_name && (
+              <>
+                <span style={{ fontSize: '0.65rem', color: '#6b5030' }}>Наживка:</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                  <span style={{ fontSize: '0.65rem', color: activeRod.bait_remaining < 5 ? '#f87171' : '#d4c5a9' }}>
+                    {activeRod.bait_name} ({activeRod.bait_remaining})
+                  </span>
+                  {activeSession?.state === 'waiting' && activeSession.rodId === activeRod.id && (
+                    <BaitChangeButton
+                      sessionId={activeSession.id}
+                      currentBaitName={activeRod.bait_name}
+                      onSuccess={(msg) => onMessage?.(msg)}
+                    />
+                  )}
+                </div>
+              </>
+            )}
+
+            {showDepth && (
               <SettingSlider
-                label="Проводка"
-                value={activeRod.retrieve_speed}
-                min={1}
-                max={10}
-                step={1}
+                label="Глубина"
+                value={activeRod.depth_setting}
+                min={0.1} max={10} step={0.1}
                 disabled={slidersDisabled}
-                onChange={(v) => onUpdateSettings(activeRod.id, { retrieve_speed: v })}
+                onChange={(v) => onUpdateSettings(activeRod.id, { depth_setting: v })}
               />
-              {/* Индикатор оптимальной скорости */}
-              <span className="col-span-2 text-[9px] text-center">
-                {activeRod.retrieve_speed >= 4 && activeRod.retrieve_speed <= 7 && (
-                  <span className="text-green-400">✓ Оптимальная скорость (+20%)</span>
-                )}
-                {(activeRod.retrieve_speed <= 2 || activeRod.retrieve_speed >= 9) && (
-                  <span className="text-red-400">⚠ Слишком медленная/быстрая (-30%)</span>
-                )}
-                {activeRod.retrieve_speed === 3 || activeRod.retrieve_speed === 8 && (
-                  <span className="text-yellow-400">Средняя скорость</span>
-                )}
-              </span>
+            )}
 
-            </>
-          )}
-
-          <TackleRow
-            label="Прочность"
-            value={`${activeRod.durability_current}%`}
-            valueClass={`text-xs ${durabilityColor(activeRod.durability_current)}`}
-          />
+            {showRetrieve && (
+              <>
+                <SettingSlider
+                  label="Проводка"
+                  value={activeRod.retrieve_speed}
+                  min={1} max={10} step={1}
+                  disabled={slidersDisabled}
+                  onChange={(v) => onUpdateSettings(activeRod.id, { retrieve_speed: v })}
+                />
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontSize: '0.6rem', lineHeight: 1.3 }}>
+                  {activeRod.retrieve_speed >= 4 && activeRod.retrieve_speed <= 7 && (
+                    <span style={{ color: '#4ade80' }}>✓ Оптимальная скорость (+20%)</span>
+                  )}
+                  {(activeRod.retrieve_speed <= 2 || activeRod.retrieve_speed >= 9) && (
+                    <span style={{ color: '#f87171' }}>⚠ Слишком медленная/быстрая (-30%)</span>
+                  )}
+                  {(activeRod.retrieve_speed === 3 || activeRod.retrieve_speed === 8) && (
+                    <span style={{ color: '#facc15' }}>~ Средняя скорость</span>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Кнопка смены снасти */}
           {!rodInWater && (
-            <div className="col-span-2 mt-1">
-              <button
-                onClick={() => setTackleChangeRodId(
-                  tackleChangeRodId === activeRod.id ? null : activeRod.id,
-                )}
-                className="btn btn-secondary text-[10px] w-full py-0.5"
-              >
-                {tackleChangeRodId === activeRod.id ? 'Скрыть' : 'Сменить снасть'}
-              </button>
-            </div>
+            <button
+              onClick={() => setTackleChangeRodId(tackleChangeRodId === activeRod.id ? null : activeRod.id)}
+              className="btn btn-secondary"
+              style={{ width: '100%', marginTop: '6px', fontSize: '0.65rem', minHeight: '28px', padding: '3px 8px' }}
+            >
+              {tackleChangeRodId === activeRod.id ? '✖ Скрыть' : '🔧 Сменить снасть'}
+            </button>
           )}
         </div>
       )}
@@ -278,136 +280,178 @@ export default function TacklePanel({
       )}
 
       {/* Статус + кнопки действий */}
-      <div className="p-2 border-b border-wood-700/40 space-y-2">
+      <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(92,61,30,0.3)', flexShrink: 0 }}>
+        {/* Сообщение */}
         {message && (
-          <p className="text-wood-300 text-xs text-center">{message}</p>
+          <div style={{
+            padding: '5px 10px', borderRadius: '6px', marginBottom: '8px', fontSize: '0.72rem',
+            textAlign: 'center', lineHeight: 1.35,
+            background: msgIsError
+              ? 'rgba(220,38,38,0.12)'
+              : msgIsSuccess
+                ? 'rgba(22,101,52,0.18)'
+                : 'rgba(92,61,30,0.25)',
+            color: msgIsError ? '#f87171' : msgIsSuccess ? '#4ade80' : '#d4c5a9',
+            border: `1px solid ${msgIsError ? 'rgba(220,38,38,0.2)' : msgIsSuccess ? 'rgba(74,222,128,0.2)' : 'rgba(92,61,30,0.3)'}`,
+          }}>
+            {message}
+          </div>
         )}
 
-        <div className="flex flex-wrap gap-2">
-          {/* Нет сессий и есть удочки = подсказка */}
-          {sessions.length === 0 && rods.length > 0 && (
-            <span className="text-wood-500 text-sm font-serif py-1 w-full text-center">
-              Кликните по воде для заброса
-            </span>
-          )}
+        {/* Нет снастей */}
+        {rods.length === 0 && (
+          <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#5c3d1e', fontFamily: 'Georgia, serif', padding: '4px 0' }}>
+            Нет готовых снастей. Соберите удочку в рюкзаке.
+          </p>
+        )}
 
-          {/* Нет снастей */}
-          {rods.length === 0 && (
-            <span className="text-wood-500 text-xs">Нет готовых снастей</span>
-          )}
+        {/* Нет сессий — подсказка */}
+        {sessions.length === 0 && rods.length > 0 && (
+          <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#8b6d3f', fontFamily: 'Georgia, serif', padding: '4px 0', animation: 'pulse 2s infinite' }}>
+            🎣 Кликните по воде для заброса
+          </p>
+        )}
 
-          {/* Ожидание поклёвки — показываем для активной сессии или единственной */}
-          {(() => {
-            const waitingSession = activeSession?.state === 'waiting'
-              ? activeSession
-              : sessions.length === 1 && sessions[0].state === 'waiting'
-                ? sessions[0]
-                : null
-            if (!waitingSession) return null
-            const isSpinning = waitingSession.rodClass === 'spinning'
-            const nearShore = isSpinning && waitingSession.retrieveProgress > 0.85
-            return (
-              <div className="w-full flex flex-col gap-2">
-                {/* Кнопка проводки для спиннинга */}
-                {isSpinning ? (
-                  <div className="flex flex-col gap-1">
-                    {nearShore ? (
-                      // Приманка у берега - показываем кнопку перезаброса
-                      <div className="text-center">
-                        <div className="text-yellow-400 text-xs mb-1 animate-pulse">
-                          🎣 Приманка у берега!
-                        </div>
-                        <button
-                          onClick={() => onRetrieve(waitingSession.id)}
-                          className="btn bg-yellow-700 hover:bg-yellow-600 border-yellow-600 text-white text-sm w-full"
-                        >
-                          Перезаброс
-                        </button>
+        {/* Ожидание поклёвки */}
+        {(() => {
+          const waitingSession = activeSession?.state === 'waiting'
+            ? activeSession
+            : sessions.length === 1 && sessions[0].state === 'waiting'
+              ? sessions[0]
+              : null
+          if (!waitingSession) return null
+          const isSpinning = waitingSession.rodClass === 'spinning'
+          const nearShore = isSpinning && waitingSession.retrieveProgress > 0.85
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {isSpinning ? (
+                <>
+                  {nearShore ? (
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#facc15', fontSize: '0.72rem', marginBottom: '6px', animation: 'pulse 1.5s infinite' }}>
+                        🎣 Приманка у берега!
                       </div>
-                    ) : (
-                      // Обычная кнопка проводки
-                      <>
-                        <button
-                          onMouseDown={() => onStartRetrieve?.(waitingSession.id)}
-                          onMouseUp={() => onStopRetrieve?.(waitingSession.id)}
-                          onMouseLeave={() => onStopRetrieve?.(waitingSession.id)}
-                          onTouchStart={(e) => {
-                            e.preventDefault()
-                            onStartRetrieve?.(waitingSession.id)
-                          }}
-                          onTouchEnd={(e) => {
-                            e.preventDefault()
-                            onStopRetrieve?.(waitingSession.id)
-                          }}
-                          className={`btn flex-1 text-sm transition-colors ${
-                            waitingSession.isRetrieving
-                              ? 'bg-water-600 hover:bg-water-500 border-water-500 text-white animate-pulse'
-                              : 'bg-water-800 hover:bg-water-700 border-water-700 text-water-200'
-                          }`}
-                        >
-                          {waitingSession.isRetrieving ? '⚡ Проводка...' : 'Зажмите для проводки [R]'}
-                        </button>
-                        <div className="text-center text-[9px] text-water-500">
-                          Рыба клюёт только во время проводки
+                      <button
+                        onClick={() => onRetrieve(waitingSession.id)}
+                        className="btn"
+                        style={{
+                          width: '100%', minHeight: '44px', fontSize: '0.9rem',
+                          background: 'rgba(133,77,14,0.5)', borderColor: '#92400e',
+                          color: '#fde68a',
+                        }}
+                      >
+                        🔄 Перезаброс
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onMouseDown={() => onStartRetrieve?.(waitingSession.id)}
+                        onMouseUp={() => onStopRetrieve?.(waitingSession.id)}
+                        onMouseLeave={() => onStopRetrieve?.(waitingSession.id)}
+                        onTouchStart={(e) => { e.preventDefault(); onStartRetrieve?.(waitingSession.id) }}
+                        onTouchEnd={(e) => { e.preventDefault(); onStopRetrieve?.(waitingSession.id) }}
+                        className="btn"
+                        style={{
+                          width: '100%', minHeight: '48px', fontSize: '0.9rem',
+                          transition: 'all 0.15s ease',
+                          background: waitingSession.isRetrieving
+                            ? 'rgba(2,132,199,0.5)' : 'rgba(12,74,110,0.4)',
+                          borderColor: waitingSession.isRetrieving ? '#0369a1' : '#164e63',
+                          color: waitingSession.isRetrieving ? '#e0f2fe' : '#7898b8',
+                          boxShadow: waitingSession.isRetrieving ? '0 0 12px rgba(2,132,199,0.3)' : 'none',
+                        }}
+                      >
+                        {waitingSession.isRetrieving ? '⚡ Проводка...' : '🎣 Зажмите для проводки [R]'}
+                      </button>
+                      {/* Прогресс подматывания */}
+                      {waitingSession.retrieveProgress > 0.05 && (
+                        <div style={{ height: '4px', background: 'rgba(12,74,110,0.4)', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%', borderRadius: '4px',
+                            width: `${waitingSession.retrieveProgress * 100}%`,
+                            background: 'linear-gradient(to right, #0369a1, #38bdf8)',
+                            transition: 'width 0.3s ease',
+                          }} />
                         </div>
-                        {/* Прогресс бар подматывания */}
-                        {waitingSession.retrieveProgress > 0.1 && (
-                          <div className="w-full bg-wood-800 rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className="bg-water-500 h-full transition-all duration-300"
-                              style={{ width: `${waitingSession.retrieveProgress * 100}%` }}
-                            />
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-wood-500 text-sm font-serif animate-pulse py-1 text-center">
-                    Ожидание поклёвки...
-                  </span>
-                )}
-
-                {/* Кнопка вытащить (если не у берега) */}
-                {!nearShore && (
+                      )}
+                      <p style={{ textAlign: 'center', fontSize: '0.6rem', color: '#4a3118' }}>
+                        Рыба клюёт только во время проводки
+                      </p>
+                    </>
+                  )}
+                  {!nearShore && (
+                    <button
+                      onClick={() => onRetrieve(waitingSession.id)}
+                      className="btn btn-secondary"
+                      style={{ minHeight: '36px', fontSize: '0.75rem' }}
+                    >
+                      Вытащить
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p style={{
+                    textAlign: 'center', fontSize: '0.82rem', color: '#8b6d3f',
+                    fontFamily: 'Georgia, serif', animation: 'pulse 2s infinite',
+                  }}>
+                    ⏳ Ожидание поклёвки...
+                  </p>
                   <button
                     onClick={() => onRetrieve(waitingSession.id)}
-                    className="btn btn-secondary text-xs"
+                    className="btn btn-secondary"
+                    style={{ minHeight: '36px', fontSize: '0.75rem' }}
                   >
                     Вытащить
                   </button>
-                )}
-              </div>
-            )
-          })()}
+                </>
+              )}
+            </div>
+          )
+        })()}
 
-          {/* Поклёвка */}
-          {activeSession?.state === 'bite' && (
+        {/* Поклёвка */}
+        {activeSession?.state === 'bite' && (
+          <button
+            onClick={onStrike}
+            className="btn"
+            style={{
+              width: '100%', minHeight: '52px', fontSize: '1.05rem',
+              fontFamily: 'Georgia, serif', letterSpacing: '0.05em',
+              background: 'rgba(185,28,28,0.5)', borderColor: '#b91c1c',
+              color: '#fca5a5', animation: 'pulse 0.6s infinite',
+              boxShadow: '0 0 20px rgba(220,38,38,0.4)',
+            }}
+          >
+            ⚡ ПОДСЕЧКА! [Space]
+          </button>
+        )}
+
+        {/* Вываживание */}
+        {activeSession?.state === 'fighting' && (
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
-              onClick={onStrike}
-              className="btn bg-red-800 hover:bg-red-700 text-white border-red-600 animate-pulse flex-1 text-sm"
+              onClick={onReelIn}
+              className="btn btn-primary"
+              style={{ flex: 1, minHeight: '48px', fontSize: '0.9rem' }}
             >
-              ПОДСЕЧКА! [Space]
+              🎣 Подмотка [G]
             </button>
-          )}
-
-          {/* Вываживание */}
-          {activeSession?.state === 'fighting' && (
-            <>
-              <button onClick={onReelIn} className="btn btn-primary flex-1 text-sm">
-                Подмотка [G]
-              </button>
-              <button onClick={onPull} className="btn btn-action flex-1 text-sm">
-                Подтяжка [H]
-              </button>
-            </>
-          )}
-        </div>
+            <button
+              onClick={onPull}
+              className="btn btn-action"
+              style={{ flex: 1, minHeight: '48px', fontSize: '0.9rem' }}
+            >
+              💪 Подтяжка [H]
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* FightBar при вываживании */}
+      {/* FightBar */}
       {activeSession?.state === 'fighting' && activeFight && (
-        <div className="border-b border-wood-700/40">
+        <div style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
           <FightBar
             tension={activeFight.tension}
             distance={activeFight.distance}
@@ -419,50 +463,45 @@ export default function TacklePanel({
       {/* Чат / Игроки */}
       {chatChannelId && (
         <div className="flex-1 min-h-0 flex flex-col">
-          <div className="flex border-b border-wood-700/40">
-            <button
-              onClick={() => setChatTab('chat')}
-              className={`flex-1 text-xs py-1.5 font-serif transition-colors ${
-                chatTab === 'chat'
-                  ? 'text-wood-100 border-b-2 border-water-500'
-                  : 'text-wood-500 hover:text-wood-300'
-              }`}
-            >
-              Чат
-            </button>
-            <button
-              onClick={() => setChatTab('players')}
-              className={`flex-1 text-xs py-1.5 font-serif transition-colors ${
-                chatTab === 'players'
-                  ? 'text-wood-100 border-b-2 border-water-500'
-                  : 'text-wood-500 hover:text-wood-300'
-              }`}
-            >
-              Игроки{playerCount > 0 ? ` (${playerCount})` : ''}
-            </button>
+          <div style={{ display: 'flex', borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
+            {(['chat', 'players'] as const).map((tab) => {
+              const isActive = chatTab === tab
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setChatTab(tab)}
+                  style={{
+                    flex: 1, fontSize: '0.72rem', padding: '7px 4px',
+                    fontFamily: 'Georgia, serif', transition: 'color 0.15s ease',
+                    background: 'none', outline: 'none', cursor: 'pointer',
+                    borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+                    borderBottom: isActive ? '2px solid #7898b8' : '2px solid transparent',
+                    color: isActive ? '#d4c5a9' : '#5c3d1e',
+                  }}
+                >
+                  {tab === 'chat' ? '💬 Чат' : `👥 Игроки${playerCount > 0 ? ` (${playerCount})` : ''}`}
+                </button>
+              )
+            })}
           </div>
-          <div className="flex-1 min-h-0 p-2">
+          <div style={{ flex: 1, minHeight: 0, padding: '6px' }}>
             {chatTab === 'chat' ? (
-              <ChatWindow
-                channelType="location"
-                channelId={chatChannelId}
-                className="h-full"
-              />
+              <ChatWindow channelType="location" channelId={chatChannelId} className="h-full" />
             ) : (
-              <PlayerList
-                locationId={chatChannelId}
-                onCountChange={setPlayerCount}
-                className="h-full"
-              />
+              <PlayerList locationId={chatChannelId} onCountChange={setPlayerCount} className="h-full" />
             )}
           </div>
         </div>
       )}
 
       {/* Кнопка выхода */}
-      <div className="p-2 border-t border-wood-700/40 mt-auto">
-        <button onClick={onLeave} className="btn btn-secondary w-full text-xs">
-          На базу
+      <div style={{ padding: '8px 10px', borderTop: '1px solid rgba(92,61,30,0.3)', flexShrink: 0 }}>
+        <button
+          onClick={onLeave}
+          className="btn btn-secondary"
+          style={{ width: '100%', minHeight: '38px', fontSize: '0.78rem' }}
+        >
+          🏠 На базу
         </button>
       </div>
     </div>
