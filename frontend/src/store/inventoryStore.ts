@@ -33,6 +33,7 @@ interface PlayerRod {
   bait_name: string | null
   bait_remaining: number
   durability_current: number
+  durability_max: number
   is_assembled: boolean
   is_ready: boolean
   depth_setting: number

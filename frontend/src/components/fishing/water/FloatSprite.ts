@@ -141,7 +141,7 @@ function drawWaitingFloat(
 
 function drawBiteFloat(
   g: Graphics, x: number, y: number, f: number, phase: number,
-  biteAngle: number, alpha: number,
+  _biteAngle: number, alpha: number,
 ) {
   // СУПЕР медленная анимация - поклевка должна длиться 20-30 секунд
   const slowTime = (f + phase * 100) * 0.005 // В 200 раз медленнее!

@@ -28,8 +28,9 @@ export default function BaitChangeButton({ sessionId, currentBaitName, onSuccess
   useEffect(() => {
     if (showPicker) {
       getInventory()
-        .then((data: InventoryItem[] | { results: InventoryItem[] }) => {
-          const list = Array.isArray(data) ? data : data.results
+        .then((res) => {
+          const data = res.data
+          const list: InventoryItem[] = Array.isArray(data) ? data : (data.results ?? data)
           const baitItems = list.filter((i) => i.item_type === 'bait' && i.quantity > 0)
           setBaits(baitItems)
         })

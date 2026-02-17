@@ -55,8 +55,9 @@ export default function TackleChangePanel({ rod, onApply, onClose }: TackleChang
 
   useEffect(() => {
     getInventory()
-      .then((data: InventoryItem[] | { results: InventoryItem[] }) => {
-        const list = Array.isArray(data) ? data : data.results
+      .then((res) => {
+        const data = res.data
+        const list: InventoryItem[] = Array.isArray(data) ? data : (data.results ?? data)
         setInventory(list)
       })
       .catch(() => setError('Не удалось загрузить инвентарь'))
