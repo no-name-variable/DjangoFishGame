@@ -30,6 +30,7 @@ interface ShopItem {
   name: string
   price: string
   image?: string | null
+  specs?: { label: string; value: string }[]
   [key: string]: unknown
 }
 
@@ -107,15 +108,12 @@ export default function ShopPage() {
                   <h3 className="font-serif text-wood-200 text-sm self-center">{item.name}</h3>
                 </div>
                 <div className="text-xs text-wood-500 mb-3 space-y-0.5">
-                  {Object.entries(item)
-                    .filter(([k]) => !['id', 'name', 'image', 'description', 'price', 'target_species'].includes(k))
-                    .slice(0, 4)
-                    .map(([k, v]) => (
-                      <div key={k}>
-                        <span className="text-wood-600">{k}:</span>{' '}
-                        <span className="text-wood-400">{String(v)}</span>
-                      </div>
-                    ))}
+                  {item.specs?.map((s) => (
+                    <div key={s.label}>
+                      <span className="text-wood-600">{s.label}:</span>{' '}
+                      <span className="text-wood-400">{s.value}</span>
+                    </div>
+                  ))}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-wood-800/40">
                   <span className="text-yellow-400 font-bold text-sm">

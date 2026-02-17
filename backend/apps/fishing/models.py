@@ -34,16 +34,6 @@ class FishingSession(models.Model):
     class Meta:
         verbose_name = 'Сессия рыбалки'
         verbose_name_plural = 'Сессии рыбалки'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['player', 'rod'],
-                name='unique_player_rod_session',
-            ),
-            models.UniqueConstraint(
-                fields=['player', 'slot'],
-                name='unique_player_slot_session',
-            ),
-        ]
 
     def __str__(self):
         return f'{self.player.nickname} — {self.get_state_display()}'
