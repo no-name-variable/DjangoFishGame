@@ -1,6 +1,9 @@
 from django.urls import path
 
-from .views import BaseListView, BaseLocationsView, BaseTravelView, LocationEnterView, LocationLeaveView
+from .views import (
+    BaseListView, BaseLocationsView, BaseTravelView,
+    LocationEnterView, LocationLeaveView, LocationPlayersView,
+)
 
 urlpatterns = [
     path('bases/', BaseListView.as_view(), name='base-list'),
@@ -8,4 +11,5 @@ urlpatterns = [
     path('bases/<int:base_id>/travel/', BaseTravelView.as_view(), name='base-travel'),
     path('locations/<int:location_id>/enter/', LocationEnterView.as_view(), name='location-enter'),
     path('locations/<int:location_id>/leave/', LocationLeaveView.as_view(), name='location-leave'),
+    path('locations/<int:location_id>/players/', LocationPlayersView.as_view(), name='location-players'),
 ]

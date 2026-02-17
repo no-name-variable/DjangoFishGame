@@ -45,6 +45,18 @@ class FishingStatusUseCase:
         if not sessions:
             return FishingStatusResult(sessions=[], fights={}, game_time=gt)
 
+        # Сбрасываем протухшие поклёвки (> 3 секунд без подсечки)
+        now = timezone.now()
+        for session in sessions:
+            if session.state == FishingSession.State.BITE and session.bite_time:
+                if (now - session.bite_time).total_seconds() > 3:
+                    session.state = FishingSession.State.WAITING
+                    session.hooked_species = None
+                    session.hooked_weight = None
+                    session.hooked_length = None
+                    session.bite_time = None
+                    session.save()
+
         # Для каждой WAITING — пробуем поклёвку и обновляем прогресс проводки
         for session in sessions:
             if session.state == FishingSession.State.WAITING:

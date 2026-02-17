@@ -4,6 +4,7 @@
 import { useCallback, useRef, useState } from 'react'
 import FightBar from './FightBar'
 import ChatWindow from '../chat/ChatWindow'
+import PlayerList from '../chat/PlayerList'
 import RodDock from './RodDock'
 import TackleChangePanel from './TackleChangePanel'
 import BaitChangeButton from './BaitChangeButton'
@@ -139,6 +140,8 @@ export default function TacklePanel({
   onLeave, onUpdateSettings, onChangeTackle, onMessage, message, chatChannelId,
 }: TacklePanelProps) {
   const [tackleChangeRodId, setTackleChangeRodId] = useState<number | null>(null)
+  const [chatTab, setChatTab] = useState<'chat' | 'players'>('chat')
+  const [playerCount, setPlayerCount] = useState(0)
 
   // Детали снасти: из активной сессии или выбранной удочки
   const activeRod = activeSession
@@ -413,14 +416,46 @@ export default function TacklePanel({
         </div>
       )}
 
-      {/* Чат */}
+      {/* Чат / Игроки */}
       {chatChannelId && (
-        <div className="flex-1 min-h-0 p-2">
-          <ChatWindow
-            channelType="location"
-            channelId={chatChannelId}
-            className="h-full"
-          />
+        <div className="flex-1 min-h-0 flex flex-col">
+          <div className="flex border-b border-wood-700/40">
+            <button
+              onClick={() => setChatTab('chat')}
+              className={`flex-1 text-xs py-1.5 font-serif transition-colors ${
+                chatTab === 'chat'
+                  ? 'text-wood-100 border-b-2 border-water-500'
+                  : 'text-wood-500 hover:text-wood-300'
+              }`}
+            >
+              Чат
+            </button>
+            <button
+              onClick={() => setChatTab('players')}
+              className={`flex-1 text-xs py-1.5 font-serif transition-colors ${
+                chatTab === 'players'
+                  ? 'text-wood-100 border-b-2 border-water-500'
+                  : 'text-wood-500 hover:text-wood-300'
+              }`}
+            >
+              Игроки{playerCount > 0 ? ` (${playerCount})` : ''}
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 p-2">
+            {chatTab === 'chat' ? (
+              <ChatWindow
+                channelType="location"
+                channelId={chatChannelId}
+                className="h-full"
+              />
+            ) : (
+              <PlayerList
+                locationId={chatChannelId}
+                onCountChange={setPlayerCount}
+                className="h-full"
+              />
+            )}
+          </div>
         </div>
       )}
 

@@ -223,6 +223,19 @@ class TestStrikeTimer:
         assert fishing_session_bite.hooked_weight is None
         assert fishing_session_bite.hooked_length is None
 
+    def test_expired_bite_reset_on_polling(self, api_client, fishing_session_bite):
+        """Протухшая поклёвка автоматически сбрасывается при polling status."""
+        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=5)
+        fishing_session_bite.save(update_fields=['bite_time'])
+
+        resp = api_client.get('/api/fishing/status/')
+        assert resp.status_code == 200
+
+        fishing_session_bite.refresh_from_db()
+        assert fishing_session_bite.state == FishingSession.State.WAITING
+        assert fishing_session_bite.hooked_species is None
+        assert fishing_session_bite.bite_time is None
+
 
 # ═══════════════════════════════════════════════════════════
 # 4. Лимит садка (MAX_CREEL_SIZE)

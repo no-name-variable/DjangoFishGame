@@ -135,3 +135,35 @@ class TestLocationLeave:
         assert resp.status_code == status.HTTP_200_OK
         player.refresh_from_db()
         assert player.current_location is None
+
+
+# ── Location players ─────────────────────────────────────────────────
+
+
+@pytest.mark.django_db
+class TestLocationPlayers:
+
+    def test_returns_players(self, api_client, player, location):
+        """Игрок на локации виден в списке."""
+        player.current_location = location
+        player.save(update_fields=['current_location'])
+
+        resp = api_client.get(f'/api/locations/{location.pk}/players/')
+        assert resp.status_code == status.HTTP_200_OK
+        nicknames = [p['nickname'] for p in resp.data]
+        assert player.nickname in nicknames
+        assert resp.data[0]['rank_title'] == 'Новичок'
+
+    def test_excludes_other_locations(self, api_client, player, base, location):
+        """Игрок на другой локации не виден."""
+        other_loc = Location.objects.create(
+            base=base, name='Другая локация',
+            min_rank=1, depth_map={'avg': 3.0},
+        )
+        player.current_location = other_loc
+        player.save(update_fields=['current_location'])
+
+        resp = api_client.get(f'/api/locations/{location.pk}/players/')
+        assert resp.status_code == status.HTTP_200_OK
+        nicknames = [p['nickname'] for p in resp.data]
+        assert player.nickname not in nicknames

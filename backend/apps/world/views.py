@@ -1,11 +1,23 @@
 """Views мира — базы и локации."""
 
-from rest_framework import generics, status
+from rest_framework import generics, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.models import Player
+
 from .models import Base, Location
 from .serializers import BaseSerializer, LocationDetailSerializer, LocationSerializer
+
+
+class LocationPlayerSerializer(serializers.ModelSerializer):
+    """Краткая информация об игроке на локации."""
+
+    rank_title = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Player
+        fields = ['id', 'nickname', 'rank', 'rank_title']
 
 
 class BaseListView(generics.ListAPIView):
@@ -90,3 +102,13 @@ class BaseTravelView(APIView):
         player.save(update_fields=['money', 'current_base', 'current_location'])
 
         return Response(BaseSerializer(base).data)
+
+
+class LocationPlayersView(generics.ListAPIView):
+    """Список игроков на локации."""
+
+    serializer_class = LocationPlayerSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return Player.objects.filter(current_location_id=self.kwargs['location_id'])
