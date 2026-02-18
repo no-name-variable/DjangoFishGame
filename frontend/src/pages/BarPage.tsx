@@ -86,7 +86,6 @@ const PREPARATIONS = [
 ] as const
 
 export default function BarPage() {
-  const player = usePlayerStore((s) => s.player)
   const updatePlayer = usePlayerStore((s) => s.updatePlayer)
   const [drinks, setDrinks] = useState<Drink[]>([])
   const [creel, setCreel] = useState<CreelFish[]>([])
@@ -155,7 +154,8 @@ export default function BarPage() {
     }
   }
 
-  const baseId = player?.current_base ?? 0
+  // Бар — общее место, не привязан к базе
+  const barChannelId = 0
 
   if (loading) {
     return (
@@ -475,7 +475,7 @@ export default function BarPage() {
 
         <ChatWindow
           channelType="bar"
-          channelId={baseId}
+          channelId={barChannelId}
           className="flex-1 min-h-0"
           onMembersChange={setMembers}
         />

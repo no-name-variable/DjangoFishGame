@@ -23,20 +23,19 @@ def send_bar_notification(player, drink_count: int) -> None:
         return
 
     text = template.format(nick=player.nickname)
-    base_id = player.current_base_id or 0
-
+    # Бар — общее место, channel_id=0
     # Сохраняем как системное сообщение в БД
     msg = ChatMessage.objects.create(
         player=player,
         channel='bar',
-        channel_id=base_id,
+        channel_id=0,
         text=text,
     )
 
     # Рассылаем по WebSocket
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        f'chat_bar_{base_id}',
+        'chat_bar_0',
         {
             'type': 'chat.message',
             'message': {
