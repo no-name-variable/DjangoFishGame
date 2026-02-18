@@ -13,6 +13,14 @@ from .models import (
 )
 
 
+class IngredientShopSerializer(serializers.ModelSerializer):
+    """Сериализатор ингредиентов для магазина."""
+
+    class Meta:
+        model = MoonshineIngredient
+        fields = ['id', 'name', 'slug', 'price', 'description']
+
+
 class ApparatusPartSerializer(serializers.ModelSerializer):
     collected = serializers.SerializerMethodField()
 
@@ -61,17 +69,21 @@ class RecipeSerializer(serializers.ModelSerializer):
         if not request:
             return False
         player = request.user.player
-        # Проверяем аппарат
+        from django.contrib.contenttypes.models import ContentType
+        from apps.inventory.models import InventoryItem
         from .services import MoonshineService
         svc = MoonshineService()
         if not svc.is_apparatus_complete(player):
             return False
-        # Проверяем ингредиенты
+        ct = ContentType.objects.get_for_model(MoonshineIngredient)
         for slug, qty in obj.required_ingredients.items():
-            pi = PlayerIngredient.objects.filter(
-                player=player, ingredient__slug=slug,
+            ingredient = MoonshineIngredient.objects.filter(slug=slug).first()
+            if not ingredient:
+                return False
+            inv = InventoryItem.objects.filter(
+                player=player, content_type=ct, object_id=ingredient.pk,
             ).first()
-            if not pi or pi.quantity < qty:
+            if not inv or inv.quantity < qty:
                 return False
         return True
 

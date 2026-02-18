@@ -7,21 +7,17 @@ from rest_framework.views import APIView
 from .models import (
     ApparatusPart,
     BrewingSession,
-    MoonshineIngredient,
     MoonshineRecipe,
     PlayerMoonshineBuff,
 )
 from .serializers import (
     ApparatusPartSerializer,
     BrewingSessionSerializer,
-    BuyIngredientSerializer,
     CollectBrewingSerializer,
-    IngredientSerializer,
     PlayerBuffSerializer,
     RecipeSerializer,
     StartBrewingSerializer,
 )
-from .use_cases.buy_ingredient import BuyIngredientUseCase
 from .use_cases.collect_moonshine import CollectMoonshineUseCase
 from .use_cases.start_brewing import StartBrewingUseCase
 
@@ -46,41 +42,6 @@ class PartsView(APIView):
             'collected': collected,
             'total': total,
             'is_complete': collected >= total,
-        })
-
-
-class IngredientsView(APIView):
-    """Список ингредиентов + количество у игрока."""
-
-    def get(self, request):
-        ingredients = MoonshineIngredient.objects.all()
-        serializer = IngredientSerializer(ingredients, many=True, context={'request': request})
-        return Response(serializer.data)
-
-
-class BuyIngredientView(APIView):
-    """Купить ингредиент."""
-
-    def post(self, request):
-        serializer = BuyIngredientSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        uc = _resolve(BuyIngredientUseCase)
-        try:
-            result = uc.execute(
-                request.user.player,
-                serializer.validated_data['ingredient_id'],
-                serializer.validated_data.get('quantity', 1),
-            )
-        except MoonshineIngredient.DoesNotExist:
-            return Response({'error': 'Ингредиент не найден.'}, status=status.HTTP_404_NOT_FOUND)
-        except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({
-            'message': f'Куплено: {result.ingredient_name} x{result.quantity}',
-            'total_cost': result.total_cost,
-            'player_money': result.player_money,
         })
 
 

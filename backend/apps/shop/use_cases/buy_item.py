@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from django.contrib.contenttypes.models import ContentType
 
 from apps.inventory.models import InventoryItem
+from apps.home.models import MoonshineIngredient
 from apps.tackle.models import (
     Bait, FloatTackle, Flavoring, Food, Groundbait, Hook, Line, Reel, RodType,
 )
@@ -13,6 +14,7 @@ ITEM_TYPE_MAP = {
     'rod': RodType, 'reel': Reel, 'line': Line, 'hook': Hook,
     'float': FloatTackle, 'bait': Bait,
     'groundbait': Groundbait, 'flavoring': Flavoring, 'food': Food,
+    'ingredient': MoonshineIngredient,
 }
 
 

@@ -2,9 +2,12 @@
 
 from dataclasses import dataclass
 
-from apps.fishing.models import GameTime
+from django.contrib.contenttypes.models import ContentType
 
-from ..models import BrewingSession, MoonshineRecipe, PlayerIngredient
+from apps.fishing.models import GameTime
+from apps.inventory.models import InventoryItem
+
+from ..models import BrewingSession, MoonshineIngredient, MoonshineRecipe
 from ..services import MoonshineService
 
 
@@ -22,6 +25,17 @@ class StartBrewingUseCase:
     def __init__(self, moonshine_service: MoonshineService):
         self._moonshine = moonshine_service
 
+    def _get_ingredient_item(self, player, slug):
+        """Находит InventoryItem с ингредиентом по slug."""
+        ingredient = MoonshineIngredient.objects.filter(slug=slug).first()
+        if not ingredient:
+            return None, 0
+        ct = ContentType.objects.get_for_model(MoonshineIngredient)
+        inv = InventoryItem.objects.filter(
+            player=player, content_type=ct, object_id=ingredient.pk,
+        ).first()
+        return inv, inv.quantity if inv else 0
+
     def execute(self, player, recipe_id: int) -> StartBrewingResult:
         """Raises: MoonshineRecipe.DoesNotExist, ValueError."""
         try:
@@ -32,29 +46,25 @@ class StartBrewingUseCase:
         if not self._moonshine.is_apparatus_complete(player):
             raise ValueError('Аппарат не собран. Соберите все 6 деталей.')
 
-        # Проверяем, нет ли уже активной варки
         if BrewingSession.objects.filter(player=player).exists():
             raise ValueError('У вас уже есть активная варка.')
 
-        # Проверяем ингредиенты
+        # Проверяем ингредиенты в инвентаре
         for slug, qty in recipe.required_ingredients.items():
-            pi = PlayerIngredient.objects.filter(
-                player=player, ingredient__slug=slug,
-            ).first()
-            if not pi or pi.quantity < qty:
-                have = pi.quantity if pi else 0
+            _, have = self._get_ingredient_item(player, slug)
+            if have < qty:
                 raise ValueError(
                     f'Недостаточно ингредиента ({slug}). Нужно: {qty}, есть: {have}.',
                 )
 
-        # Списываем ингредиенты
+        # Списываем ингредиенты из инвентаря
         for slug, qty in recipe.required_ingredients.items():
-            pi = PlayerIngredient.objects.get(player=player, ingredient__slug=slug)
-            pi.quantity -= qty
-            if pi.quantity <= 0:
-                pi.delete()
+            inv, _ = self._get_ingredient_item(player, slug)
+            inv.quantity -= qty
+            if inv.quantity <= 0:
+                inv.delete()
             else:
-                pi.save(update_fields=['quantity'])
+                inv.save(update_fields=['quantity'])
 
         # Создаём сессию варки
         gt = GameTime.get_instance()

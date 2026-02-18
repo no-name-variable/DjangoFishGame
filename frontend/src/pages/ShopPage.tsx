@@ -10,18 +10,19 @@ import GameImage from '../components/ui/GameImage'
 import { getFallbackUrl } from '../utils/getAssetUrl'
 
 const categories = [
-  { key: 'rods',   label: 'Удилища',  icon: '🪃' },
-  { key: 'reels',  label: 'Катушки',  icon: '⚙️' },
-  { key: 'lines',  label: 'Лески',    icon: '🧵' },
-  { key: 'hooks',  label: 'Крючки',   icon: '🪝' },
-  { key: 'floats', label: 'Поплавки', icon: '🔴' },
-  { key: 'baits',  label: 'Наживки',  icon: '🪱' },
-  { key: 'food',   label: 'Еда',      icon: '🍞' },
+  { key: 'rods',        label: 'Удилища',      icon: '🪃' },
+  { key: 'reels',       label: 'Катушки',      icon: '⚙️' },
+  { key: 'lines',       label: 'Лески',        icon: '🧵' },
+  { key: 'hooks',       label: 'Крючки',       icon: '🪝' },
+  { key: 'floats',      label: 'Поплавки',     icon: '🔴' },
+  { key: 'baits',       label: 'Наживки',      icon: '🪱' },
+  { key: 'food',        label: 'Еда',          icon: '🍞' },
+  { key: 'ingredients', label: 'Ингредиенты',  icon: '🧪' },
 ]
 
 const itemTypeMap: Record<string, string> = {
   rods: 'rod', reels: 'reel', lines: 'line', hooks: 'hook',
-  floats: 'float', baits: 'bait', food: 'food',
+  floats: 'float', baits: 'bait', food: 'food', ingredients: 'ingredient',
 }
 
 interface ShopItem {

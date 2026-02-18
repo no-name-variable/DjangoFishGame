@@ -6,6 +6,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.home.models import MoonshineIngredient
+from apps.home.serializers import IngredientShopSerializer
 from apps.tackle.models import (
     Bait, FloatTackle, Food, Groundbait, Hook, Line, Reel, RodType, Flavoring,
 )
@@ -30,6 +32,7 @@ SHOP_CATEGORIES = {
     'groundbaits': (Groundbait, GroundbaitSerializer),
     'flavorings': (Flavoring, FlavoringSerializer),
     'food': (Food, FoodSerializer),
+    'ingredients': (MoonshineIngredient, IngredientShopSerializer),
 }
 
 
