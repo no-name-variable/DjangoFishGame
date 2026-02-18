@@ -104,8 +104,10 @@ class BaitSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_specs(self, obj):
+        species = list(obj.target_species.values_list('name_ru', flat=True))
         return [
             {'label': 'В упаковке', 'value': f'{obj.quantity_per_pack} шт.'},
+            {'label': 'Целевая рыба', 'value': ', '.join(species) if species else 'Универсальная'},
         ]
 
 
@@ -117,9 +119,11 @@ class GroundbaitSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_specs(self, obj):
+        species = list(obj.target_species.values_list('name_ru', flat=True))
         return [
             {'label': 'Эффективность', 'value': f'{obj.effectiveness}/10'},
             {'label': 'Длительность', 'value': f'{obj.duration_hours} ч.'},
+            {'label': 'Целевая рыба', 'value': ', '.join(species) if species else 'Универсальная'},
         ]
 
 
@@ -131,8 +135,10 @@ class FlavoringSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_specs(self, obj):
+        species = list(obj.target_species.values_list('name_ru', flat=True))
         return [
             {'label': 'Бонус', 'value': f'x{obj.bonus_multiplier}'},
+            {'label': 'Целевая рыба', 'value': ', '.join(species) if species else 'Универсальная'},
         ]
 
 

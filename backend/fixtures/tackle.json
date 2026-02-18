@@ -205,7 +205,8 @@
       "name": "Червь",
       "quantity_per_pack": 20,
       "price": "10.00",
-      "image": "tackle/baits/1.png"
+      "image": "tackle/baits/1.png",
+      "target_species": [1, 2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 17, 29, 30, 31, 32, 33, 34, 35, 41]
     }
   },
   {
@@ -215,7 +216,8 @@
       "name": "Опарыш",
       "quantity_per_pack": 30,
       "price": "15.00",
-      "image": "tackle/baits/2.png"
+      "image": "tackle/baits/2.png",
+      "target_species": [2, 3, 4, 5, 6, 9, 12, 30, 33, 34, 35, 38, 40]
     }
   },
   {
@@ -225,7 +227,8 @@
       "name": "Кукуруза",
       "quantity_per_pack": 25,
       "price": "8.00",
-      "image": "tackle/baits/3.jpg"
+      "image": "tackle/baits/3.jpg",
+      "target_species": [3, 4, 10, 11, 13, 20, 21, 22, 26, 31]
     }
   },
   {
@@ -235,7 +238,8 @@
       "name": "Тесто",
       "quantity_per_pack": 15,
       "price": "12.00",
-      "image": "tackle/baits/4.jpg"
+      "image": "tackle/baits/4.jpg",
+      "target_species": [2, 3, 5, 6, 9, 32]
     }
   },
   {
@@ -245,7 +249,8 @@
       "name": "Живец",
       "quantity_per_pack": 5,
       "price": "30.00",
-      "image": "tackle/baits/5.png"
+      "image": "tackle/baits/5.png",
+      "target_species": [1, 14, 15, 16, 17, 18, 24, 27, 28, 29, 41]
     }
   },
   {

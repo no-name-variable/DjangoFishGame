@@ -11,7 +11,7 @@
       "length_min": 8,
       "length_max": 50,
       "rarity": "common",
-      "sell_price_per_kg": "120.00",
+      "sell_price_per_kg": "60.00",
       "experience_per_kg": 10,
       "active_time": {
         "morning": 0.9,
@@ -36,7 +36,7 @@
       "length_min": 5,
       "length_max": 40,
       "rarity": "common",
-      "sell_price_per_kg": "80.00",
+      "sell_price_per_kg": "40.00",
       "experience_per_kg": 8,
       "active_time": {
         "morning": 0.8,
@@ -61,7 +61,7 @@
       "length_min": 8,
       "length_max": 45,
       "rarity": "common",
-      "sell_price_per_kg": "90.00",
+      "sell_price_per_kg": "45.00",
       "experience_per_kg": 9,
       "active_time": {
         "morning": 0.9,
@@ -86,7 +86,7 @@
       "length_min": 10,
       "length_max": 70,
       "rarity": "common",
-      "sell_price_per_kg": "150.00",
+      "sell_price_per_kg": "75.00",
       "experience_per_kg": 14,
       "active_time": {
         "morning": 0.7,
@@ -111,7 +111,7 @@
       "length_min": 6,
       "length_max": 35,
       "rarity": "common",
-      "sell_price_per_kg": "70.00",
+      "sell_price_per_kg": "35.00",
       "experience_per_kg": 7,
       "active_time": {
         "morning": 0.7,
@@ -136,7 +136,7 @@
       "length_min": 5,
       "length_max": 20,
       "rarity": "common",
-      "sell_price_per_kg": "40.00",
+      "sell_price_per_kg": "20.00",
       "experience_per_kg": 4,
       "active_time": {
         "morning": 0.8,
@@ -161,7 +161,7 @@
       "length_min": 4,
       "length_max": 20,
       "rarity": "common",
-      "sell_price_per_kg": "30.00",
+      "sell_price_per_kg": "15.00",
       "experience_per_kg": 3,
       "active_time": {
         "morning": 0.5,
@@ -186,7 +186,7 @@
       "length_min": 4,
       "length_max": 15,
       "rarity": "common",
-      "sell_price_per_kg": "35.00",
+      "sell_price_per_kg": "17.50",
       "experience_per_kg": 3,
       "active_time": {
         "morning": 0.7,
@@ -211,7 +211,7 @@
       "length_min": 6,
       "length_max": 40,
       "rarity": "common",
-      "sell_price_per_kg": "85.00",
+      "sell_price_per_kg": "42.50",
       "experience_per_kg": 8,
       "active_time": {
         "morning": 0.8,
@@ -236,7 +236,7 @@
       "length_min": 10,
       "length_max": 60,
       "rarity": "uncommon",
-      "sell_price_per_kg": "200.00",
+      "sell_price_per_kg": "100.00",
       "experience_per_kg": 20,
       "active_time": {
         "morning": 0.9,
@@ -261,7 +261,7 @@
       "length_min": 15,
       "length_max": 100,
       "rarity": "uncommon",
-      "sell_price_per_kg": "180.00",
+      "sell_price_per_kg": "90.00",
       "experience_per_kg": 18,
       "active_time": {
         "morning": 0.8,
@@ -286,7 +286,7 @@
       "length_min": 10,
       "length_max": 70,
       "rarity": "uncommon",
-      "sell_price_per_kg": "160.00",
+      "sell_price_per_kg": "80.00",
       "experience_per_kg": 16,
       "active_time": {
         "morning": 0.9,
@@ -311,7 +311,7 @@
       "length_min": 10,
       "length_max": 65,
       "rarity": "uncommon",
-      "sell_price_per_kg": "170.00",
+      "sell_price_per_kg": "85.00",
       "experience_per_kg": 17,
       "active_time": {
         "morning": 0.8,
@@ -336,7 +336,7 @@
       "length_min": 15,
       "length_max": 80,
       "rarity": "uncommon",
-      "sell_price_per_kg": "220.00",
+      "sell_price_per_kg": "110.00",
       "experience_per_kg": 22,
       "active_time": {
         "morning": 0.9,
@@ -361,7 +361,7 @@
       "length_min": 15,
       "length_max": 100,
       "rarity": "rare",
-      "sell_price_per_kg": "350.00",
+      "sell_price_per_kg": "175.00",
       "experience_per_kg": 35,
       "active_time": {
         "morning": 0.6,
@@ -386,7 +386,7 @@
       "length_min": 15,
       "length_max": 130,
       "rarity": "rare",
-      "sell_price_per_kg": "280.00",
+      "sell_price_per_kg": "140.00",
       "experience_per_kg": 30,
       "active_time": {
         "morning": 0.9,
@@ -411,7 +411,7 @@
       "length_min": 15,
       "length_max": 100,
       "rarity": "rare",
-      "sell_price_per_kg": "300.00",
+      "sell_price_per_kg": "150.00",
       "experience_per_kg": 32,
       "active_time": {
         "morning": 0.2,
@@ -436,7 +436,7 @@
       "length_min": 30,
       "length_max": 300,
       "rarity": "rare",
-      "sell_price_per_kg": "250.00",
+      "sell_price_per_kg": "125.00",
       "experience_per_kg": 28,
       "active_time": {
         "morning": 0.1,
@@ -461,7 +461,7 @@
       "length_min": 20,
       "length_max": 70,
       "rarity": "trophy",
-      "sell_price_per_kg": "800.00",
+      "sell_price_per_kg": "400.00",
       "experience_per_kg": 60,
       "active_time": {
         "morning": 0.5,
@@ -486,7 +486,7 @@
       "length_min": 20,
       "length_max": 110,
       "rarity": "trophy",
-      "sell_price_per_kg": "400.00",
+      "sell_price_per_kg": "200.00",
       "experience_per_kg": 45,
       "active_time": {
         "morning": 0.8,
@@ -511,7 +511,7 @@
       "length_min": 20,
       "length_max": 120,
       "rarity": "uncommon",
-      "sell_price_per_kg": "140.00",
+      "sell_price_per_kg": "70.00",
       "experience_per_kg": 15,
       "active_time": {
         "morning": 0.7,
@@ -536,7 +536,7 @@
       "length_min": 25,
       "length_max": 120,
       "rarity": "rare",
-      "sell_price_per_kg": "190.00",
+      "sell_price_per_kg": "95.00",
       "experience_per_kg": 25,
       "active_time": {
         "morning": 0.8,
@@ -561,7 +561,7 @@
       "length_min": 15,
       "length_max": 70,
       "rarity": "trophy",
-      "sell_price_per_kg": "600.00",
+      "sell_price_per_kg": "300.00",
       "experience_per_kg": 50,
       "active_time": {
         "morning": 0.9,
@@ -586,7 +586,7 @@
       "length_min": 40,
       "length_max": 200,
       "rarity": "legendary",
-      "sell_price_per_kg": "1500.00",
+      "sell_price_per_kg": "750.00",
       "experience_per_kg": 100,
       "active_time": {
         "morning": 0.8,
@@ -611,7 +611,7 @@
       "length_min": 40,
       "length_max": 230,
       "rarity": "legendary",
-      "sell_price_per_kg": "2000.00",
+      "sell_price_per_kg": "1000.00",
       "experience_per_kg": 120,
       "active_time": {
         "morning": 0.5,
