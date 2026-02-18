@@ -40,16 +40,24 @@ class StrikeUseCase:
         ).exists():
             raise ValueError('Уже идёт вываживание на другой удочке.')
 
-        # Проверка таймера подсечки (3 секунды)
-        if session.bite_time and (timezone.now() - session.bite_time).total_seconds() > 3:
+        # Проверка таймера подсечки
+        bite_timeout = session.bite_duration or 4.0
+        if session.bite_time and (timezone.now() - session.bite_time).total_seconds() > bite_timeout:
             session.state = FishingSession.State.WAITING
             session.hooked_species = None
             session.hooked_weight = None
             session.hooked_length = None
+            session.bite_time = None
+            session.bite_duration = None
+            session.nibble_time = None
+            session.nibble_duration = None
             session.save()
             raise ValueError('Поздно! Рыба сошла.')
 
         session.state = FishingSession.State.FIGHTING
+        session.nibble_time = None
+        session.nibble_duration = None
+        session.bite_duration = None
         session.save()
 
         fight = self._engine.create_fight(session, session.hooked_weight, session.hooked_species)

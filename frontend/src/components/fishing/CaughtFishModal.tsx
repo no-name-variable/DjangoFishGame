@@ -10,6 +10,7 @@ interface CaughtFishModalProps {
   weight: number
   length: number
   rarity: string
+  error?: string | null
   onKeep: () => void
   onRelease: () => void
 }
@@ -29,7 +30,7 @@ const RARITY_CFG: Record<string, {
   legendary: { textColor: '#facc15', bg: 'rgba(120,53,15,0.3)',    border: 'rgba(250,204,21,0.5)',    glow: '0 0 36px rgba(250,204,21,0.5)',             name: 'Легендарная', icon: '⭐' },
 }
 
-export default function CaughtFishModal({ fish, speciesImage, weight, length, rarity, onKeep, onRelease }: CaughtFishModalProps) {
+export default function CaughtFishModal({ fish, speciesImage, weight, length, rarity, error, onKeep, onRelease }: CaughtFishModalProps) {
   const cfg = RARITY_CFG[rarity] ?? RARITY_CFG.common
 
   return (
@@ -139,6 +140,13 @@ export default function CaughtFishModal({ fish, speciesImage, weight, length, ra
               🌊 Отпустить
             </button>
           </div>
+
+          {/* Ошибка (напр. «Садок полон») */}
+          {error && (
+            <p style={{ textAlign: 'center', fontSize: '0.78rem', color: '#f87171', marginTop: '8px' }}>
+              {error}
+            </p>
+          )}
 
           {/* Подсказка */}
           <p style={{ textAlign: 'center', fontSize: '0.6rem', color: '#4a3118', marginTop: '8px' }}>

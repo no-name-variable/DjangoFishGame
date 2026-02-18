@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 
 from apps.fishing.models import FishingSession, GroundbaitSpot
+from apps.fishing.utils import calc_bite_timeout_seconds
 from apps.inventory.models import InventoryItem
 
 
@@ -138,7 +139,8 @@ class TestStrike:
         assert resp.status_code == 404
 
     def test_strike_late(self, api_client, fishing_session_bite):
-        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=10)
+        timeout = calc_bite_timeout_seconds(fishing_session_bite)
+        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=timeout + 5)
         fishing_session_bite.save(update_fields=['bite_time'])
 
         resp = api_client.post(self.URL, {'session_id': fishing_session_bite.pk})

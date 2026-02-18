@@ -6,10 +6,30 @@ import { persist } from 'zustand/middleware'
 
 interface PlayerRod {
   id: number
+  rod_type: number
   rod_type_name: string
-  rod_class: 'float' | 'spinning' | 'bottom'
+  display_name: string
   custom_name: string | null
+  rod_class: 'float' | 'spinning' | 'bottom'
+  reel: number | null
+  reel_name: string | null
+  line: number | null
+  line_name: string | null
+  hook: number | null
+  hook_name: string | null
+  float_tackle: number | null
+  float_name: string | null
+  lure: number | null
+  lure_name: string | null
+  bait: number | null
+  bait_name: string | null
+  bait_remaining: number
+  durability_current: number
+  is_assembled: boolean
   is_ready: boolean
+  depth_setting: number
+  retrieve_speed: number
+  clip_distance: number
 }
 
 interface Player {

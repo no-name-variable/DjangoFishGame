@@ -28,6 +28,7 @@ const rodClassLabel: Record<string, string> = {
 
 const stateLabel: Record<string, string> = {
   waiting: 'Заброшена',
+  nibble: 'Подёргивает...',
   bite: 'ПОКЛЁВКА!',
   fighting: 'Вываживание',
   caught: 'Поймана!',
@@ -37,6 +38,7 @@ const stateLabel: Record<string, string> = {
 function slotBorderClass(state: string, isActive: boolean): string {
   const base = isActive ? 'ring-2 ring-wood-300/60' : ''
   switch (state) {
+    case 'nibble': return `border-orange-500 ${base}`
     case 'bite': return `border-red-500 ${base}`
     case 'fighting': return `border-yellow-500 ${base}`
     case 'caught': return `border-green-500 ${base}`
@@ -83,6 +85,7 @@ function RodSlot({
   }
 
   const borderClass = slotBorderClass(session.state, isActive)
+  const isNibble = session.state === 'nibble'
   const isBite = session.state === 'bite'
   const isFighting = session.state === 'fighting'
 
@@ -102,6 +105,7 @@ function RodSlot({
       </div>
       <div className={`text-[10px] mt-0.5 truncate ${
         isBite ? 'text-red-400 font-bold' :
+        isNibble ? 'text-orange-400' :
         isFighting ? 'text-yellow-400' :
         'text-wood-400'
       }`}>
@@ -203,14 +207,6 @@ export default function RodDock({
         <div className="text-wood-600 text-xs text-center py-2">Нет снастей</div>
       ) : (
         <div className="flex gap-1.5">
-          {/* Выбранная незаброшенная удочка — первый слот */}
-          {selectedRod && sessions.length === 0 && (
-            <SelectedRodSlot
-              rod={selectedRod}
-              onClick={() => setPickerOpen(!pickerOpen)}
-            />
-          )}
-
           {/* Слоты заброшенных удочек */}
           {sessions.map((s) => (
             <RodSlot
@@ -222,8 +218,16 @@ export default function RodDock({
             />
           ))}
 
-          {/* Пустой слот для добавления */}
-          {canAddMore && (
+          {/* Выбранная незаброшенная удочка */}
+          {selectedRod && canAddMore && (
+            <SelectedRodSlot
+              rod={selectedRod}
+              onClick={() => setPickerOpen(!pickerOpen)}
+            />
+          )}
+
+          {/* Пустой слот для добавления (когда удочка не выбрана) */}
+          {canAddMore && !selectedRod && (
             <RodSlot
               isActive={false}
               onClick={() => setPickerOpen(!pickerOpen)}

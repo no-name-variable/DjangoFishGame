@@ -88,6 +88,20 @@ export function updateRodAnim(
       smoothing = 0.06
       break
 
+    case 'nibble': {
+      // Лёгкие подёргивания — реже и слабее чем при bite
+      state.biteTimer--
+      if (state.biteTimer <= 0) {
+        state.biteJerk = 0.04 + Math.random() * 0.06
+        state.biteTimer = 15 + Math.floor(Math.random() * 40)
+      }
+      state.biteJerk *= 0.92
+      totalBend = 0.08 + state.biteJerk
+      profile = 'tip'
+      smoothing = 0.18
+      break
+    }
+
     case 'bite': {
       // Рывки через случайные интервалы
       state.biteTimer--
@@ -124,7 +138,7 @@ export function updateRodAnim(
 
   // Сброс biteJerk при смене состояния
   if (state.prevState !== active) {
-    if (active !== 'bite') {
+    if (active !== 'bite' && active !== 'nibble') {
       state.biteJerk = 0
       state.biteTimer = 0
     }
@@ -148,6 +162,8 @@ export function updateRodAnim(
       const vibAmp = tension * 0.00015 * t
       wobble = Math.sin(frame * 0.3 + i * 0.5) * vibAmp
         + Math.sin(frame * 0.7 + i * 1.1) * vibAmp * 0.5
+    } else if (active === 'nibble') {
+      wobble = Math.sin(frame * 0.1 + i * 0.5) * 0.003 * t
     } else if (active === 'bite') {
       wobble = Math.sin(frame * 0.15 + i * 0.6) * 0.005 * t
     }

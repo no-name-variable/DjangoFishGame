@@ -76,7 +76,7 @@ export async function getGameTime() {
 
 export interface SessionData {
   id: number
-  state: 'idle' | 'waiting' | 'bite' | 'fighting' | 'caught'
+  state: 'idle' | 'waiting' | 'nibble' | 'bite' | 'fighting' | 'caught'
   slot: number
   location: number
   location_name: string

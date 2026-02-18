@@ -118,8 +118,9 @@ class FishingConsumer(AsyncJsonWebsocketConsumer):
             'time_of_day': gt.time_of_day,
         } if gt else None
 
-        # Определяем новые поклёвки
+        # Определяем новые поклёвки и подёргивания
         bite_sessions = [s for s in result.sessions if s.state == 'bite']
+        nibble_sessions = [s for s in result.sessions if s.state == 'nibble']
 
         response = {
             'type': 'state',
@@ -128,9 +129,10 @@ class FishingConsumer(AsyncJsonWebsocketConsumer):
             'game_time': game_time,
         }
 
-        # Добавляем информацию о новых поклёвках
         if bite_sessions:
             response['bites'] = [s.pk for s in bite_sessions]
+        if nibble_sessions:
+            response['nibbles'] = [s.pk for s in nibble_sessions]
 
         return response
 

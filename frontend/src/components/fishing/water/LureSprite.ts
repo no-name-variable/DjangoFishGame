@@ -42,6 +42,8 @@ export function drawLure(
       g, baseX, baseY, f, cfg.retrieveSpeed, cfg.phase, alpha,
       cfg.isRetrieving ?? false, cfg.retrieveProgress ?? 0, waterline,
     )
+  } else if (cfg.state === 'nibble') {
+    drawNibbleLure(g, baseX, baseY, f, cfg.phase, alpha)
   } else if (cfg.state === 'bite') {
     drawBiteLure(g, baseX, baseY, f, cfg.biteAngle, alpha)
   } else if (cfg.state === 'fighting') {
@@ -170,6 +172,28 @@ function drawLureTrail(
   }
 }
 
+/** Приманка при подёргивании (NIBBLE) — лёгкий рывок */
+function drawNibbleLure(
+  g: Graphics, baseX: number, baseY: number,
+  frame: number, phase: number, alpha: number,
+) {
+  // Периодические лёгкие подёргивания
+  const t = frame * 0.08 + phase * 2
+  const twitchPhase = Math.sin(t * 1.7 + phase * 3)
+  const twitch = twitchPhase > 0.6 ? (twitchPhase - 0.6) * 8 : 0
+
+  const lureX = baseX + Math.sin(t * 0.4) * 2
+  const lureY = baseY + twitch
+
+  drawLureBody(g, lureX, lureY, 2, frame, alpha)
+
+  // Лёгкие круги при тычке
+  if (twitch > 0.5) {
+    g.circle(lureX, lureY, 6 + twitch * 2)
+    g.stroke({ color: 0xffffff, alpha: alpha * 0.15, width: 0.8 })
+  }
+}
+
 /** Приманка при поклёвке (BITE) */
 function drawBiteLure(
   g: Graphics, baseX: number, baseY: number,
@@ -264,6 +288,15 @@ export function drawLureRipples(
         g.stroke({ color: 0xffffff, alpha: 0.05, width: 0.5 })
       }
     }
+  } else if (cfg.state === 'nibble') {
+    // Лёгкие круги при подёргивании
+    const t = frame * 0.08 + cfg.phase * 2
+    const twitchPhase = Math.sin(t * 1.7 + cfg.phase * 3)
+    if (twitchPhase > 0.6) {
+      const radius = 5 + (twitchPhase - 0.6) * 10
+      g.circle(baseX, baseY, radius)
+      g.stroke({ color: 0xffffff, alpha: 0.08, width: 0.7 })
+    }
   } else if (cfg.state === 'bite') {
     // Агрессивные круги при поклёвке
     for (let r = 0; r < 3; r++) {
@@ -275,22 +308,31 @@ export function drawLureRipples(
   }
 }
 
-/** Индикатор поклёвки на неактивной приманке */
+/** Индикатор поклёвки/подёргивания на неактивной приманке */
 export function drawLureBiteIndicator(
   g: Graphics, cfg: LureConfig, frame: number,
   w: number, h: number, waterline: number,
 ) {
-  if (cfg.state !== 'bite' || cfg.isActive) return
+  if ((cfg.state !== 'bite' && cfg.state !== 'nibble') || cfg.isActive) return
 
   const [x, y] = toCanvasCoords(cfg.castX, cfg.castY, w, h, waterline)
-
-  // Красный пульсирующий круг
   const pulse = 0.7 + Math.sin(frame * 0.15) * 0.3
-  g.circle(x, y - 25, 12 * pulse)
-  g.fill({ color: 0xff0000, alpha: 0.4 * pulse })
-  g.stroke({ color: 0xff0000, alpha: 0.8 * pulse, width: 2 })
 
-  // Иконка приманки
-  g.circle(x, y - 25, 4)
-  g.fill({ color: 0xffcc00, alpha: 0.9 })
+  if (cfg.state === 'nibble') {
+    // Оранжевый пульсирующий круг для nibble
+    g.circle(x, y - 25, 10 * pulse)
+    g.fill({ color: 0xff8800, alpha: 0.25 * pulse })
+    g.stroke({ color: 0xff8800, alpha: 0.6 * pulse, width: 1.5 })
+
+    g.circle(x, y - 25, 3)
+    g.fill({ color: 0xffcc00, alpha: 0.7 })
+  } else {
+    // Красный пульсирующий круг для bite
+    g.circle(x, y - 25, 12 * pulse)
+    g.fill({ color: 0xff0000, alpha: 0.4 * pulse })
+    g.stroke({ color: 0xff0000, alpha: 0.8 * pulse, width: 2 })
+
+    g.circle(x, y - 25, 4)
+    g.fill({ color: 0xffcc00, alpha: 0.9 })
+  }
 }

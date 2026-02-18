@@ -1,5 +1,6 @@
 """Use case: статус всех рыболовных сессий (polling)."""
 
+import random
 from dataclasses import dataclass
 
 from django.utils import timezone
@@ -22,7 +23,7 @@ class FishingStatusResult:
 
 
 class FishingStatusUseCase:
-    """Получить статус всех сессий. Для каждой WAITING — try_bite()."""
+    """Получить статус всех сессий. Трёхфазный тик: WAITING→NIBBLE→BITE."""
 
     def __init__(
         self,
@@ -45,19 +46,36 @@ class FishingStatusUseCase:
         if not sessions:
             return FishingStatusResult(sessions=[], fights={}, game_time=gt)
 
-        # Сбрасываем протухшие поклёвки (> 3 секунд без подсечки)
         now = timezone.now()
+
+        # Фаза A: Expire BITE → WAITING (таймаут bite_duration)
         for session in sessions:
             if session.state == FishingSession.State.BITE and session.bite_time:
-                if (now - session.bite_time).total_seconds() > 3:
+                timeout = session.bite_duration or 4.0
+                if (now - session.bite_time).total_seconds() > timeout:
                     session.state = FishingSession.State.WAITING
                     session.hooked_species = None
                     session.hooked_weight = None
                     session.hooked_length = None
                     session.bite_time = None
+                    session.bite_duration = None
+                    session.nibble_time = None
+                    session.nibble_duration = None
                     session.save()
 
-        # Для каждой WAITING — пробуем поклёвку и обновляем прогресс проводки
+        # Фаза B: Transition NIBBLE → BITE (таймаут nibble_duration)
+        for session in sessions:
+            if session.state == FishingSession.State.NIBBLE and session.nibble_time:
+                timeout = session.nibble_duration or 3.0
+                if (now - session.nibble_time).total_seconds() > timeout:
+                    session.state = FishingSession.State.BITE
+                    session.bite_time = timezone.now()
+                    session.bite_duration = random.uniform(2.0, 4.0)
+                    session.nibble_time = None
+                    session.nibble_duration = None
+                    session.save()
+
+        # Фаза C: Try nibble (WAITING → NIBBLE)
         deleted_ids = set()
         for session in sessions:
             if session.state == FishingSession.State.WAITING:
@@ -78,8 +96,9 @@ class FishingStatusUseCase:
                     if fish:
                         weight = self._fish.generate_fish_weight(fish, player)
                         length = self._fish.generate_fish_length(fish, weight)
-                        session.state = FishingSession.State.BITE
-                        session.bite_time = timezone.now()
+                        session.state = FishingSession.State.NIBBLE
+                        session.nibble_time = timezone.now()
+                        session.nibble_duration = random.uniform(1.0, 3.0)
                         session.hooked_species = fish
                         session.hooked_weight = weight
                         session.hooked_length = length

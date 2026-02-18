@@ -8,6 +8,7 @@ import { useFishingStore, type SessionInfo } from '../store/fishingStore'
 import type { SessionData, FightData } from '../api/fishing'
 
 interface FishingSocketCallbacks {
+  onNibble?: (sessionId: number) => void
   onBite?: (sessionId: number) => void
   onCaught?: (data: CaughtData) => void
   onBreak?: (result: string, sessionId: number) => void
@@ -48,6 +49,7 @@ export function useFishingSocket(callbacks: FishingSocketCallbacks) {
   callbacksRef.current = callbacks
 
   const prevBiteIdsRef = useRef<Set<number>>(new Set())
+  const prevNibbleIdsRef = useRef<Set<number>>(new Set())
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reconnectDelayRef = useRef(3000)
   const unmountedRef = useRef(false)
@@ -97,6 +99,27 @@ export function useFishingSocket(callbacks: FishingSocketCallbacks) {
             })
           }
 
+          // Детекция новых подёргиваний (nibble)
+          if (data.nibbles) {
+            const newNibbleIds = new Set<number>(data.nibbles)
+            for (const id of newNibbleIds) {
+              if (!prevNibbleIdsRef.current.has(id)) {
+                cb.onNibble?.(id)
+              }
+            }
+            prevNibbleIdsRef.current = newNibbleIds
+          } else {
+            const nibbleIds = new Set(
+              sessions.filter((s) => s.state === 'nibble').map((s) => s.id),
+            )
+            for (const id of nibbleIds) {
+              if (!prevNibbleIdsRef.current.has(id)) {
+                cb.onNibble?.(id)
+              }
+            }
+            prevNibbleIdsRef.current = nibbleIds
+          }
+
           // Детекция новых поклёвок
           if (data.bites) {
             const newBiteIds = new Set<number>(data.bites)
@@ -107,7 +130,6 @@ export function useFishingSocket(callbacks: FishingSocketCallbacks) {
             }
             prevBiteIdsRef.current = newBiteIds
           } else {
-            // Определяем поклёвки из сессий
             const biteIds = new Set(
               sessions.filter((s) => s.state === 'bite').map((s) => s.id),
             )

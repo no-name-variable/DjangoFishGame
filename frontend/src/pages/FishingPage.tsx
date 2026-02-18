@@ -36,6 +36,7 @@ export default function FishingPage() {
   const [rods, setRods] = useState<FullRod[]>([])
   const [selectedRodId, setSelectedRodId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const [keepError, setKeepError] = useState<string | null>(null)
   const [gearOpen, setGearOpen] = useState(false)
   const waterRef = useRef<HTMLDivElement>(null)
   const lastCastRodClassRef = useRef<string | null>(null)
@@ -45,22 +46,19 @@ export default function FishingPage() {
 
   // WebSocket — колбэки для событий
   const { send, connected } = useFishingSocket({
-    onBite: (sessionId) => {
-      play('bite')
-      setMessage('ПОКЛЁВКА! Подсекай!')
-      const store = useFishingStore.getState()
-      if (!store.hasFighting()) {
-        setActiveSession(sessionId)
-      }
+    onNibble: () => {
+      play('nibble')
     },
-    onCastOk: (sessionId) => {
+    onBite: () => {
+      play('bite')
+    },
+    onCastOk: () => {
       play('cast')
       if (lastCastRodClassRef.current === 'spinning') {
         setMessage('🌀 Спиннинг заброшен! Зажмите [R] для проводки')
       } else {
         setMessage('🎣 Заброс! Ожидаем поклёвку...')
       }
-      setActiveSession(sessionId)
     },
     onStrikeOk: (data) => {
       setMessage(`На крючке: ${data.fish}! Вываживай!`)
@@ -84,16 +82,23 @@ export default function FishingPage() {
     onKeepResult: (data) => {
       const d = data as Record<string, unknown>
       setMessage(`${d.species_name} ${Number(d.weight).toFixed(2)}кг в садке! +${d.experience_reward} опыта`)
+      setKeepError(null)
       setCaught(null)
       getProfile().then(setPlayer).catch(() => {})
     },
     onReleaseResult: (data) => {
       setMessage(`Отпущена! +${data.karma_bonus} кармы`)
+      setKeepError(null)
       setCaught(null)
       getProfile().then(setPlayer).catch(() => {})
     },
     onError: (msg) => {
-      setMessage(msg)
+      // Если модалка пойманной рыбы открыта — показать ошибку в ней
+      if (useFishingStore.getState().caughtInfo) {
+        setKeepError(msg)
+      } else {
+        setMessage(msg)
+      }
     },
   })
 
@@ -142,12 +147,6 @@ export default function FishingPage() {
     // Запоминаем класс удочки для правильного сообщения в onCastOk
     lastCastRodClassRef.current = rods.find((r) => r.id === selectedRodId)?.rod_class ?? null
     send('cast', { rod_id: selectedRodId, point_x: normX, point_y: normY })
-
-    // Автовыбор следующей незаброшенной удочки
-    const castRodIds = new Set(sessionList.map((s) => s.rodId))
-    castRodIds.add(selectedRodId)
-    const nextRod = rods.find((r) => !castRodIds.has(r.id))
-    if (nextRod) setSelectedRodId(nextRod.id)
   }, [selectedRodId, sessions, rods, send])
 
   // Клик по поплавку = выбор сессии
@@ -156,9 +155,28 @@ export default function FishingPage() {
   }, [setActiveSession])
 
   const handleStrike = useCallback(() => {
-    if (!activeSessionId) return
-    send('strike', { session_id: activeSessionId })
-  }, [activeSessionId, send])
+    const sessionList = Object.values(sessions)
+    const target = selectedRodId
+      ? sessionList.find((s) => s.rodId === selectedRodId) || null
+      : null
+
+    if (!target) {
+      setMessage('Эта удочка не заброшена')
+      return
+    }
+
+    if (target.state === 'nibble') {
+      setMessage('Подёргивает... Рано подсекать!')
+      return
+    }
+    if (target.state !== 'bite') {
+      setMessage('Сейчас поклёвки нет!')
+      return
+    }
+
+    setActiveSession(target.id)
+    send('strike', { session_id: target.id })
+  }, [selectedRodId, sessions, send, setMessage, setActiveSession])
 
   const handleFightAction = useCallback((action: 'reel' | 'pull') => {
     if (!activeSessionId) return
@@ -168,16 +186,20 @@ export default function FishingPage() {
   }, [activeSessionId, send, play])
 
   const handleKeep = useCallback(() => {
-    const sid = caughtInfo?.sessionId ?? activeSessionId
+    const sid = caughtInfo?.sessionId
+      ?? activeSessionId
+      ?? Object.values(sessions).find((s) => s.state === 'caught')?.id
     if (!sid) return
     send('keep', { session_id: sid })
-  }, [caughtInfo?.sessionId, activeSessionId, send])
+  }, [caughtInfo?.sessionId, activeSessionId, sessions, send])
 
   const handleRelease = useCallback(() => {
-    const sid = caughtInfo?.sessionId ?? activeSessionId
+    const sid = caughtInfo?.sessionId
+      ?? activeSessionId
+      ?? Object.values(sessions).find((s) => s.state === 'caught')?.id
     if (!sid) return
     send('release', { session_id: sid })
-  }, [caughtInfo?.sessionId, activeSessionId, send])
+  }, [caughtInfo?.sessionId, activeSessionId, sessions, send])
 
   const handleRetrieve = useCallback((sessionId: number) => {
     const session = sessions[sessionId]
@@ -219,7 +241,7 @@ export default function FishingPage() {
     // Вытаскиваем все удочки через REST (WS может быть уже не нужен)
     const sessionList = Object.values(sessions)
     for (const s of sessionList) {
-      if (s.state === 'waiting' || s.state === 'idle') {
+      if (s.state === 'waiting' || s.state === 'idle' || s.state === 'nibble') {
         await fishingApi.retrieveRod(s.id).catch(() => {})
       }
     }
@@ -233,21 +255,43 @@ export default function FishingPage() {
 
   // Горячие клавиши
   useEffect(() => {
-    const activeSession = activeSessionId ? sessions[activeSessionId] : null
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!activeSession) return
+      const sessionList = Object.values(sessions)
+      const selectedSession = selectedRodId
+        ? sessionList.find((s) => s.rodId === selectedRodId)
+        : null
+      const activeSession = activeSessionId ? sessions[activeSessionId] : null
+      const strikeTarget = selectedSession || activeSession
 
-      if (activeSession.state === 'fighting') {
+      // Горячие клавиши 1/2/3 — переключение удочек
+      if (e.key === '1' || e.key === '2' || e.key === '3') {
+        const slotNum = Number(e.key)
+        const targetSession = sessionList.find((s) => s.slot === slotNum)
+        if (targetSession) {
+          setActiveSession(targetSession.id)
+          setSelectedRodId(targetSession.rodId)
+        } else {
+          const rodByIndex = rods[slotNum - 1]
+          if (rodByIndex) setSelectedRodId(rodByIndex.id)
+        }
+        return
+      }
+
+      if (activeSession?.state === 'fighting') {
         if (e.key === 'g' || e.key === 'G' || e.key === 'п' || e.key === 'П') {
           handleFightAction('reel')
         } else if (e.key === 'h' || e.key === 'H' || e.key === 'р' || e.key === 'Р') {
           handleFightAction('pull')
         }
-      } else if (activeSession.state === 'bite') {
+      } else if (strikeTarget?.state === 'bite') {
         if (e.key === ' ' || e.key === 'Enter') {
           handleStrike()
         }
-      } else if (activeSession.state === 'waiting' && activeSession.rodClass === 'spinning') {
+      } else if (strikeTarget?.state === 'nibble') {
+        if (e.key === ' ' || e.key === 'Enter') {
+          setMessage('Подёргивает... Рано подсекать!')
+        }
+      } else if (activeSession?.state === 'waiting' && activeSession.rodClass === 'spinning') {
         if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
           if (!activeSession.isRetrieving) {
             send('update_retrieve', { session_id: activeSession.id, is_retrieving: true })
@@ -271,7 +315,7 @@ export default function FishingPage() {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [activeSessionId, sessions, handleFightAction, handleStrike, send])
+  }, [activeSessionId, sessions, handleFightAction, handleStrike, send, selectedRodId, rods, setActiveSession, setSelectedRodId])
 
   const gt = useFishingStore((s) => s.gameTime)
   const timeLabels: Record<string, string> = {
@@ -291,6 +335,14 @@ export default function FishingPage() {
   // Удочки, которые ещё не заброшены
   const castRodIds = new Set(sessionList.map((s) => s.rodId))
   const availableRods = rods.filter((r) => !castRodIds.has(r.id))
+
+  // Авто-выбор: если выбранная удочка уже заброшена — переключить на следующую
+  const selectedRodCast = !!selectedRodId && castRodIds.has(selectedRodId)
+  useEffect(() => {
+    if (selectedRodCast && availableRods.length > 0) {
+      setSelectedRodId(availableRods[0].id)
+    }
+  }, [selectedRodCast, availableRods.length])
 
   // Формируем Set из сессий которые в режиме проводки
   const retrievingSessions = new Set(
@@ -390,19 +442,6 @@ export default function FishingPage() {
             </div>
           )}
 
-          {/* Оверлей: поклёвка на активной удочке */}
-          {activeSession?.state === 'bite' && (
-            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-              <div style={{
-                fontFamily: 'Georgia, serif', fontSize: '2.2rem', fontWeight: 'bold',
-                color: '#fca5a5', animation: 'bounce 0.5s infinite',
-                textShadow: '0 0 24px rgba(255,0,0,0.7), 0 0 48px rgba(255,0,0,0.3), 0 2px 6px rgba(0,0,0,0.9)',
-                letterSpacing: '0.08em',
-              }}>
-                ⚡ ПОКЛЁВКА!
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Правая панель */}
@@ -444,6 +483,7 @@ export default function FishingPage() {
           weight={caughtInfo.weight}
           length={caughtInfo.length}
           rarity={caughtInfo.rarity}
+          error={keepError}
           onKeep={handleKeep}
           onRelease={handleRelease}
         />

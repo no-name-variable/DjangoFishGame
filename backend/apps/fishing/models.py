@@ -10,6 +10,7 @@ class FishingSession(models.Model):
     class State(models.TextChoices):
         IDLE = 'idle', 'Без дела'
         WAITING = 'waiting', 'Ожидание поклёвки'
+        NIBBLE = 'nibble', 'Подёргивание'
         BITE = 'bite', 'Поклёвка!'
         FIGHTING = 'fighting', 'Вываживание'
         CAUGHT = 'caught', 'Рыба поймана'
@@ -25,6 +26,9 @@ class FishingSession(models.Model):
     bite_time = models.DateTimeField('Время поклёвки', null=True, blank=True)
     is_retrieving = models.BooleanField('Проводка (для спиннинга)', default=False)
     retrieve_progress = models.FloatField('Прогресс подматывания (0-1)', default=0.0)
+    nibble_time = models.DateTimeField('Время начала подёргивания', null=True, blank=True)
+    nibble_duration = models.FloatField('Длительность подёргивания (сек)', null=True, blank=True)
+    bite_duration = models.FloatField('Длительность поклёвки (сек)', null=True, blank=True)
     hooked_species = models.ForeignKey(
         'tackle.FishSpecies', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Клюнувшая рыба',
     )

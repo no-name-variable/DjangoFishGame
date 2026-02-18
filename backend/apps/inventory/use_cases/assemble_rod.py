@@ -50,7 +50,9 @@ class AssembleRodUseCase:
                         player=player, content_type=comp_ct,
                         object_id=component.pk, quantity__gte=1,
                     ).first()
-                    if comp_inv:
+                    if field == 'bait':
+                        pass  # Наживка не списывается — доступна для нескольких удочек
+                    elif comp_inv:
                         to_deduct.append((comp_inv, component))
                 except model.DoesNotExist:
                     raise model.DoesNotExist(f'{model.__name__} не найден.')

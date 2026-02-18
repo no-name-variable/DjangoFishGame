@@ -27,6 +27,31 @@ export function toCanvasCoords(
   return [cx, cy]
 }
 
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v))
+}
+
+/** Общая функция движения при поклёвке, чтобы линии и поплавок вели себя согласованно */
+export function calcBiteMotion(frame: number, phase: number) {
+  const t = frame * 0.06 + phase * 2
+
+  // Лёгкие покачивания + частые мелкие рывки
+  const wobble = Math.sin(t) * 2.4
+  const twitch = Math.sin(t * 2.1) * 1.2
+
+  // Редкие более глубокие притопления
+  const plungePhase = (Math.sin(t * 0.45 + phase) + 1) / 2 // 0..1
+  const plunge = (plungePhase * plungePhase) * 9
+
+  const offsetX = Math.sin(t * 0.55 + phase) * 2
+  const offsetY = wobble + twitch + plunge
+
+  // Интенсивность для подсветки/волн
+  const intensity = clamp((Math.abs(twitch) + plunge * 0.6) / 8, 0, 1)
+
+  return { offsetX, offsetY, intensity }
+}
+
 export function drawFloat(
   g: Graphics, cfg: FloatConfig, frame: number,
   w: number, h: number, waterline: number,
@@ -39,6 +64,8 @@ export function drawFloat(
 
   if (cfg.state === 'waiting') {
     drawWaitingFloat(g, baseX, baseY, f, p, alpha)
+  } else if (cfg.state === 'nibble') {
+    drawNibbleFloat(g, baseX, baseY, f, p, alpha)
   } else if (cfg.state === 'bite') {
     drawBiteFloat(g, baseX, baseY, f, p, cfg.biteAngle, alpha)
   } else if (cfg.state === 'fighting') {
@@ -63,13 +90,23 @@ export function drawRipples(
     g.stroke({ color: 0xffffff, alpha: 0.05, width: 0.5 })
     g.circle(baseX, baseY, r1 + 8)
     g.stroke({ color: 0xffffff, alpha: 0.03, width: 0.5 })
-  } else if (cfg.state === 'bite') {
-    // Агрессивные круги
-    for (let r = 0; r < 3; r++) {
-      const radius = ((f * 2 + r * 30) % 60)
-      const alpha = 0.25 * (1 - radius / 60)
+  } else if (cfg.state === 'nibble') {
+    // Лёгкие круги от подёргивания
+    const { intensity } = calcNibbleMotion(f, cfg.phase)
+    if (intensity > 0.15) {
+      const radius = 8 + intensity * 6
       g.circle(baseX, baseY, radius)
-      g.stroke({ color: 0xffffff, alpha, width: 1.2 })
+      g.stroke({ color: 0xffffff, alpha: 0.06 + intensity * 0.08, width: 0.7 })
+    }
+  } else if (cfg.state === 'bite') {
+    // Активность рыбы — частые, но мелкие круги
+    const { intensity } = calcBiteMotion(f, cfg.phase)
+    const baseRadius = 10 + intensity * 8
+    for (let r = 0; r < 2; r++) {
+      const radius = (f * 1.4 + r * 18) % 40 + baseRadius
+      const alpha = (0.16 + intensity * 0.15) * (1 - (radius - baseRadius) / 40)
+      g.circle(baseX, baseY, radius)
+      g.stroke({ color: 0xffffff, alpha, width: 1 })
     }
   } else if (cfg.state === 'fighting') {
     // Всплески от рыбы
@@ -91,25 +128,52 @@ export function drawRipples(
   }
 }
 
-/** Индикатор поклёвки на неактивной удочке */
+/** Индикатор поклёвки/подёргивания на неактивной удочке */
 export function drawBiteIndicator(
   g: Graphics, cfg: FloatConfig, frame: number,
   w: number, h: number, waterline: number,
 ) {
-  if (cfg.state !== 'bite' || cfg.isActive) return
+  if ((cfg.state !== 'bite' && cfg.state !== 'nibble') || cfg.isActive) return
 
   const [baseX, baseY] = toCanvasCoords(cfg.castX, cfg.castY, w, h, waterline)
   const pulse = Math.sin(frame * 0.15) * 0.5 + 0.5
 
-  // Пульсирующий красный круг
-  g.circle(baseX, baseY - 25, 10 + pulse * 4)
-  g.fill({ color: 0xff2222, alpha: 0.3 + pulse * 0.3 })
+  if (cfg.state === 'nibble') {
+    // Оранжевый пульсирующий круг для nibble
+    g.circle(baseX, baseY - 25, 8 + pulse * 3)
+    g.fill({ color: 0xff8800, alpha: 0.2 + pulse * 0.2 })
 
-  // Восклицательный знак
-  g.rect(baseX - 1.5, baseY - 33, 3, 10)
-  g.fill({ color: 0xff4444, alpha: 0.9 })
-  g.circle(baseX, baseY - 20, 2)
-  g.fill({ color: 0xff4444, alpha: 0.9 })
+    // Вопросительный знак (подёргивание, не поклёвка)
+    g.rect(baseX - 1, baseY - 31, 2, 7)
+    g.fill({ color: 0xffaa44, alpha: 0.8 })
+    g.circle(baseX, baseY - 21, 1.5)
+    g.fill({ color: 0xffaa44, alpha: 0.8 })
+  } else {
+    // Красный пульсирующий круг для bite
+    g.circle(baseX, baseY - 25, 10 + pulse * 4)
+    g.fill({ color: 0xff2222, alpha: 0.3 + pulse * 0.3 })
+
+    // Восклицательный знак
+    g.rect(baseX - 1.5, baseY - 33, 3, 10)
+    g.fill({ color: 0xff4444, alpha: 0.9 })
+    g.circle(baseX, baseY - 20, 2)
+    g.fill({ color: 0xff4444, alpha: 0.9 })
+  }
+}
+
+/** Движение при подёргивании — лёгкие тычки, без ухода под воду */
+export function calcNibbleMotion(frame: number, phase: number) {
+  const t = frame * 0.08 + phase * 2
+
+  // Периодические лёгкие тычки вниз
+  const twitchPhase = Math.sin(t * 1.7 + phase * 3)
+  const twitch = twitchPhase > 0.6 ? (twitchPhase - 0.6) * 6 : 0
+
+  const offsetX = Math.sin(t * 0.4 + phase) * 1
+  const offsetY = twitch + Math.sin(t * 0.7) * 0.8
+
+  const intensity = clamp(twitch / 2.5, 0, 1)
+  return { offsetX, offsetY, intensity }
 }
 
 // ────────── Приватные draw-функции ──────────
@@ -139,78 +203,57 @@ function drawWaitingFloat(
   g.stroke({ color: 0xcccccc, width: 0.5, alpha: 0.3 * alpha })
 }
 
+function drawNibbleFloat(
+  g: Graphics, x: number, y: number, f: number, phase: number, alpha: number,
+) {
+  const { offsetX, offsetY } = calcNibbleMotion(f, phase)
+  const bobX = x + offsetX
+  const bobY = y + offsetY
+
+  // Антенна — лёгкое покачивание, не уходит под воду
+  const antennaTop = bobY - 14
+  const tilt = Math.sin(f * 0.05 + phase) * 0.06
+  g.moveTo(bobX + tilt * 14, antennaTop)
+  g.lineTo(bobX, bobY)
+  g.stroke({ color: 0xff3333, width: 2, alpha })
+
+  // Тело поплавка
+  g.ellipse(bobX, bobY + 4, 3, 6)
+  g.fill({ color: 0xff4444, alpha })
+  g.ellipse(bobX, bobY + 10, 2, 4)
+  g.fill({ color: 0xffffff, alpha })
+
+  // Подводная часть лески
+  g.moveTo(bobX, bobY + 14)
+  g.lineTo(bobX + Math.sin(f * 0.07 + phase) * 4, bobY + 40)
+  g.stroke({ color: 0xcccccc, width: 0.5, alpha: 0.3 * alpha })
+}
+
 function drawBiteFloat(
   g: Graphics, x: number, y: number, f: number, phase: number,
   _biteAngle: number, alpha: number,
 ) {
-  // СУПЕР медленная анимация - поклевка должна длиться 20-30 секунд
-  const slowTime = (f + phase * 100) * 0.005 // В 200 раз медленнее!
+  const { offsetX, offsetY, intensity } = calcBiteMotion(f, phase)
+  const bobX = x + offsetX
+  const bobY = y + offsetY
+  const sinkFactor = clamp(intensity * 1.2, 0, 1)
 
-  // Основная волна покачивания - едва заметная
-  const mainWave = Math.sin(slowTime) * 1.5
+  // Антенна постепенно "уходит" под воду, но без скачков
+  const antennaLen = 14 * (1 - sinkFactor * 0.45)
+  g.moveTo(bobX, bobY - antennaLen)
+  g.lineTo(bobX, bobY)
+  g.stroke({ color: 0xff4444, width: 2, alpha: alpha * (0.7 + 0.3 * (1 - sinkFactor)) })
 
-  // Вторичная волна для "игры" - минимальная
-  const secondWave = Math.sin(slowTime * 0.4) * 1
+  // Тело поплавка
+  g.ellipse(bobX, bobY + 4, 3, 6)
+  g.fill({ color: 0xff6666, alpha: alpha * (0.75 + 0.25 * (1 - sinkFactor)) })
+  g.ellipse(bobX, bobY + 10, 2, 4)
+  g.fill({ color: 0xffffff, alpha: alpha * (0.65 + 0.25 * (1 - sinkFactor)) })
 
-  // Постепенное погружение - ОЧЕНЬ медленное (20-30 секунд)
-  const sinkProgress = Math.min(1, slowTime * 0.05)
-  const smoothSink = sinkProgress * sinkProgress * (3 - 2 * sinkProgress)
-  const sinkDepth = smoothSink * 12
-
-  // Итоговая позиция Y - едва заметные движения
-  const bobY = y + mainWave + secondWave + sinkDepth
-
-  // Минимальное горизонтальное покачивание
-  const bobX = x + Math.sin(slowTime * 0.5) * 1
-
-  if (smoothSink < 0.7) {
-    // Поплавок на поверхности (0-70% погружения)
-
-    // Антенна - укорачивается по мере погружения
-    const antennaLen = 14 * (1 - smoothSink * 0.5)
-    g.moveTo(bobX, bobY - antennaLen)
-    g.lineTo(bobX, bobY)
-    g.stroke({ color: 0xff4444, width: 2, alpha: alpha * (1 - smoothSink * 0.2) })
-
-    // Тело поплавка
-    g.ellipse(bobX, bobY + 4, 3, 6)
-    g.fill({ color: 0xff5555, alpha: alpha * (1 - smoothSink * 0.3) })
-    g.ellipse(bobX, bobY + 10, 2, 4)
-    g.fill({ color: 0xffffff, alpha: alpha * (1 - smoothSink * 0.2) })
-
-    // Мягкие волны вокруг
-    if (Math.abs(mainWave) > 1.5) {
-      const waveSize = 6 + Math.abs(mainWave)
-      g.circle(bobX, bobY + 12, waveSize)
-      g.stroke({ color: 0xffffff, alpha: 0.1, width: 1 })
-    }
-
-  } else {
-    // Поплавок под водой (70-100% погружения)
-
-    // Только кончик антенны торчит
-    const tipLength = 5 * (1 - (smoothSink - 0.7) / 0.3)
-    if (tipLength > 0) {
-      g.moveTo(bobX, bobY - tipLength)
-      g.lineTo(bobX, bobY)
-      g.stroke({ color: 0xff2222, width: 2, alpha: alpha * 0.7 })
-    }
-
-    // Красный ореол - очень медленная пульсация
-    const pulse = Math.sin(slowTime * 0.5) * 0.3 + 0.7
-    g.circle(bobX, bobY, 12 * pulse)
-    g.fill({ color: 0xff0000, alpha: 0.2 * pulse })
-
-    // Медленные пузырьки
-    const bubblePhase = Math.floor(slowTime) % 4
-    if (bubblePhase < 2) {
-      for (let i = 0; i < 2; i++) {
-        const bx = bobX + Math.sin(slowTime + i) * 3
-        const by = bobY - bubblePhase * 8 - i * 6
-        g.circle(bx, by, 1.5)
-        g.fill({ color: 0xffffff, alpha: 0.4 })
-      }
-    }
+  // Лёгкое сияние вокруг активного поплавка — видно, что рыба трогает
+  if (intensity > 0.2) {
+    g.circle(bobX, bobY + 2, 9 + intensity * 6)
+    g.stroke({ color: 0xff6666, alpha: 0.12 + intensity * 0.18, width: 1.2 })
   }
 }
 

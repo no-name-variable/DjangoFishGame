@@ -4,7 +4,7 @@
  */
 import { Graphics } from 'pixi.js'
 import type { FloatConfig } from './FloatSprite'
-import { toCanvasCoords } from './FloatSprite'
+import { calcBiteMotion, calcNibbleMotion, toCanvasCoords } from './FloatSprite'
 
 export function drawLine(
   g: Graphics,
@@ -20,13 +20,19 @@ export function drawLine(
 
   const isFighting = cfg.state === 'fighting'
   const isBite = cfg.state === 'bite'
+  const isNibble = cfg.state === 'nibble'
 
   // Целевая точка лески
   let targetX = floatX
   let targetY = floatY
-  if (isBite) {
-    targetX += Math.sin(frame * 0.5) * 5
-    targetY += Math.sin(frame * 0.04) * 2 + Math.sin(frame * 0.3) * 8
+  if (isNibble) {
+    const { offsetX, offsetY } = calcNibbleMotion(frame, cfg.phase)
+    targetX += offsetX
+    targetY += offsetY
+  } else if (isBite) {
+    const { offsetX, offsetY } = calcBiteMotion(frame, cfg.phase)
+    targetX += offsetX
+    targetY += offsetY
   } else if (isFighting) {
     targetX += Math.sin(frame * 0.4) * (cfg.tension * 0.05)
     targetY += Math.cos(frame * 0.3) * (cfg.tension * 0.03)

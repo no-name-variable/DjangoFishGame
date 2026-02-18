@@ -4,7 +4,7 @@
 import { create } from 'zustand'
 import type { SessionData, FightData } from '../api/fishing'
 
-export type FishingState = 'idle' | 'waiting' | 'bite' | 'fighting' | 'caught'
+export type FishingState = 'idle' | 'waiting' | 'nibble' | 'bite' | 'fighting' | 'caught'
 
 export interface SessionInfo {
   id: number
@@ -155,6 +155,7 @@ export const useFishingStore = create<FishingStoreState>((set, get) => ({
 
   canCast: () => Object.keys(get().sessions).length < MAX_RODS,
   hasAnyBite: () => Object.values(get().sessions).some((s) => s.state === 'bite'),
+  hasAnyNibble: () => Object.values(get().sessions).some((s) => s.state === 'nibble'),
   hasFighting: () => Object.values(get().sessions).some((s) => s.state === 'fighting'),
   sessionCount: () => Object.keys(get().sessions).length,
 }))

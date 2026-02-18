@@ -35,34 +35,16 @@ class ChangeBaitUseCase:
             raise Bait.DoesNotExist('Наживка не найдена.')
 
         ct = ContentType.objects.get_for_model(bait)
-        inv = InventoryItem.objects.filter(
+        if not InventoryItem.objects.filter(
             player=player, content_type=ct, object_id=bait.pk, quantity__gte=1,
-        ).first()
-        if not inv:
+        ).exists():
             raise ValueError('Нет наживки в инвентаре.')
 
-        # Возвращаем старую наживку в инвентарь (если была)
+        # Обновляем удочку (наживка не списывается из инвентаря)
         rod = session.rod
-        if rod.bait and rod.bait_remaining > 0:
-            old_ct = ContentType.objects.get_for_model(rod.bait)
-            old_inv, created = InventoryItem.objects.get_or_create(
-                player=player, content_type=old_ct, object_id=rod.bait.pk,
-                defaults={'quantity': 0},
-            )
-            old_inv.quantity += rod.bait_remaining
-            old_inv.save(update_fields=['quantity'])
-
-        # Обновляем удочку
         rod.bait = bait
         rod.bait_remaining = bait.quantity_per_pack
         rod.save(update_fields=['bait', 'bait_remaining'])
-
-        # Списываем новую наживку из инвентаря
-        inv.quantity -= 1
-        if inv.quantity <= 0:
-            inv.delete()
-        else:
-            inv.save(update_fields=['quantity'])
 
         return ChangeBaitResult(
             session_id=session.pk,

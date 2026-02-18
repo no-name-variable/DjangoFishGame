@@ -13,6 +13,7 @@ const SOUND_MAP: Record<string, string> = {
   cast: '/sounds/splash.mp3',
   reel: '/sounds/reel.mp3',
   bell: '/sounds/bell.mp3',
+  nibble: '/sounds/click.mp3',
   bite: '/sounds/bite.mp3',
   catch: '/sounds/catch.mp3',
   break: '/sounds/break.mp3',

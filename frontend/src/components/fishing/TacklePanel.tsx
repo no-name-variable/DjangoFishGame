@@ -7,7 +7,6 @@ import ChatWindow from '../chat/ChatWindow'
 import PlayerList from '../chat/PlayerList'
 import RodDock from './RodDock'
 import TackleChangePanel from './TackleChangePanel'
-import BaitChangeButton from './BaitChangeButton'
 import type { SessionInfo, FightInfo } from '../../store/fishingStore'
 
 export interface FullRod {
@@ -139,7 +138,7 @@ export default function TacklePanel({
   sessions, fights, activeSessionId, activeSession, activeFight,
   onSessionClick, onStrike, onReelIn, onPull, onKeep, onRelease, onRetrieve,
   onStartRetrieve, onStopRetrieve,
-  onLeave, onUpdateSettings, onChangeTackle, onMessage, message, chatChannelId,
+  onLeave, onUpdateSettings, onChangeTackle, message, chatChannelId,
 }: TacklePanelProps) {
   const [tackleChangeRodId, setTackleChangeRodId] = useState<number | null>(null)
   const [chatTab, setChatTab] = useState<'chat' | 'players'>('chat')
@@ -150,8 +149,8 @@ export default function TacklePanel({
     ? rods.find((r) => r.id === activeSession.rodId)
     : rods.find((r) => r.id === selectedRodId)
 
-  // Слайдеры заблокированы во время bite/fighting/caught
-  const slidersDisabled = !!activeSession && ['bite', 'fighting', 'caught'].includes(activeSession.state)
+  // Слайдеры заблокированы во время nibble/bite/fighting/caught
+  const slidersDisabled = !!activeSession && ['nibble', 'bite', 'fighting', 'caught'].includes(activeSession.state)
 
   // Удочка в воде — нельзя менять снасть
   const rodInWater = activeRod
@@ -162,6 +161,11 @@ export default function TacklePanel({
   const showDepth = activeRod && activeRod.rod_class !== 'spinning'
   // Показывать проводку: спиннинг
   const showRetrieve = activeRod?.rod_class === 'spinning'
+
+  const selectedSession = selectedRodId
+    ? sessions.find((s) => s.rodId === selectedRodId) || null
+    : null
+  const strikeSession = selectedSession || activeSession
 
   /* Тип сообщения для цветового кодирования */
   const msgIsError = message.startsWith('⚠') || message.includes('Обрыв') || message.includes('сломал') || message.includes('Ошибка')
@@ -211,21 +215,11 @@ export default function TacklePanel({
             {activeRod.float_name && <TackleRow label="Поплавок" value={activeRod.float_name} />}
             {activeRod.lure_name  && <TackleRow label="Приманка" value={activeRod.lure_name} />}
             {activeRod.bait_name && (
-              <>
-                <span className="text-wood-500 text-xs">Наживка:</span>
-                <div className="flex items-center justify-between gap-2">
-                  <span className={activeRod.bait_remaining < 5 ? 'text-xs text-red-400' : 'text-xs text-wood-200'}>
-                    {activeRod.bait_name} ({activeRod.bait_remaining})
-                  </span>
-                  {activeSession?.state === 'waiting' && activeSession.rodId === activeRod.id && (
-                    <BaitChangeButton
-                      sessionId={activeSession.id}
-                      currentBaitName={activeRod.bait_name}
-                      onSuccess={(msg) => onMessage?.(msg)}
-                    />
-                  )}
-                </div>
-              </>
+              <TackleRow
+                label="Наживка"
+                value={`${activeRod.bait_name} (${activeRod.bait_remaining})`}
+                valueClass={activeRod.bait_remaining < 5 ? 'text-xs text-red-400' : 'text-xs text-wood-200'}
+              />
             )}
 
             {/* Слайдер глубины */}
@@ -317,6 +311,48 @@ export default function TacklePanel({
           {rods.length === 0 && (
             <span className="text-wood-500 text-xs">Нет готовых снастей</span>
           )}
+
+          {/* Кнопка подсечки всегда под рукой */}
+          {strikeSession && (
+            <button
+              onClick={onStrike}
+              className="btn w-full"
+              style={{
+                minHeight: '48px', fontSize: '0.95rem', fontFamily: 'Georgia, serif',
+                letterSpacing: '0.04em',
+                background: 'linear-gradient(135deg, rgba(92,61,30,0.35), rgba(92,61,30,0.15))',
+                borderColor: 'rgba(92,61,30,0.5)',
+                color: '#e2d3b6',
+              }}
+              title="Можно подсечь в любой момент — смотри на поплавок"
+            >
+              ✦ Подсечь
+            </button>
+          )}
+
+          {/* ─── Подёргивание (nibble) ─── */}
+          {(() => {
+            const nibbleSession = activeSession?.state === 'nibble'
+              ? activeSession
+              : sessions.length === 1 && sessions[0].state === 'nibble'
+                ? sessions[0]
+                : null
+            if (!nibbleSession) return null
+            return (
+              <div className="w-full flex flex-col gap-1">
+                <div style={{
+                  textAlign: 'center', fontSize: '0.82rem',
+                  fontFamily: 'Georgia, serif', color: '#f59e0b',
+                  animation: 'pulse 1.2s ease-in-out infinite',
+                  padding: '6px 8px', borderRadius: '8px',
+                  background: 'rgba(245,158,11,0.08)',
+                  border: '1px solid rgba(245,158,11,0.2)',
+                }}>
+                  🐟 Подёргивает... Ждите поклёвку!
+                </div>
+              </div>
+            )
+          })()}
 
           {/* ─── Ожидание поклёвки ─── */}
           {(() => {
@@ -468,23 +504,6 @@ export default function TacklePanel({
                 </button>
               </div>
             </div>
-          )}
-
-          {/* ─── Поклёвка ─── */}
-          {activeSession?.state === 'bite' && (
-            <button
-              onClick={onStrike}
-              className="btn flex-1"
-              style={{
-                minHeight: '52px', fontSize: '1.05rem', fontFamily: 'Georgia, serif',
-                letterSpacing: '0.05em',
-                background: 'rgba(185,28,28,0.55)', borderColor: '#b91c1c',
-                color: '#fca5a5', animation: 'pulse 0.6s ease-in-out infinite',
-                boxShadow: '0 0 20px rgba(220,38,38,0.4)',
-              }}
-            >
-              ⚡ ПОДСЕЧКА! [Space]
-            </button>
           )}
 
           {/* ─── Вываживание ─── */}

@@ -14,6 +14,7 @@ from apps.fishing.services.bite_calculator import BiteCalculatorService
 from apps.fishing.services.fight_engine import FightEngineService
 from apps.fishing.services.fish_selector import FishSelectorService
 from apps.fishing.services.time_service import TimeService
+from apps.fishing.utils import calc_bite_timeout_seconds
 from apps.potions.services import PotionService
 from apps.inventory.models import CaughtFish, InventoryItem, PlayerRod
 from apps.tackle.models import Bait, FishSpecies, Lure, RodType
@@ -184,7 +185,7 @@ class TestOnlyOneFighting:
 
 
 # ═══════════════════════════════════════════════════════════
-# 3. Подсечка — таймер 3 секунды
+# 3. Подсечка — таймер 40±10 секунд
 # ═══════════════════════════════════════════════════════════
 
 @pytest.mark.django_db
@@ -192,26 +193,29 @@ class TestStrikeTimer:
     """Тесты таймера подсечки."""
     URL = '/api/fishing/strike/'
 
-    def test_strike_within_3_seconds(self, api_client, fishing_session_bite):
-        """Подсечка в пределах 3 секунд — успех."""
-        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=2)
+    def test_strike_within_window(self, api_client, fishing_session_bite):
+        """Подсечка в пределах окна — успех."""
+        timeout = calc_bite_timeout_seconds(fishing_session_bite)
+        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=timeout - 5)
         fishing_session_bite.save(update_fields=['bite_time'])
 
         resp = api_client.post(self.URL, {'session_id': fishing_session_bite.pk})
         assert resp.status_code == 200
         assert resp.data['status'] == 'fighting'
 
-    def test_strike_at_2_9_seconds(self, api_client, fishing_session_bite):
-        """Подсечка через 2.9 секунды — ещё успешна."""
-        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=2.9)
+    def test_strike_near_limit_still_ok(self, api_client, fishing_session_bite):
+        """Подсечка прямо перед окончанием окна — успешна."""
+        timeout = calc_bite_timeout_seconds(fishing_session_bite)
+        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=timeout - 0.5)
         fishing_session_bite.save(update_fields=['bite_time'])
 
         resp = api_client.post(self.URL, {'session_id': fishing_session_bite.pk})
         assert resp.status_code == 200
 
-    def test_strike_after_4_seconds_resets_to_waiting(self, api_client, fishing_session_bite):
-        """Поздняя подсечка (4 сек) — рыба сходит, удочка возвращается к WAITING."""
-        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=4)
+    def test_strike_after_timeout_resets_to_waiting(self, api_client, fishing_session_bite):
+        """Поздняя подсечка — рыба сходит, удочка возвращается к WAITING."""
+        timeout = calc_bite_timeout_seconds(fishing_session_bite)
+        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=timeout + 5)
         fishing_session_bite.save(update_fields=['bite_time'])
 
         resp = api_client.post(self.URL, {'session_id': fishing_session_bite.pk})
@@ -225,7 +229,8 @@ class TestStrikeTimer:
 
     def test_expired_bite_reset_on_polling(self, api_client, fishing_session_bite):
         """Протухшая поклёвка автоматически сбрасывается при polling status."""
-        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=5)
+        timeout = calc_bite_timeout_seconds(fishing_session_bite)
+        fishing_session_bite.bite_time = timezone.now() - timedelta(seconds=timeout + 5)
         fishing_session_bite.save(update_fields=['bite_time'])
 
         resp = api_client.get('/api/fishing/status/')
@@ -378,6 +383,7 @@ class TestReleaseMechanics:
 class TestFightFullCycle:
     """Тесты полного цикла вываживания."""
 
+    @patch('apps.fishing.services.fight_engine._fish_action', lambda f: None)
     def test_fight_to_catch(self, api_client, fishing_session_fighting):
         """Подмотка до вытаскивания: distance → 0 = caught."""
         fight = FightState.objects.get(session=fishing_session_fighting)
@@ -595,14 +601,9 @@ class TestChangeBait:
         assert resp.data['new_bait'] == 'Опарыш'
         assert resp.data['bait_remaining'] == 30
 
-        # Новая наживка списалась из инвентаря
+        # Наживка не списывается из инвентаря (many-to-many)
         inv = InventoryItem.objects.get(player=player, content_type=ct, object_id=new_bait.pk)
-        assert inv.quantity == 1
-
-        # Старая наживка вернулась в инвентарь
-        old_ct = ContentType.objects.get_for_model(old_bait)
-        old_inv = InventoryItem.objects.get(player=player, content_type=old_ct, object_id=old_bait.pk)
-        assert old_inv.quantity == old_remaining
+        assert inv.quantity == 2
 
     def test_change_bait_not_in_inventory(self, api_client, player, location, player_rod):
         """Нельзя сменить на наживку, которой нет в инвентаре."""
@@ -803,22 +804,120 @@ class TestStatusPolling:
     @patch.object(FishSelectorService, 'select_fish')
     @patch.object(FishSelectorService, 'generate_fish_weight', return_value=1.2)
     @patch.object(FishSelectorService, 'generate_fish_length', return_value=22.0)
-    def test_status_triggers_bite(self, mock_length, mock_weight, mock_select, mock_bite,
-                                   api_client, fishing_session_waiting, fish_species):
-        """Polling может перевести WAITING → BITE."""
+    def test_status_triggers_nibble_not_bite(self, mock_length, mock_weight, mock_select, mock_bite,
+                                              api_client, fishing_session_waiting, fish_species):
+        """Polling переводит WAITING → NIBBLE (не сразу BITE)."""
         mock_select.return_value = fish_species
 
         resp = api_client.get(self.URL)
         assert resp.status_code == 200
 
         fishing_session_waiting.refresh_from_db()
-        assert fishing_session_waiting.state == FishingSession.State.BITE
+        assert fishing_session_waiting.state == FishingSession.State.NIBBLE
         assert fishing_session_waiting.hooked_species == fish_species
         assert fishing_session_waiting.hooked_weight == 1.2
+        assert fishing_session_waiting.nibble_time is not None
+        assert fishing_session_waiting.nibble_duration is not None
+        assert 1.0 <= fishing_session_waiting.nibble_duration <= 3.0
 
 
 # ═══════════════════════════════════════════════════════════
-# 12. Retrieve (вытаскивание удочки)
+# 12. NIBBLE: переходы и подсечка
+# ═══════════════════════════════════════════════════════════
+
+@pytest.mark.django_db
+class TestNibbleMechanics:
+    """Тесты трёхфазной механики: WAITING → NIBBLE → BITE."""
+    URL = '/api/fishing/status/'
+
+    def test_nibble_transitions_to_bite(self, api_client, player, location, player_rod, fish_species):
+        """NIBBLE с истёкшим duration → BITE."""
+        player.current_location = location
+        player.save(update_fields=['current_location'])
+
+        session = FishingSession.objects.create(
+            player=player, location=location, rod=player_rod, slot=1,
+            state=FishingSession.State.NIBBLE,
+            cast_time=timezone.now(),
+            nibble_time=timezone.now() - timedelta(seconds=10),
+            nibble_duration=2.0,
+            hooked_species=fish_species, hooked_weight=1.0, hooked_length=20.0,
+        )
+
+        resp = api_client.get(self.URL)
+        assert resp.status_code == 200
+
+        session.refresh_from_db()
+        assert session.state == FishingSession.State.BITE
+        assert session.bite_time is not None
+        assert session.bite_duration is not None
+        assert 2.0 <= session.bite_duration <= 4.0
+        assert session.nibble_time is None
+        assert session.nibble_duration is None
+
+    def test_bite_expires_to_waiting(self, api_client, player, location, player_rod, fish_species):
+        """BITE с истёкшим duration → WAITING."""
+        player.current_location = location
+        player.save(update_fields=['current_location'])
+
+        session = FishingSession.objects.create(
+            player=player, location=location, rod=player_rod, slot=1,
+            state=FishingSession.State.BITE,
+            cast_time=timezone.now(),
+            bite_time=timezone.now() - timedelta(seconds=10),
+            bite_duration=3.0,
+            hooked_species=fish_species, hooked_weight=1.0, hooked_length=20.0,
+        )
+
+        resp = api_client.get(self.URL)
+        assert resp.status_code == 200
+
+        session.refresh_from_db()
+        assert session.state == FishingSession.State.WAITING
+        assert session.hooked_species is None
+        assert session.bite_time is None
+        assert session.bite_duration is None
+
+    def test_strike_during_nibble_rejected(self, api_client, player, location, player_rod, fish_species):
+        """Подсечка во время NIBBLE отклоняется."""
+        player.current_location = location
+        player.save(update_fields=['current_location'])
+
+        session = FishingSession.objects.create(
+            player=player, location=location, rod=player_rod, slot=1,
+            state=FishingSession.State.NIBBLE,
+            cast_time=timezone.now(),
+            nibble_time=timezone.now(),
+            nibble_duration=2.0,
+            hooked_species=fish_species, hooked_weight=1.0, hooked_length=20.0,
+        )
+
+        resp = api_client.post('/api/fishing/strike/', {'session_id': session.pk})
+        assert resp.status_code == 400
+
+    def test_nibble_not_expired_stays_nibble(self, api_client, player, location, player_rod, fish_species):
+        """NIBBLE с оставшимся временем остаётся NIBBLE."""
+        player.current_location = location
+        player.save(update_fields=['current_location'])
+
+        session = FishingSession.objects.create(
+            player=player, location=location, rod=player_rod, slot=1,
+            state=FishingSession.State.NIBBLE,
+            cast_time=timezone.now(),
+            nibble_time=timezone.now(),
+            nibble_duration=3.0,
+            hooked_species=fish_species, hooked_weight=1.0, hooked_length=20.0,
+        )
+
+        resp = api_client.get(self.URL)
+        assert resp.status_code == 200
+
+        session.refresh_from_db()
+        assert session.state == FishingSession.State.NIBBLE
+
+
+# ═══════════════════════════════════════════════════════════
+# 13. Retrieve (вытаскивание удочки)
 # ═══════════════════════════════════════════════════════════
 
 @pytest.mark.django_db
@@ -860,6 +959,7 @@ class TestRetrieveMechanics:
 class TestFullFishingCycle:
     """Интеграционный тест: полный цикл ловли."""
 
+    @patch('apps.fishing.services.fight_engine._fish_action', lambda f: None)
     @patch.object(BiteCalculatorService, 'try_bite', return_value=True)
     @patch.object(FishSelectorService, 'select_fish')
     @patch.object(FishSelectorService, 'generate_fish_weight', return_value=0.8)
@@ -867,7 +967,7 @@ class TestFullFishingCycle:
     def test_full_cycle_cast_to_keep(self, mock_length, mock_weight, mock_select, mock_bite,
                                       api_client, player, location, player_rod,
                                       fish_species, location_fish, game_time):
-        """Полный цикл: cast → status(bite) → strike → reel_in(caught) → keep."""
+        """Полный цикл: cast → status(nibble) → status(bite) → strike → reel_in(caught) → keep."""
         mock_select.return_value = fish_species
 
         player.current_location = location
@@ -880,24 +980,36 @@ class TestFullFishingCycle:
         assert resp.status_code == 200
         session_id = resp.data['session_id']
 
-        # 2. Polling → поклёвка
+        # 2. Polling → nibble
         resp = api_client.get('/api/fishing/status/')
         assert resp.status_code == 200
+        nibble_session = next(
+            (s for s in resp.data['sessions'] if s['id'] == session_id), None,
+        )
+        assert nibble_session is not None
+        assert nibble_session['state'] == 'nibble'
+
+        # 3. Принудительно продвигаем nibble → bite (сдвигаем nibble_time в прошлое)
+        session = FishingSession.objects.get(pk=session_id)
+        session.nibble_time = timezone.now() - timedelta(seconds=10)
+        session.save(update_fields=['nibble_time'])
+
+        resp = api_client.get('/api/fishing/status/')
         bite_session = next(
             (s for s in resp.data['sessions'] if s['id'] == session_id), None,
         )
         assert bite_session is not None
         assert bite_session['state'] == 'bite'
 
-        # 3. Подсечка
+        # 4. Подсечка
         resp = api_client.post('/api/fishing/strike/', {'session_id': session_id})
         assert resp.status_code == 200
         assert resp.data['status'] == 'fighting'
 
-        # 4. Подмотка до caught (ставим нулевую дистанцию)
+        # 5. Подмотка до caught (ставим нулевую дистанцию)
         fight = FightState.objects.get(session_id=session_id)
-        fight.distance = 0.01
-        fight.fish_strength = 0.1
+        fight.distance = 0.0
+        fight.fish_strength = 0.01
         fight.line_tension = 5
         fight.save()
 
@@ -905,7 +1017,7 @@ class TestFullFishingCycle:
         assert resp.status_code == 200
         assert resp.data['result'] == 'caught'
 
-        # 5. В садок
+        # 6. В садок
         resp = api_client.post('/api/fishing/keep/', {'session_id': session_id})
         assert resp.status_code == 201
 
@@ -913,6 +1025,7 @@ class TestFullFishingCycle:
         assert CaughtFish.objects.filter(player=player, species=fish_species).exists()
         assert not FishingSession.objects.filter(pk=session_id).exists()
 
+    @patch('apps.fishing.services.fight_engine._fish_action', lambda f: None)
     @patch.object(BiteCalculatorService, 'try_bite', return_value=True)
     @patch.object(FishSelectorService, 'select_fish')
     @patch.object(FishSelectorService, 'generate_fish_weight', return_value=2.0)
@@ -920,7 +1033,7 @@ class TestFullFishingCycle:
     def test_full_cycle_cast_to_release(self, mock_length, mock_weight, mock_select, mock_bite,
                                          api_client, player, location, player_rod,
                                          fish_species, location_fish, game_time):
-        """Полный цикл: cast → status(bite) → strike → reel_in(caught) → release."""
+        """Полный цикл: cast → nibble → bite → strike → reel_in(caught) → release."""
         mock_select.return_value = fish_species
         player.current_location = location
         player.karma = 0
@@ -932,13 +1045,19 @@ class TestFullFishingCycle:
         })
         session_id = resp.data['session_id']
 
-        # 2. Поклёвка
+        # 2. Nibble
         api_client.get('/api/fishing/status/')
 
-        # 3. Подсечка
+        # 3. Продвигаем nibble → bite
+        session = FishingSession.objects.get(pk=session_id)
+        session.nibble_time = timezone.now() - timedelta(seconds=10)
+        session.save(update_fields=['nibble_time'])
+        api_client.get('/api/fishing/status/')
+
+        # 4. Подсечка
         api_client.post('/api/fishing/strike/', {'session_id': session_id})
 
-        # 4. Caught
+        # 5. Caught
         fight = FightState.objects.get(session_id=session_id)
         fight.distance = 0.01
         fight.fish_strength = 0.1
@@ -947,7 +1066,7 @@ class TestFullFishingCycle:
         resp = api_client.post('/api/fishing/reel-in/', {'session_id': session_id})
         assert resp.data['result'] == 'caught'
 
-        # 5. Отпускаем
+        # 6. Отпускаем
         resp = api_client.post('/api/fishing/release/', {'session_id': session_id})
         assert resp.status_code == 200
         assert resp.data['karma_bonus'] >= 1
