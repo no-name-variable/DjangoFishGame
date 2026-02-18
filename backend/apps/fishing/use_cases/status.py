@@ -51,7 +51,7 @@ class FishingStatusUseCase:
         # Фаза A: Expire BITE → WAITING (таймаут bite_duration)
         for session in sessions:
             if session.state == FishingSession.State.BITE and session.bite_time:
-                timeout = session.bite_duration or 4.0
+                timeout = session.bite_duration or 30.0
                 if (now - session.bite_time).total_seconds() > timeout:
                     session.state = FishingSession.State.WAITING
                     session.hooked_species = None
@@ -70,7 +70,7 @@ class FishingStatusUseCase:
                 if (now - session.nibble_time).total_seconds() > timeout:
                     session.state = FishingSession.State.BITE
                     session.bite_time = timezone.now()
-                    session.bite_duration = random.uniform(2.0, 4.0)
+                    session.bite_duration = random.uniform(20.0, 40.0)
                     session.nibble_time = None
                     session.nibble_duration = None
                     session.save()

@@ -851,7 +851,7 @@ class TestNibbleMechanics:
         assert session.state == FishingSession.State.BITE
         assert session.bite_time is not None
         assert session.bite_duration is not None
-        assert 2.0 <= session.bite_duration <= 4.0
+        assert 20.0 <= session.bite_duration <= 40.0
         assert session.nibble_time is None
         assert session.nibble_duration is None
 

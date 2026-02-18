@@ -162,10 +162,10 @@ export default function TacklePanel({
   // Показывать проводку: спиннинг
   const showRetrieve = activeRod?.rod_class === 'spinning'
 
-  const selectedSession = selectedRodId
-    ? sessions.find((s) => s.rodId === selectedRodId) || null
-    : null
-  const strikeSession = selectedSession || activeSession
+  // Состояние подсечки: ищем bite/nibble среди ВСЕХ сессий
+  const anyBite = sessions.find((s) => s.state === 'bite')
+  const anyNibble = sessions.find((s) => s.state === 'nibble')
+  const strikeState: 'bite' | 'nibble' | 'idle' = anyBite ? 'bite' : anyNibble ? 'nibble' : 'idle'
 
   /* Тип сообщения для цветового кодирования */
   const msgIsError = message.startsWith('⚠') || message.includes('Обрыв') || message.includes('сломал') || message.includes('Ошибка')
@@ -312,21 +312,37 @@ export default function TacklePanel({
             <span className="text-wood-500 text-xs">Нет готовых снастей</span>
           )}
 
-          {/* Кнопка подсечки всегда под рукой */}
-          {strikeSession && (
+          {/* Кнопка подсечки — меняет вид по состоянию */}
+          {sessions.length > 0 && (
             <button
               onClick={onStrike}
-              className="btn w-full"
+              className={`btn w-full ${strikeState === 'bite' ? 'animate-pulse' : ''}`}
               style={{
-                minHeight: '48px', fontSize: '0.95rem', fontFamily: 'Georgia, serif',
-                letterSpacing: '0.04em',
-                background: 'linear-gradient(135deg, rgba(92,61,30,0.35), rgba(92,61,30,0.15))',
-                borderColor: 'rgba(92,61,30,0.5)',
-                color: '#e2d3b6',
+                minHeight: '48px', fontSize: strikeState === 'bite' ? '1.1rem' : '0.95rem',
+                fontFamily: 'Georgia, serif', letterSpacing: '0.04em',
+                transition: 'all 0.2s ease',
+                ...(strikeState === 'bite' ? {
+                  background: 'linear-gradient(135deg, rgba(220,38,38,0.5), rgba(185,28,28,0.3))',
+                  borderColor: '#ef4444',
+                  color: '#fecaca',
+                  boxShadow: '0 0 16px rgba(239,68,68,0.4)',
+                } : strikeState === 'nibble' ? {
+                  background: 'linear-gradient(135deg, rgba(245,158,11,0.3), rgba(217,119,6,0.15))',
+                  borderColor: 'rgba(245,158,11,0.5)',
+                  color: '#fde68a',
+                } : {
+                  background: 'linear-gradient(135deg, rgba(92,61,30,0.35), rgba(92,61,30,0.15))',
+                  borderColor: 'rgba(92,61,30,0.5)',
+                  color: '#e2d3b6',
+                }),
               }}
-              title="Можно подсечь в любой момент — смотри на поплавок"
+              title={strikeState === 'bite' ? 'Подсекай! [Пробел]'
+                : strikeState === 'nibble' ? 'Подёргивает — ждите поклёвку'
+                : 'Подсечь [Пробел]'}
             >
-              ✦ Подсечь
+              {strikeState === 'bite' ? '🔥 ПОДСЕЧЬ!' :
+               strikeState === 'nibble' ? '🐟 Подёргивает...' :
+               '✦ Подсечь'}
             </button>
           )}
 

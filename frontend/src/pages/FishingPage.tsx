@@ -156,26 +156,43 @@ export default function FishingPage() {
 
   const handleStrike = useCallback(() => {
     const sessionList = Object.values(sessions)
-    const target = selectedRodId
+
+    // Ищем цель: сначала выбранная удочка, потом любая с поклёвкой
+    let target = selectedRodId
       ? sessionList.find((s) => s.rodId === selectedRodId) || null
       : null
 
+    // Если на выбранной нет bite/nibble — ищем среди всех
+    if (!target || (target.state !== 'bite' && target.state !== 'nibble')) {
+      const biting = sessionList.find((s) => s.state === 'bite')
+      const nibbling = sessionList.find((s) => s.state === 'nibble')
+      if (biting) {
+        target = biting
+      } else if (nibbling) {
+        target = nibbling
+      }
+    }
+
     if (!target) {
-      setMessage('Эта удочка не заброшена')
+      setMessage('Нет заброшенных удочек')
+      return
+    }
+
+    if (target.state === 'bite') {
+      setActiveSession(target.id)
+      setSelectedRodId(target.rodId)
+      send('strike', { session_id: target.id })
       return
     }
 
     if (target.state === 'nibble') {
-      setMessage('Подёргивает... Рано подсекать!')
-      return
-    }
-    if (target.state !== 'bite') {
-      setMessage('Сейчас поклёвки нет!')
+      setActiveSession(target.id)
+      setSelectedRodId(target.rodId)
+      setMessage('Подёргивает... Ждите поклёвку!')
       return
     }
 
-    setActiveSession(target.id)
-    send('strike', { session_id: target.id })
+    setMessage('Поклёвки нет — ждите')
   }, [selectedRodId, sessions, send, setMessage, setActiveSession])
 
   const handleFightAction = useCallback((action: 'reel' | 'pull') => {
@@ -257,11 +274,7 @@ export default function FishingPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const sessionList = Object.values(sessions)
-      const selectedSession = selectedRodId
-        ? sessionList.find((s) => s.rodId === selectedRodId)
-        : null
       const activeSession = activeSessionId ? sessions[activeSessionId] : null
-      const strikeTarget = selectedSession || activeSession
 
       // Горячие клавиши 1/2/3 — переключение удочек
       if (e.key === '1' || e.key === '2' || e.key === '3') {
@@ -283,14 +296,9 @@ export default function FishingPage() {
         } else if (e.key === 'h' || e.key === 'H' || e.key === 'р' || e.key === 'Р') {
           handleFightAction('pull')
         }
-      } else if (strikeTarget?.state === 'bite') {
-        if (e.key === ' ' || e.key === 'Enter') {
-          handleStrike()
-        }
-      } else if (strikeTarget?.state === 'nibble') {
-        if (e.key === ' ' || e.key === 'Enter') {
-          setMessage('Подёргивает... Рано подсекать!')
-        }
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        // Space/Enter — подсечка (handleStrike сам найдёт bite/nibble)
+        handleStrike()
       } else if (activeSession?.state === 'waiting' && activeSession.rodClass === 'spinning') {
         if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
           if (!activeSession.isRetrieving) {

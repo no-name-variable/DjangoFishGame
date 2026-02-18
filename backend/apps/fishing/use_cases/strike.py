@@ -41,7 +41,7 @@ class StrikeUseCase:
             raise ValueError('Уже идёт вываживание на другой удочке.')
 
         # Проверка таймера подсечки
-        bite_timeout = session.bite_duration or 4.0
+        bite_timeout = session.bite_duration or 30.0
         if session.bite_time and (timezone.now() - session.bite_time).total_seconds() > bite_timeout:
             session.state = FishingSession.State.WAITING
             session.hooked_species = None
