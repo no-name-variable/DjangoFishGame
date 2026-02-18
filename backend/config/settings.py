@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'apps.potions',
     'apps.inspection',
     'apps.bazaar',
+    'apps.cafe',
+    'apps.home',
     'channels',
 ]
 

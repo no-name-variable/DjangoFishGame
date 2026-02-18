@@ -6,12 +6,12 @@ from django.contrib.contenttypes.models import ContentType
 
 from apps.inventory.models import InventoryItem
 from apps.tackle.models import (
-    Bait, FloatTackle, Flavoring, Food, Groundbait, Hook, Line, Lure, Reel, RodType,
+    Bait, FloatTackle, Flavoring, Food, Groundbait, Hook, Line, Reel, RodType,
 )
 
 ITEM_TYPE_MAP = {
     'rod': RodType, 'reel': Reel, 'line': Line, 'hook': Hook,
-    'float': FloatTackle, 'lure': Lure, 'bait': Bait,
+    'float': FloatTackle, 'bait': Bait,
     'groundbait': Groundbait, 'flavoring': Flavoring, 'food': Food,
 }
 

@@ -7,11 +7,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.tackle.models import (
-    Bait, FloatTackle, Food, Groundbait, Hook, Line, Lure, Reel, RodType, Flavoring,
+    Bait, FloatTackle, Food, Groundbait, Hook, Line, Reel, RodType, Flavoring,
 )
 from apps.tackle.serializers import (
     BaitSerializer, FloatTackleSerializer, FoodSerializer, GroundbaitSerializer,
-    HookSerializer, LineSerializer, LureSerializer, ReelSerializer, RodTypeSerializer,
+    HookSerializer, LineSerializer, ReelSerializer, RodTypeSerializer,
     FlavoringSerializer,
 )
 
@@ -26,7 +26,6 @@ SHOP_CATEGORIES = {
     'lines': (Line, LineSerializer),
     'hooks': (Hook, HookSerializer),
     'floats': (FloatTackle, FloatTackleSerializer),
-    'lures': (Lure, LureSerializer),
     'baits': (Bait, BaitSerializer),
     'groundbaits': (Groundbait, GroundbaitSerializer),
     'flavorings': (Flavoring, FlavoringSerializer),

@@ -25,7 +25,7 @@ class DisassembleRodUseCase:
 
         components = [
             rod.rod_type, rod.reel, rod.line,
-            rod.hook, rod.float_tackle, rod.lure,
+            rod.hook, rod.float_tackle,
         ]
 
         for component in components:

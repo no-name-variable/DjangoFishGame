@@ -3,15 +3,17 @@
 import random
 
 from apps.fishing.services.time_service import TimeService
+from apps.home.services import MoonshineService
 from apps.potions.services import PotionService
 
 
 class FishSelectorService:
     """Сервис выбора рыбы при поклёвке."""
 
-    def __init__(self, time_service: TimeService, potion_service: PotionService):
+    def __init__(self, time_service: TimeService, potion_service: PotionService, moonshine_service: MoonshineService):
         self._time = time_service
         self._potions = potion_service
+        self._moonshine = moonshine_service
 
     def select_fish(self, location, rod_setup):
         """
@@ -26,8 +28,6 @@ class FishSelectorService:
 
         candidates = []
         weights = []
-
-        is_spinning = rod_setup.rod_type.rod_class == 'spinning'
 
         # Получить активный прикорм для бонуса к целевым видам
         from apps.fishing.models import GroundbaitSpot
@@ -48,32 +48,16 @@ class FishSelectorService:
             # Модификатор времени суток
             weight *= self._time.get_time_of_day_modifier(fish)
 
-            # Модификатор наживки/приманки
+            # Модификатор наживки
             if rod_setup.bait and rod_setup.bait.target_species.filter(pk=fish.pk).exists():
-                weight *= 2.0
-            elif rod_setup.lure and rod_setup.lure.target_species.filter(pk=fish.pk).exists():
                 weight *= 2.0
 
             # Модификатор глубины
-            if is_spinning and rod_setup.lure:
-                # Для спиннинга — глубина приманки зависит от скорости проводки
-                speed = rod_setup.retrieve_speed  # 1-10
-                lure = rod_setup.lure
-                # Быстрая проводка — ближе к поверхности, медленная — глубже
-                effective_depth = lure.depth_max - (speed / 10) * (lure.depth_max - lure.depth_min)
-                if fish.preferred_depth_min <= effective_depth <= fish.preferred_depth_max:
-                    weight *= 1.5
-                else:
-                    weight *= 0.3
-                # Бонус скорости проводки: хищники любят быструю, мирная рыба — медленную
-                if fish.rarity in ('rare', 'trophy', 'legendary'):
-                    weight *= 0.8 + speed * 0.04  # 0.84-1.2 для хищников
+            depth = rod_setup.depth_setting
+            if fish.preferred_depth_min <= depth <= fish.preferred_depth_max:
+                weight *= 1.5
             else:
-                depth = rod_setup.depth_setting
-                if fish.preferred_depth_min <= depth <= fish.preferred_depth_max:
-                    weight *= 1.5
-                else:
-                    weight *= 0.3
+                weight *= 0.3
 
             # Модификатор прикормки (целевые виды)
             if fish.pk in groundbait_species_ids:
@@ -92,6 +76,13 @@ class FishSelectorService:
             for i, lf in enumerate(candidates):
                 if lf.fish.rarity in ('rare', 'trophy', 'legendary'):
                     weights[i] *= rarity_val
+
+        # Модификатор самогона (luck — редкие рыбы)
+        luck_val = self._moonshine.get_buff_effect_value(rod_setup.player, 'luck')
+        if luck_val:
+            for i, lf in enumerate(candidates):
+                if lf.fish.rarity in ('rare', 'trophy', 'legendary'):
+                    weights[i] *= (1.0 + luck_val)
 
         selected = random.choices(candidates, weights=weights, k=1)[0]
         return selected.fish

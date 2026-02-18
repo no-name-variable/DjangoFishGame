@@ -10,7 +10,7 @@ from apps.tackle.models import Bait, Flavoring, Groundbait
 from .models import FishingSession, GameTime
 from .serializers import (
     CastSerializer, ChangeBaitSerializer, FishingMultiStatusSerializer,
-    SessionActionSerializer, UpdateRetrieveSerializer,
+    SessionActionSerializer,
 )
 from .use_cases.cast import CastUseCase
 from .use_cases.change_bait import ChangeBaitUseCase
@@ -207,28 +207,6 @@ class RetrieveRodView(APIView):
 
         return Response({'status': 'retrieved'})
 
-
-class UpdateRetrieveView(APIView):
-    """Обновить статус проводки спиннинга (is_retrieving)."""
-
-    def post(self, request):
-        ser = UpdateRetrieveSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        data = ser.validated_data
-        player = request.user.player
-
-        try:
-            session = FishingSession.objects.get(
-                pk=data['session_id'], player=player,
-                state=FishingSession.State.WAITING,
-            )
-        except FishingSession.DoesNotExist:
-            return Response({'error': 'Сессия не найдена.'}, status=status.HTTP_404_NOT_FOUND)
-
-        session.is_retrieving = data['is_retrieving']
-        session.save(update_fields=['is_retrieving'])
-
-        return Response({'status': 'ok', 'is_retrieving': session.is_retrieving})
 
 
 class GroundbaitView(APIView):

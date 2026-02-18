@@ -24,8 +24,6 @@ class FishingSession(models.Model):
     cast_y = models.FloatField('Точка заброса Y', default=0)
     cast_time = models.DateTimeField('Время заброса', null=True, blank=True)
     bite_time = models.DateTimeField('Время поклёвки', null=True, blank=True)
-    is_retrieving = models.BooleanField('Проводка (для спиннинга)', default=False)
-    retrieve_progress = models.FloatField('Прогресс подматывания (0-1)', default=0.0)
     nibble_time = models.DateTimeField('Время начала подёргивания', null=True, blank=True)
     nibble_duration = models.FloatField('Длительность подёргивания (сек)', null=True, blank=True)
     bite_duration = models.FloatField('Длительность поклёвки (сек)', null=True, blank=True)

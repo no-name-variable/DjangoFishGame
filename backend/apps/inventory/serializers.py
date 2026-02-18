@@ -15,12 +15,16 @@ class InventoryItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'item_type', 'object_id', 'item_name', 'item_image', 'quantity']
 
     def get_item_name(self, obj):
+        if obj.content_type.model_class() is None:
+            return '???'
         if obj.item:
             return str(obj.item)
         return '???'
 
     def get_item_image(self, obj):
         """URL изображения предмета."""
+        if obj.content_type.model_class() is None:
+            return None
         item = obj.item
         if item and hasattr(item, 'image') and item.image:
             request = self.context.get('request')
@@ -38,7 +42,6 @@ class PlayerRodSerializer(serializers.ModelSerializer):
     line_name = serializers.CharField(source='line.name', read_only=True, default=None)
     hook_name = serializers.CharField(source='hook.name', read_only=True, default=None)
     float_name = serializers.CharField(source='float_tackle.name', read_only=True, default=None)
-    lure_name = serializers.CharField(source='lure.name', read_only=True, default=None)
     bait_name = serializers.CharField(source='bait.name', read_only=True, default=None)
     is_ready = serializers.ReadOnlyField()
 
@@ -48,9 +51,9 @@ class PlayerRodSerializer(serializers.ModelSerializer):
             'id', 'rod_type', 'rod_type_name', 'display_name', 'custom_name', 'rod_class',
             'reel', 'reel_name', 'line', 'line_name',
             'hook', 'hook_name', 'float_tackle', 'float_name',
-            'lure', 'lure_name', 'bait', 'bait_name',
+            'bait', 'bait_name',
             'bait_remaining', 'durability_current', 'is_assembled', 'is_ready',
-            'depth_setting', 'retrieve_speed', 'clip_distance',
+            'depth_setting', 'clip_distance',
         ]
 
 
@@ -64,10 +67,8 @@ class AssembleRodSerializer(serializers.Serializer):
     line_id = serializers.IntegerField(required=False)
     hook_id = serializers.IntegerField(required=False)
     float_tackle_id = serializers.IntegerField(required=False)
-    lure_id = serializers.IntegerField(required=False)
     bait_id = serializers.IntegerField(required=False)
     depth_setting = serializers.FloatField(required=False, default=1.5)
-    retrieve_speed = serializers.IntegerField(required=False, default=5)
     clip_distance = serializers.FloatField(required=False, default=30.0)
 
 

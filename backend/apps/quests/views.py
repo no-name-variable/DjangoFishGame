@@ -1,5 +1,6 @@
 """Views квестов."""
 
+from django.db import models
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,9 +25,21 @@ class AvailableQuestsView(generics.ListAPIView):
     def get_queryset(self):
         player = self.request.user.player
         taken_ids = PlayerQuest.objects.filter(player=player).values_list('quest_id', flat=True)
-        return Quest.objects.filter(
+        # Квесты, prerequisite которых выполнен (или prerequisite=None)
+        completed_ids = set(PlayerQuest.objects.filter(
+            player=player,
+            status__in=[PlayerQuest.Status.COMPLETED, PlayerQuest.Status.CLAIMED],
+        ).values_list('quest_id', flat=True))
+        qs = Quest.objects.filter(
             min_rank__lte=player.rank,
-        ).exclude(pk__in=taken_ids).select_related('target_species', 'target_location')
+        ).exclude(pk__in=taken_ids).select_related(
+            'target_species', 'target_location', 'reward_apparatus_part',
+        )
+        # Фильтруем: показываем только если prerequisite=None или prerequisite выполнен
+        return qs.filter(
+            models.Q(prerequisite_quest__isnull=True) |
+            models.Q(prerequisite_quest_id__in=completed_ids)
+        )
 
 
 class PlayerQuestsView(generics.ListAPIView):
@@ -39,6 +52,7 @@ class PlayerQuestsView(generics.ListAPIView):
             player=self.request.user.player,
         ).select_related(
             'quest', 'quest__target_species', 'quest__target_location',
+            'quest__reward_apparatus_part',
         ).order_by('status', '-started_at')
 
 
@@ -72,9 +86,12 @@ class ClaimQuestRewardView(APIView):
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({
+        data = {
             'message': f'Награда за "{result.quest_name}" получена!',
             'reward_money': result.reward_money,
             'reward_experience': result.reward_experience,
             'reward_karma': result.reward_karma,
-        })
+        }
+        if result.reward_apparatus_part:
+            data['reward_apparatus_part'] = result.reward_apparatus_part
+        return Response(data)

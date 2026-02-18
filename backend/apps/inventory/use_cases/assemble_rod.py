@@ -2,7 +2,7 @@
 
 from django.contrib.contenttypes.models import ContentType
 
-from apps.tackle.models import Bait, FloatTackle, Hook, Line, Lure, Reel, RodType
+from apps.tackle.models import Bait, FloatTackle, Hook, Line, Reel, RodType
 
 from ..models import InventoryItem, PlayerRod
 
@@ -12,7 +12,6 @@ COMPONENT_MAP = {
     'line_id': ('line', Line),
     'hook_id': ('hook', Hook),
     'float_tackle_id': ('float_tackle', FloatTackle),
-    'lure_id': ('lure', Lure),
     'bait_id': ('bait', Bait),
 }
 
@@ -58,7 +57,6 @@ class AssembleRodUseCase:
                     raise model.DoesNotExist(f'{model.__name__} не найден.')
 
         rod.depth_setting = data.get('depth_setting', 1.5)
-        rod.retrieve_speed = data.get('retrieve_speed', 5)
         rod.is_assembled = True
         rod.save()
 

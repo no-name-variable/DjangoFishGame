@@ -46,7 +46,7 @@ class PlayerRodsView(generics.ListAPIView):
     def get_queryset(self):
         return PlayerRod.objects.filter(
             player=self.request.user.player,
-        ).select_related('rod_type', 'reel', 'line', 'hook', 'float_tackle', 'lure', 'bait')
+        ).select_related('rod_type', 'reel', 'line', 'hook', 'float_tackle', 'bait')
 
 
 class CreelView(generics.ListAPIView):
@@ -136,9 +136,7 @@ class RodSettingsView(APIView):
 
         if 'depth_setting' in request.data:
             rod.depth_setting = max(0.1, min(10.0, float(request.data['depth_setting'])))
-        if 'retrieve_speed' in request.data:
-            rod.retrieve_speed = max(1, min(10, int(request.data['retrieve_speed'])))
-        rod.save(update_fields=['depth_setting', 'retrieve_speed'])
+        rod.save(update_fields=['depth_setting'])
         return Response(PlayerRodSerializer(rod).data)
 
 

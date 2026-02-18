@@ -34,7 +34,7 @@ export interface PlayerRod {
   id: number
   rod_type: number
   rod_type_name: string
-  rod_class: 'float' | 'spinning' | 'bottom'
+  rod_class: 'float' | 'bottom'
   custom_name: string | null
   is_assembled: boolean
   is_ready: boolean
@@ -42,11 +42,9 @@ export interface PlayerRod {
   line: number | null
   hook: number | null
   float_tackle: number | null
-  lure: number | null
   bait: number | null
   bait_remaining: number
   depth_setting: number
-  retrieve_speed: number
   durability_current: number
   durability_max: number
 }

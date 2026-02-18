@@ -33,22 +33,6 @@
   },
   {
     "model": "tackle.rodtype",
-    "pk": 3,
-    "fields": {
-      "name": "Спиннинг 'Щукарь'",
-      "description": "Спиннинг среднего класса для ловли хищной рыбы.",
-      "rod_class": "spinning",
-      "test_min": 2.0,
-      "test_max": 15.0,
-      "durability_max": 100,
-      "length": 2.4,
-      "price": "350.00",
-      "min_rank": 5,
-      "image": "tackle/rods/3.jpg"
-    }
-  },
-  {
-    "model": "tackle.rodtype",
     "pk": 4,
     "fields": {
       "name": "Донка 'Классика'",
@@ -61,22 +45,6 @@
       "price": "150.00",
       "min_rank": 3,
       "image": "tackle/rods/4.jpg"
-    }
-  },
-  {
-    "model": "tackle.rodtype",
-    "pk": 5,
-    "fields": {
-      "name": "Спиннинг 'Мастер'",
-      "description": "Мощный спиннинг для трофейной рыбалки.",
-      "rod_class": "spinning",
-      "test_min": 5.0,
-      "test_max": 30.0,
-      "durability_max": 100,
-      "length": 2.7,
-      "price": "800.00",
-      "min_rank": 15,
-      "image": "tackle/rods/5.jpg"
     }
   },
   {
@@ -278,42 +246,6 @@
       "quantity_per_pack": 5,
       "price": "30.00",
       "image": "tackle/baits/5.png"
-    }
-  },
-  {
-    "model": "tackle.lure",
-    "pk": 1,
-    "fields": {
-      "name": "Колебалка 'Атом'",
-      "lure_type": "spoon",
-      "depth_min": 1.0,
-      "depth_max": 3.0,
-      "price": "45.00",
-      "image": "tackle/lures/1.jpg"
-    }
-  },
-  {
-    "model": "tackle.lure",
-    "pk": 2,
-    "fields": {
-      "name": "Воблер 'Минноу'",
-      "lure_type": "wobbler",
-      "depth_min": 0.5,
-      "depth_max": 2.0,
-      "price": "80.00",
-      "image": "tackle/lures/2.jpg"
-    }
-  },
-  {
-    "model": "tackle.lure",
-    "pk": 3,
-    "fields": {
-      "name": "Джиг 'Риппер'",
-      "lure_type": "jig",
-      "depth_min": 2.0,
-      "depth_max": 5.0,
-      "price": "35.00",
-      "image": "tackle/lures/3.jpg"
     }
   },
   {

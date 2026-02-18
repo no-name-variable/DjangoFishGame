@@ -2,10 +2,9 @@
 
 from rest_framework import serializers
 
-from .models import Bait, FishSpecies, Flavoring, FloatTackle, Food, Groundbait, Hook, Line, Lure, Reel, RodType
+from .models import Bait, FishSpecies, Flavoring, FloatTackle, Food, Groundbait, Hook, Line, Reel, RodType
 
-ROD_CLASS_LABELS = {'float': 'Поплавочное', 'spinning': 'Спиннинговое', 'bottom': 'Донное'}
-LURE_TYPE_LABELS = {'spoon': 'Колебалка', 'wobbler': 'Воблер', 'jig': 'Джиг', 'soft': 'Силикон'}
+ROD_CLASS_LABELS = {'float': 'Поплавочное', 'bottom': 'Донное'}
 
 
 class FishSpeciesSerializer(serializers.ModelSerializer):
@@ -95,23 +94,6 @@ class FloatTackleSerializer(serializers.ModelSerializer):
             {'label': 'Чувствительность', 'value': f'{obj.sensitivity}/10'},
         ]
 
-
-class LureSerializer(serializers.ModelSerializer):
-    lure_type_display = serializers.SerializerMethodField()
-    specs = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Lure
-        fields = '__all__'
-
-    def get_lure_type_display(self, obj):
-        return LURE_TYPE_LABELS.get(obj.lure_type, obj.lure_type)
-
-    def get_specs(self, obj):
-        return [
-            {'label': 'Тип', 'value': LURE_TYPE_LABELS.get(obj.lure_type, obj.lure_type)},
-            {'label': 'Глубина проводки', 'value': f'{obj.depth_min}–{obj.depth_max} м'},
-        ]
 
 
 class BaitSerializer(serializers.ModelSerializer):

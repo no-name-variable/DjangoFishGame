@@ -27,7 +27,7 @@ interface InventoryItem {
 interface Props {
   sessions: SessionInfo[]
   rods: FullRod[]
-  onUpdateSettings: (rodId: number, settings: { depth_setting?: number; retrieve_speed?: number }) => void
+  onUpdateSettings: (rodId: number, settings: { depth_setting?: number }) => void
   onChangeTackle: (rodId: number, updatedRod: FullRod) => void
   onClose: () => void
 }
@@ -67,25 +67,23 @@ const slotBtn = (danger: boolean, disabled: boolean): CSSProperties => ({
 function changeableTypes(rodClass: string): string[] {
   switch (rodClass) {
     case 'float': return ['hook', 'floattackle', 'bait']
-    case 'spinning': return ['hook', 'lure']
     case 'bottom': return ['hook', 'bait']
     default: return ['hook', 'bait']
   }
 }
 
 const TYPE_TO_FIELD: Record<string, string> = {
-  hook: 'hook_id', floattackle: 'float_tackle_id', lure: 'lure_id', bait: 'bait_id',
+  hook: 'hook_id', floattackle: 'float_tackle_id', bait: 'bait_id',
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  hook: 'Крючок', floattackle: 'Поплавок', lure: 'Приманка', bait: 'Наживка',
+  hook: 'Крючок', floattackle: 'Поплавок', bait: 'Наживка',
 }
 
 /** Все слоты (включая статичные) */
 function allSlots(rodClass: string): string[] {
   switch (rodClass) {
     case 'float': return ['reel', 'line', 'hook', 'floattackle', 'bait']
-    case 'spinning': return ['reel', 'line', 'hook', 'lure']
     case 'bottom': return ['reel', 'line', 'hook', 'bait']
     default: return ['reel', 'line', 'hook', 'bait']
   }
@@ -97,7 +95,6 @@ function buildSlot(rod: FullRod, type: string): TackleSlotData {
     case 'line': return { type, itemId: rod.line ?? null, name: rod.line_name }
     case 'hook': return { type, itemId: rod.hook ?? null, name: rod.hook_name }
     case 'floattackle': return { type, itemId: rod.float_tackle ?? null, name: rod.float_name }
-    case 'lure': return { type, itemId: rod.lure ?? null, name: rod.lure_name }
     case 'bait': return { type, itemId: rod.bait ?? null, name: rod.bait_name, remaining: rod.bait_remaining }
     default: return { type, itemId: null, name: null }
   }
@@ -116,12 +113,11 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
   const [pickerType, setPickerType] = useState<string | null>(null)
 
   const [sliderDepth, setSliderDepth] = useState(0)
-  const [sliderSpeed, setSliderSpeed] = useState(0)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const rod = rods.find((r) => r.id === selectedRodId)
-    if (rod) { setSliderDepth(rod.depth_setting); setSliderSpeed(rod.retrieve_speed) }
+    if (rod) { setSliderDepth(rod.depth_setting) }
   }, [selectedRodId, rods])
 
   useEffect(() => {
@@ -184,16 +180,12 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
     }
   }
 
-  const handleSlider = (field: 'depth_setting' | 'retrieve_speed', value: number) => {
-    if (field === 'depth_setting') setSliderDepth(value)
-    else setSliderSpeed(value)
+  const handleSlider = (value: number) => {
+    setSliderDepth(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       if (!selectedRodId) return
-      const settings: { depth_setting?: number; retrieve_speed?: number } = {}
-      if (field === 'depth_setting') settings.depth_setting = value
-      else settings.retrieve_speed = value
-      onUpdateSettings(selectedRodId, settings)
+      onUpdateSettings(selectedRodId, { depth_setting: value })
     }, 300)
   }
 
@@ -441,36 +433,19 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
                   {rodSelector}
                   {selectedRod && (
                     <div>
-                      {selectedRod.rod_class !== 'spinning' && (
-                        <div style={{ marginBottom: '16px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <label style={{ color: '#7898b8', fontSize: '0.75rem' }}>🏊 Глубина</label>
-                            <span style={{ color: '#a8894e', fontSize: '0.75rem' }}>{sliderDepth.toFixed(1)} м</span>
-                          </div>
-                          <input type="range" min={0.5} max={10} step={0.1} value={sliderDepth}
-                            onChange={(e) => handleSlider('depth_setting', Number(e.target.value))}
-                            style={{ width: '100%', accentColor: '#3b82f6' }} />
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
-                            <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>0.5 м</span>
-                            <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>10 м</span>
-                          </div>
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <label style={{ color: '#7898b8', fontSize: '0.75rem' }}>🏊 Глубина</label>
+                          <span style={{ color: '#a8894e', fontSize: '0.75rem' }}>{sliderDepth.toFixed(1)} м</span>
                         </div>
-                      )}
-                      {selectedRod.rod_class === 'spinning' && (
-                        <div style={{ marginBottom: '16px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <label style={{ color: '#7898b8', fontSize: '0.75rem' }}>🌀 Скорость проводки</label>
-                            <span style={{ color: '#a8894e', fontSize: '0.75rem' }}>{sliderSpeed.toFixed(1)}</span>
-                          </div>
-                          <input type="range" min={0.5} max={10} step={0.1} value={sliderSpeed}
-                            onChange={(e) => handleSlider('retrieve_speed', Number(e.target.value))}
-                            style={{ width: '100%', accentColor: '#3b82f6' }} />
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
-                            <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>медленно</span>
-                            <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>быстро</span>
-                          </div>
+                        <input type="range" min={0.5} max={10} step={0.1} value={sliderDepth}
+                          onChange={(e) => handleSlider(Number(e.target.value))}
+                          style={{ width: '100%', accentColor: '#3b82f6' }} />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                          <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>0.5 м</span>
+                          <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>10 м</span>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
                 </>

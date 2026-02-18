@@ -1,0 +1,20 @@
+[
+  {"model": "home.apparatuspart", "pk": 1, "fields": {"name": "Перегонный куб", "slug": "cube", "description": "Основа аппарата — медный куб для нагрева браги.", "order": 1}},
+  {"model": "home.apparatuspart", "pk": 2, "fields": {"name": "Змеевик", "slug": "coil", "description": "Спиральная трубка для конденсации паров.", "order": 2}},
+  {"model": "home.apparatuspart", "pk": 3, "fields": {"name": "Термометр", "slug": "thermometer", "description": "Для точного контроля температуры.", "order": 3}},
+  {"model": "home.apparatuspart", "pk": 4, "fields": {"name": "Сухопарник", "slug": "dry_pot", "description": "Очищает пары от сивушных масел.", "order": 4}},
+  {"model": "home.apparatuspart", "pk": 5, "fields": {"name": "Шланги", "slug": "hoses", "description": "Соединительные шланги для системы охлаждения.", "order": 5}},
+  {"model": "home.apparatuspart", "pk": 6, "fields": {"name": "Прокладки", "slug": "gaskets", "description": "Герметичные прокладки для всех соединений.", "order": 6}},
+
+  {"model": "home.moonshineingredient", "pk": 1, "fields": {"name": "Сахар", "slug": "sugar", "price": "10.00", "description": "Основа для классической браги."}},
+  {"model": "home.moonshineingredient", "pk": 2, "fields": {"name": "Дрожжи", "slug": "yeast", "price": "15.00", "description": "Для брожения."}},
+  {"model": "home.moonshineingredient", "pk": 3, "fields": {"name": "Пшеница", "slug": "wheat", "price": "25.00", "description": "Зерно для пшеничного самогона."}},
+  {"model": "home.moonshineingredient", "pk": 4, "fields": {"name": "Кукуруза", "slug": "corn", "price": "20.00", "description": "Для кукурузного бурбона."}},
+  {"model": "home.moonshineingredient", "pk": 5, "fields": {"name": "Яблоки", "slug": "apples", "price": "18.00", "description": "Ароматные яблоки для настойки."}},
+  {"model": "home.moonshineingredient", "pk": 6, "fields": {"name": "Вода", "slug": "water", "price": "5.00", "description": "Чистая родниковая вода."}},
+
+  {"model": "home.moonshinerecipe", "pk": 1, "fields": {"name": "Сахарный самогон", "description": "Классический самогон из сахарной браги. Улучшает клёв.", "effect_type": "bite_boost", "effect_value": 0.25, "duration_hours": 8, "crafting_time_hours": 3, "required_ingredients": {"sugar": 3, "yeast": 1, "water": 2}}},
+  {"model": "home.moonshinerecipe", "pk": 2, "fields": {"name": "Пшеничный самогон", "description": "Мягкий пшеничный самогон. Повышает получаемый опыт.", "effect_type": "experience_boost", "effect_value": 0.30, "duration_hours": 6, "crafting_time_hours": 4, "required_ingredients": {"wheat": 2, "yeast": 1, "water": 2}}},
+  {"model": "home.moonshinerecipe", "pk": 3, "fields": {"name": "Кукурузный бурбон", "description": "Крепкий бурбон из кукурузы. Мгновенно восстанавливает сытость.", "effect_type": "hunger_restore", "effect_value": 40, "duration_hours": 0, "crafting_time_hours": 3, "required_ingredients": {"corn": 3, "yeast": 1, "water": 1}}},
+  {"model": "home.moonshinerecipe", "pk": 4, "fields": {"name": "Яблочная настойка", "description": "Ароматная яблочная настойка. Привлекает редкую рыбу.", "effect_type": "luck", "effect_value": 0.50, "duration_hours": 6, "crafting_time_hours": 5, "required_ingredients": {"apples": 3, "sugar": 1, "water": 1}}}
+]

@@ -11,7 +11,7 @@ from apps.fishing.services.fish_selector import FishSelectorService
 
 SELECT_RELATED = (
     'location', 'rod__rod_type', 'rod__reel', 'rod__line',
-    'rod__hook', 'rod__bait', 'rod__lure', 'hooked_species',
+    'rod__hook', 'rod__bait', 'hooked_species',
 )
 
 
@@ -79,18 +79,6 @@ class FishingStatusUseCase:
         deleted_ids = set()
         for session in sessions:
             if session.state == FishingSession.State.WAITING:
-                # Обновляем прогресс проводки для спиннинга
-                if session.rod.rod_class == 'spinning' and session.is_retrieving:
-                    increment = session.rod.retrieve_speed * 0.005
-                    session.retrieve_progress = min(1.0, session.retrieve_progress + increment)
-                    session.save(update_fields=['retrieve_progress'])
-
-                    # Если приманка дошла до берега — автоматически вытаскиваем
-                    if session.retrieve_progress >= 1.0:
-                        deleted_ids.add(session.pk)
-                        session.delete()
-                        continue
-
                 if self._bite.try_bite(player, session.location, session.rod, session):
                     fish = self._fish.select_fish(session.location, session.rod)
                     if fish:

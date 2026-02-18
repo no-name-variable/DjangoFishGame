@@ -25,15 +25,12 @@ export interface FullRod {
   hook_name: string | null
   float_tackle?: number | null
   float_name: string | null
-  lure?: number | null
-  lure_name: string | null
   bait?: number | null
   bait_name: string | null
   bait_remaining: number
   durability_current: number
   is_ready: boolean
   depth_setting: number
-  retrieve_speed: number
 }
 
 interface TacklePanelProps {
@@ -53,10 +50,8 @@ interface TacklePanelProps {
   onKeep: () => void
   onRelease: () => void
   onRetrieve: (sessionId: number) => void
-  onStartRetrieve?: (sessionId: number) => void
-  onStopRetrieve?: (sessionId: number) => void
   onLeave: () => void
-  onUpdateSettings: (rodId: number, settings: { depth_setting?: number; retrieve_speed?: number }) => void
+  onUpdateSettings: (rodId: number, settings: { depth_setting?: number }) => void
   onChangeTackle: (rodId: number, updatedRod: FullRod) => void
   onMessage?: (msg: string) => void
   message: string
@@ -65,7 +60,6 @@ interface TacklePanelProps {
 
 const rodClassLabel: Record<string, string> = {
   float: '🪣 Поплавочная',
-  spinning: '🌀 Спиннинг',
   bottom: '⚓ Донная',
   feeder: '🔲 Фидер',
   match: '🎯 Матчевая',
@@ -81,12 +75,7 @@ function buildTackleSlots(rod: FullRod): TackleSlotData[] {
   if (rod.rod_class === 'float') {
     slots.push({ type: 'floattackle', itemId: rod.float_tackle ?? null, name: rod.float_name })
   }
-  if (rod.rod_class === 'spinning') {
-    slots.push({ type: 'lure', itemId: rod.lure ?? null, name: rod.lure_name })
-  }
-  if (rod.rod_class !== 'spinning') {
-    slots.push({ type: 'bait', itemId: rod.bait ?? null, name: rod.bait_name, remaining: rod.bait_remaining })
-  }
+  slots.push({ type: 'bait', itemId: rod.bait ?? null, name: rod.bait_name, remaining: rod.bait_remaining })
   return slots
 }
 
@@ -150,7 +139,6 @@ export default function TacklePanel({
   rods, availableRods, selectedRodId, onSelectRod,
   sessions, fights, activeSessionId, activeSession, activeFight,
   onSessionClick, onStrike, onReelIn, onPull, onKeep, onRelease, onRetrieve,
-  onStartRetrieve, onStopRetrieve,
   onLeave, onUpdateSettings, onChangeTackle, message, chatChannelId,
 }: TacklePanelProps) {
   const [tackleChangeRodId, setTackleChangeRodId] = useState<number | null>(null)
@@ -170,10 +158,7 @@ export default function TacklePanel({
     ? sessions.some((s) => s.rodId === activeRod.id)
     : false
 
-  // Показывать глубину: поплавочная, донная, фидер, матчевая
-  const showDepth = activeRod && activeRod.rod_class !== 'spinning'
-  // Показывать проводку: спиннинг
-  const showRetrieve = activeRod?.rod_class === 'spinning'
+  const showDepth = !!activeRod
 
   // Состояние подсечки: ищем bite/nibble среди ВСЕХ сессий
   const anyBite = sessions.find((s) => s.state === 'bite')
@@ -239,28 +224,6 @@ export default function TacklePanel({
               />
             )}
 
-            {showRetrieve && (
-              <>
-                <SettingSlider
-                  label="Проводка"
-                  value={activeRod.retrieve_speed}
-                  min={1} max={10} step={1}
-                  disabled={slidersDisabled}
-                  onChange={(v) => onUpdateSettings(activeRod.id, { retrieve_speed: v })}
-                />
-                <span className="col-span-2 text-[9px] text-center">
-                  {activeRod.retrieve_speed >= 4 && activeRod.retrieve_speed <= 7 && (
-                    <span className="text-green-400">✓ Оптимальная скорость (+20%)</span>
-                  )}
-                  {(activeRod.retrieve_speed <= 2 || activeRod.retrieve_speed >= 9) && (
-                    <span className="text-red-400">⚠ Слишком медленная/быстрая (-30%)</span>
-                  )}
-                  {(activeRod.retrieve_speed === 3 || activeRod.retrieve_speed === 8) && (
-                    <span className="text-yellow-400">~ Средняя скорость</span>
-                  )}
-                </span>
-              </>
-            )}
           </div>
 
           {/* Кнопка смены снасти */}
@@ -383,117 +346,19 @@ export default function TacklePanel({
                 ? sessions[0]
                 : null
             if (!waitingSession) return null
-            const isSpinning = waitingSession.rodClass === 'spinning'
-            const nearShore = isSpinning && waitingSession.retrieveProgress > 0.85
             return (
               <div className="w-full flex flex-col gap-2">
-                {/* Спиннинг */}
-                {isSpinning ? (
-                  <div className="flex flex-col gap-1">
-                    {nearShore ? (
-                      /* Приманка у берега */
-                      <div className="flex flex-col gap-1">
-                        <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#4ade80', animation: 'pulse 1s ease-in-out infinite' }}>
-                          🏖 Приманка у берега! Клик по воде — новый заброс
-                        </div>
-                        <button
-                          onClick={() => onRetrieve(waitingSession.id)}
-                          style={{
-                            width: '100%', minHeight: '52px', fontSize: '1rem',
-                            fontFamily: 'Georgia, serif',
-                            background: 'linear-gradient(135deg, rgba(133,77,14,0.6), rgba(161,94,18,0.4))',
-                            borderColor: '#d97706', borderWidth: '1.5px',
-                            color: '#fde68a',
-                            boxShadow: '0 0 14px rgba(217,119,6,0.4)',
-                          }}
-                          className="btn"
-                        >
-                          🔄 Вытащить и перезабросить
-                        </button>
-                      </div>
-                    ) : (
-                      /* Обычная кнопка проводки */
-                      <>
-                        <button
-                          onMouseDown={() => onStartRetrieve?.(waitingSession.id)}
-                          onMouseUp={() => onStopRetrieve?.(waitingSession.id)}
-                          onMouseLeave={() => onStopRetrieve?.(waitingSession.id)}
-                          onTouchStart={(e) => { e.preventDefault(); onStartRetrieve?.(waitingSession.id) }}
-                          onTouchEnd={(e) => { e.preventDefault(); onStopRetrieve?.(waitingSession.id) }}
-                          style={{
-                            minHeight: '56px', fontSize: '1rem', width: '100%',
-                            fontFamily: 'Georgia, serif', letterSpacing: '0.03em',
-                            transition: 'all 0.12s ease',
-                            background: waitingSession.isRetrieving
-                              ? 'linear-gradient(135deg, rgba(2,132,199,0.6), rgba(14,165,233,0.4))'
-                              : 'rgba(12,74,110,0.3)',
-                            borderColor: waitingSession.isRetrieving ? '#0ea5e9' : '#164e63',
-                            borderWidth: '1.5px',
-                            color: waitingSession.isRetrieving ? '#e0f2fe' : '#7898b8',
-                            boxShadow: waitingSession.isRetrieving
-                              ? '0 0 18px rgba(14,165,233,0.45), inset 0 1px 0 rgba(255,255,255,0.1)'
-                              : 'none',
-                          }}
-                          className="btn"
-                        >
-                          {waitingSession.isRetrieving
-                            ? '⚡ Проводка...'
-                            : '🌀 Зажмите для проводки [R]'}
-                        </button>
+                <span className="text-wood-500 text-sm font-serif animate-pulse py-1 text-center">
+                  ⏳ Ожидание поклёвки...
+                </span>
 
-                        {/* Прогресс дистанции приманки */}
-                        <div style={{ position: 'relative' }}>
-                          <div className="w-full rounded-full overflow-hidden" style={{
-                            height: '10px',
-                            background: 'rgba(12,74,110,0.2)',
-                            border: '1px solid rgba(96,165,250,0.15)',
-                          }}>
-                            <div
-                              className="h-full transition-all duration-300"
-                              style={{
-                                width: `${waitingSession.retrieveProgress * 100}%`,
-                                background: waitingSession.retrieveProgress > 0.7
-                                  ? 'linear-gradient(to right, #0369a1, #4ade80)'
-                                  : 'linear-gradient(to right, #164e63, #0ea5e9)',
-                                borderRadius: '9999px',
-                                boxShadow: waitingSession.isRetrieving ? '0 0 6px rgba(14,165,233,0.5)' : 'none',
-                              }}
-                            />
-                          </div>
-                          <div style={{
-                            display: 'flex', justifyContent: 'space-between',
-                            marginTop: '2px', fontSize: '0.6rem',
-                          }}>
-                            <span style={{ color: '#164e63' }}>🎯 Заброс</span>
-                            <span style={{ color: waitingSession.retrieveProgress > 0.7 ? '#4ade80' : '#164e63' }}>
-                              🏖 Берег
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="text-center" style={{ fontSize: '0.65rem', color: '#4a6580' }}>
-                          Удерживайте — рыба клюёт только при движении приманки
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  /* Не спиннинг — ожидание поклёвки */
-                  <span className="text-wood-500 text-sm font-serif animate-pulse py-1 text-center">
-                    ⏳ Ожидание поклёвки...
-                  </span>
-                )}
-
-                {/* Кнопка вытащить (если не у берега) */}
-                {!nearShore && (
-                  <button
-                    onClick={() => onRetrieve(waitingSession.id)}
-                    className="btn btn-secondary text-xs"
-                    style={{ minHeight: '36px' }}
-                  >
-                    Вытащить
-                  </button>
-                )}
+                <button
+                  onClick={() => onRetrieve(waitingSession.id)}
+                  className="btn btn-secondary text-xs"
+                  style={{ minHeight: '36px' }}
+                >
+                  Вытащить
+                </button>
               </div>
             )
           })()}

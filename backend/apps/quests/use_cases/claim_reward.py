@@ -13,6 +13,7 @@ class ClaimRewardResult:
     reward_money: int
     reward_experience: int
     reward_karma: int
+    reward_apparatus_part: str | None = None
 
 
 class ClaimQuestRewardUseCase:
@@ -37,6 +38,15 @@ class ClaimQuestRewardUseCase:
         player.add_experience(quest.reward_experience)
         player.save(update_fields=['money', 'karma', 'rank', 'experience'])
 
+        # Выдача детали аппарата
+        apparatus_part_name = None
+        if quest.reward_apparatus_part_id:
+            from apps.home.models import PlayerApparatusPart
+            PlayerApparatusPart.objects.get_or_create(
+                player=player, part=quest.reward_apparatus_part,
+            )
+            apparatus_part_name = quest.reward_apparatus_part.name
+
         pq.status = PlayerQuest.Status.CLAIMED
         pq.save(update_fields=['status'])
 
@@ -45,4 +55,5 @@ class ClaimQuestRewardUseCase:
             reward_money=quest.reward_money,
             reward_experience=quest.reward_experience,
             reward_karma=quest.reward_karma,
+            reward_apparatus_part=apparatus_part_name,
         )

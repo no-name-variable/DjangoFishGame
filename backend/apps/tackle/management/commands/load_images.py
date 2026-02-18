@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 
 from apps.tackle.models import (
     Bait, FishSpecies, Flavoring, FloatTackle, Food,
-    Groundbait, Hook, Line, Lure, Reel, RodType,
+    Groundbait, Hook, Line, Reel, RodType,
 )
 from apps.world.models import Base, Location
 
@@ -41,7 +41,6 @@ class Command(BaseCommand):
         total += self._load_by_pk(Line, os.path.join(images_dir, 'lines'), 'png')
         total += self._load_by_pk(Hook, os.path.join(images_dir, 'hooks'), 'png')
         total += self._load_by_pk(FloatTackle, os.path.join(images_dir, 'floats'), 'bmp')
-        total += self._load_by_pk(Lure, os.path.join(images_dir, 'lures'), 'jpg')
 
         # Наживки — смешанные расширения
         total += self._load_baits(os.path.join(images_dir, 'baits'))

@@ -20,7 +20,6 @@ const MAX_SLOTS = 3
 
 const rodClassLabel: Record<string, string> = {
   float: 'Попл.',
-  spinning: 'Спин.',
   bottom: 'Донн.',
   feeder: 'Фидер',
   match: 'Матч.',
@@ -180,7 +179,6 @@ function RodPicker({
           <div className="text-wood-500 text-[10px] flex gap-1.5 flex-wrap">
             <span>{rodClassLabel[r.rod_class] || r.rod_class}</span>
             {r.bait_name && <span>· {r.bait_name} ({r.bait_remaining})</span>}
-            {r.lure_name && <span>· {r.lure_name}</span>}
           </div>
         </button>
       ))}

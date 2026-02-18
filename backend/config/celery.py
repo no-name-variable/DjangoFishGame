@@ -44,9 +44,24 @@ app.conf.beat_schedule = {
         'task': 'apps.inspection.tasks.fish_inspection',
         'schedule': 1800.0,  # 30 минут
     },
+    # Обновление заказов кафе - каждый час
+    'refresh-cafe-orders': {
+        'task': 'apps.cafe.tasks.refresh_cafe_orders',
+        'schedule': 3600.0,  # 1 час
+    },
     # Сброс динамических цен рыбы - каждые 24 часа (полночь по UTC)
     'reset-fish-prices': {
         'task': 'apps.tackle.tasks.reset_fish_prices',
         'schedule': crontab(hour=0, minute=0),
+    },
+    # Проверка готовности варки самогона - каждые 5 минут
+    'check-brewing-ready': {
+        'task': 'apps.home.tasks.check_brewing_ready',
+        'schedule': 300.0,  # 5 минут
+    },
+    # Удаление истёкших баффов самогона - каждый час
+    'expire-moonshine-buffs': {
+        'task': 'apps.home.tasks.expire_moonshine_buffs',
+        'schedule': 3600.0,  # 1 час
     },
 }

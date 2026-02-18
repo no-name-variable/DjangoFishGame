@@ -59,7 +59,6 @@ class FishingConsumer(AsyncJsonWebsocketConsumer):
             'keep': self._handle_keep,
             'release': self._handle_release,
             'retrieve': self._handle_retrieve,
-            'update_retrieve': self._handle_update_retrieve,
             'change_bait': self._handle_change_bait,
             'groundbait': self._handle_groundbait,
         }.get(action)
@@ -361,38 +360,6 @@ class FishingConsumer(AsyncJsonWebsocketConsumer):
             return {'type': 'error', 'message': 'Сессия не найдена.'}
         except ValueError as e:
             return {'type': 'error', 'message': str(e)}
-
-    async def _handle_update_retrieve(self, content):
-        session_id = content.get('session_id')
-        is_retrieving = content.get('is_retrieving')
-
-        if not session_id or is_retrieving is None:
-            await self.send_json({'type': 'error', 'message': 'Укажите session_id и is_retrieving.'})
-            return
-
-        result = await self._do_update_retrieve(session_id, is_retrieving)
-        await self.send_json(result)
-
-        if result['type'] != 'error':
-            state = await self._get_state_snapshot()
-            await self.send_json({'type': 'state', **state})
-
-    @database_sync_to_async
-    def _do_update_retrieve(self, session_id, is_retrieving):
-        from apps.fishing.models import FishingSession
-
-        try:
-            session = FishingSession.objects.get(
-                pk=session_id, player=self.player,
-                state=FishingSession.State.WAITING,
-            )
-        except FishingSession.DoesNotExist:
-            return {'type': 'error', 'message': 'Сессия не найдена.'}
-
-        session.is_retrieving = is_retrieving
-        session.save(update_fields=['is_retrieving'])
-
-        return {'type': 'update_retrieve_ok', 'session_id': session_id, 'is_retrieving': session.is_retrieving}
 
     async def _handle_change_bait(self, content):
         session_id = content.get('session_id')

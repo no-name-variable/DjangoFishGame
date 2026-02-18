@@ -8,7 +8,7 @@ interface Quest {
   id: number; name: string; description: string; quest_type: string
   target_species_name: string | null; target_count: number; target_weight: number
   target_location_name: string | null; reward_money: string; reward_experience: number
-  reward_karma: number; min_rank: number
+  reward_karma: number; reward_apparatus_part_name: string | null; min_rank: number
 }
 interface PlayerQuest {
   id: number; quest: Quest; progress: number; progress_weight: number
@@ -98,16 +98,26 @@ export default function QuestsPage() {
                   {/* Иконка типа */}
                   <div style={{
                     width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
-                    background: 'rgba(13,31,13,0.6)', border: '1px solid rgba(74,49,24,0.4)',
+                    background: pq.quest.reward_apparatus_part_name ? 'rgba(92,61,30,0.35)' : 'rgba(13,31,13,0.6)',
+                    border: `1px solid ${pq.quest.reward_apparatus_part_name ? 'rgba(234,179,8,0.3)' : 'rgba(74,49,24,0.4)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
                   }}>
-                    {QUEST_TYPE_ICON[pq.quest.quest_type] ?? '📜'}
+                    {pq.quest.reward_apparatus_part_name ? '🔧' : (QUEST_TYPE_ICON[pq.quest.quest_type] ?? '📜')}
                   </div>
 
                   {/* Контент */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', color: '#d4c5a9', marginBottom: '2px' }}>
                       {pq.quest.name}
+                      {pq.quest.reward_apparatus_part_name && (
+                        <span style={{
+                          marginLeft: '8px', fontSize: '0.6rem', color: '#facc15',
+                          background: 'rgba(234,179,8,0.15)', border: '1px solid rgba(234,179,8,0.3)',
+                          borderRadius: '4px', padding: '1px 6px', verticalAlign: 'middle',
+                        }}>
+                          Самогонный аппарат
+                        </span>
+                      )}
                     </h3>
                     <p style={{ fontSize: '0.72rem', color: '#6b5030', marginBottom: '6px' }}>
                       {pq.quest.description}
@@ -138,10 +148,13 @@ export default function QuestsPage() {
                     )}
 
                     {/* Награды */}
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '4px', fontSize: '0.68rem', color: '#5c3d1e' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px', fontSize: '0.68rem', color: '#5c3d1e' }}>
                       <span>💰 {pq.quest.reward_money}$</span>
                       <span>✨ {pq.quest.reward_experience} опыта</span>
                       {pq.quest.reward_karma > 0 && <span>⚖️ +{pq.quest.reward_karma}</span>}
+                      {pq.quest.reward_apparatus_part_name && (
+                        <span style={{ color: '#facc15' }}>🔧 {pq.quest.reward_apparatus_part_name}</span>
+                      )}
                     </div>
                   </div>
 
@@ -179,22 +192,35 @@ export default function QuestsPage() {
             <div key={q.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
               <div style={{
                 width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
-                background: 'rgba(13,31,13,0.6)', border: '1px solid rgba(74,49,24,0.4)',
+                background: q.reward_apparatus_part_name ? 'rgba(92,61,30,0.35)' : 'rgba(13,31,13,0.6)',
+                border: `1px solid ${q.reward_apparatus_part_name ? 'rgba(234,179,8,0.3)' : 'rgba(74,49,24,0.4)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
               }}>
-                {QUEST_TYPE_ICON[q.quest_type] ?? '📜'}
+                {q.reward_apparatus_part_name ? '🔧' : (QUEST_TYPE_ICON[q.quest_type] ?? '📜')}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', color: '#d4c5a9', marginBottom: '2px' }}>
                   {q.name}
+                  {q.reward_apparatus_part_name && (
+                    <span style={{
+                      marginLeft: '8px', fontSize: '0.6rem', color: '#facc15',
+                      background: 'rgba(234,179,8,0.15)', border: '1px solid rgba(234,179,8,0.3)',
+                      borderRadius: '4px', padding: '1px 6px', verticalAlign: 'middle',
+                    }}>
+                      Самогонный аппарат
+                    </span>
+                  )}
                 </h3>
                 <p style={{ fontSize: '0.72rem', color: '#6b5030', marginBottom: '6px' }}>
                   {q.description}
                 </p>
-                <div style={{ display: 'flex', gap: '10px', fontSize: '0.68rem', color: '#5c3d1e' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '0.68rem', color: '#5c3d1e' }}>
                   <span>💰 {q.reward_money}$</span>
                   <span>✨ {q.reward_experience} опыта</span>
                   {q.reward_karma > 0 && <span>⚖️ +{q.reward_karma}</span>}
+                  {q.reward_apparatus_part_name && (
+                    <span style={{ color: '#facc15' }}>🔧 {q.reward_apparatus_part_name}</span>
+                  )}
                   {q.min_rank > 0 && <span>⭐ Разряд {q.min_rank}+</span>}
                 </div>
               </div>

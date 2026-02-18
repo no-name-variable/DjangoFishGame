@@ -12,10 +12,7 @@ export interface SessionInfo {
   slot: number
   rodId: number
   rodName: string
-  rodClass: 'float' | 'spinning' | 'bottom'
-  retrieveSpeed: number
-  isRetrieving: boolean
-  retrieveProgress: number
+  rodClass: 'float' | 'bottom'
   castX: number
   castY: number
   hookedSpeciesName: string | null
@@ -89,9 +86,6 @@ export const useFishingStore = create<FishingStoreState>((set, get) => ({
         rodId: s.rod_id,
         rodName: s.rod_name,
         rodClass: s.rod_class,
-        retrieveSpeed: s.retrieve_speed,
-        isRetrieving: s.is_retrieving,
-        retrieveProgress: s.retrieve_progress,
         castX: s.cast_x,
         castY: s.cast_y,
         hookedSpeciesName: s.hooked_species_name,

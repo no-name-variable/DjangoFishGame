@@ -37,8 +37,6 @@ export interface RodData {
   hook_name: string | null
   float_tackle: number | null
   float_name: string | null
-  lure: number | null
-  lure_name: string | null
   bait: number | null
   bait_name: string | null
   bait_remaining: number
@@ -47,7 +45,6 @@ export interface RodData {
   is_assembled: boolean
   is_ready: boolean
   depth_setting: number
-  retrieve_speed: number
 }
 
 interface Props {
@@ -58,20 +55,19 @@ interface Props {
   onClose: () => void
   onUpdate: () => void
   /** Для режима рыбалки: колбэк обновления настроек */
-  onUpdateSettings?: (rodId: number, s: { depth_setting?: number; retrieve_speed?: number }) => void
+  onUpdateSettings?: (rodId: number, s: { depth_setting?: number }) => void
   /** Для режима рыбалки: колбэк замены снасти */
   onChangeTackle?: (rodId: number, updatedRod: RodData) => void
 }
 
 const ROD_CLASS_LABEL: Record<string, string> = {
-  float: 'Поплавочная', spinning: 'Спиннинг', bottom: 'Донная',
+  float: 'Поплавочная', bottom: 'Донная',
 }
 
 /** Типы слотов, доступные для класса удочки */
 function slotsForClass(rodClass: string): string[] {
   switch (rodClass) {
     case 'float': return ['rodtype', 'reel', 'line', 'hook', 'floattackle', 'bait']
-    case 'spinning': return ['rodtype', 'reel', 'line', 'hook', 'lure']
     case 'bottom': return ['rodtype', 'reel', 'line', 'hook', 'bait']
     default: return ['rodtype', 'reel', 'line', 'hook', 'bait']
   }
@@ -79,12 +75,12 @@ function slotsForClass(rodClass: string): string[] {
 
 /** Маппинг slot type → поле API */
 const TYPE_TO_FIELD: Record<string, string> = {
-  hook: 'hook_id', floattackle: 'float_tackle_id', lure: 'lure_id', bait: 'bait_id',
+  hook: 'hook_id', floattackle: 'float_tackle_id', bait: 'bait_id',
 }
 
 const TYPE_LABELS: Record<string, string> = {
   rodtype: 'Удилище', reel: 'Катушка', line: 'Леска', hook: 'Крючок',
-  floattackle: 'Поплавок', lure: 'Приманка', bait: 'Наживка',
+  floattackle: 'Поплавок', bait: 'Наживка',
 }
 
 function durabilityColor(d: number): string {
@@ -106,7 +102,6 @@ export default function RodDetailModal({
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(rod.custom_name || '')
   const [localDepth, setLocalDepth] = useState(rod.depth_setting)
-  const [localSpeed, setLocalSpeed] = useState(rod.retrieve_speed)
 
   const { setPlayer, player } = usePlayerStore()
 
@@ -146,7 +141,6 @@ export default function RodDetailModal({
       case 'line': return { type, itemId: rod.line, name: rod.line_name }
       case 'hook': return { type, itemId: rod.hook, name: rod.hook_name }
       case 'floattackle': return { type, itemId: rod.float_tackle, name: rod.float_name }
-      case 'lure': return { type, itemId: rod.lure, name: rod.lure_name }
       case 'bait': return { type, itemId: rod.bait, name: rod.bait_name, remaining: rod.bait_remaining }
       default: return { type, itemId: null, name: null }
     }
@@ -295,9 +289,6 @@ export default function RodDetailModal({
     }
   }
 
-  const showDepth = rod.rod_class !== 'spinning'
-  const showRetrieve = rod.rod_class === 'spinning'
-
   return (
     <div
       style={{
@@ -407,47 +398,26 @@ export default function RodDetailModal({
           </div>
 
           {/* Настройки */}
-          {(showDepth || showRetrieve) && (
-            <div style={{
-              padding: '10px 12px', borderRadius: '8px', marginBottom: '12px',
-              background: 'rgba(7,18,7,0.3)', border: '1px solid rgba(92,61,30,0.25)',
-            }}>
-              {showDepth && (
-                <div style={{ marginBottom: showRetrieve ? '10px' : 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <label style={{ color: '#7898b8', fontSize: '0.72rem' }}>Глубина</label>
-                    <span style={{ color: '#a8894e', fontSize: '0.72rem' }}>{localDepth.toFixed(1)} м</span>
-                  </div>
-                  <input type="range" min={0.1} max={10} step={0.1} value={localDepth}
-                    disabled={rodInWater}
-                    onChange={(e) => {
-                      const v = Number(e.target.value)
-                      setLocalDepth(v)
-                      if (mode === 'fishing') onUpdateSettings?.(rod.id, { depth_setting: v })
-                      else updateRodSettings(rod.id, { depth_setting: v }).catch(() => {})
-                    }}
-                    style={{ width: '100%', accentColor: '#3b82f6' }} />
-                </div>
-              )}
-              {showRetrieve && (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <label style={{ color: '#7898b8', fontSize: '0.72rem' }}>Проводка</label>
-                    <span style={{ color: '#a8894e', fontSize: '0.72rem' }}>{localSpeed}/10</span>
-                  </div>
-                  <input type="range" min={1} max={10} step={1} value={localSpeed}
-                    disabled={rodInWater}
-                    onChange={(e) => {
-                      const v = Number(e.target.value)
-                      setLocalSpeed(v)
-                      if (mode === 'fishing') onUpdateSettings?.(rod.id, { retrieve_speed: v })
-                      else updateRodSettings(rod.id, { retrieve_speed: v }).catch(() => {})
-                    }}
-                    style={{ width: '100%', accentColor: '#3b82f6' }} />
-                </div>
-              )}
+          <div style={{
+            padding: '10px 12px', borderRadius: '8px', marginBottom: '12px',
+            background: 'rgba(7,18,7,0.3)', border: '1px solid rgba(92,61,30,0.25)',
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <label style={{ color: '#7898b8', fontSize: '0.72rem' }}>Глубина</label>
+                <span style={{ color: '#a8894e', fontSize: '0.72rem' }}>{localDepth.toFixed(1)} м</span>
+              </div>
+              <input type="range" min={0.1} max={10} step={0.1} value={localDepth}
+                disabled={rodInWater}
+                onChange={(e) => {
+                  const v = Number(e.target.value)
+                  setLocalDepth(v)
+                  if (mode === 'fishing') onUpdateSettings?.(rod.id, { depth_setting: v })
+                  else updateRodSettings(rod.id, { depth_setting: v }).catch(() => {})
+                }}
+                style={{ width: '100%', accentColor: '#3b82f6' }} />
             </div>
-          )}
+          </div>
         </div>
 
         {/* Кнопки управления */}

@@ -15,14 +15,13 @@ const categories = [
   { key: 'lines',  label: 'Лески',    icon: '🧵' },
   { key: 'hooks',  label: 'Крючки',   icon: '🪝' },
   { key: 'floats', label: 'Поплавки', icon: '🔴' },
-  { key: 'lures',  label: 'Приманки', icon: '🪱' },
   { key: 'baits',  label: 'Наживки',  icon: '🪱' },
   { key: 'food',   label: 'Еда',      icon: '🍞' },
 ]
 
 const itemTypeMap: Record<string, string> = {
   rods: 'rod', reels: 'reel', lines: 'line', hooks: 'hook',
-  floats: 'float', lures: 'lure', baits: 'bait', food: 'food',
+  floats: 'float', baits: 'bait', food: 'food',
 }
 
 interface ShopItem {

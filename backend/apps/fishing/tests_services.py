@@ -144,17 +144,6 @@ class TestBiteCalculator:
         chance_with = self.svc.calculate_bite_chance(player, location, player_rod)
         assert chance_with > chance_without
 
-    def test_spinning_speed_modifier_optimal(self, player, location, spinning_rod, location_fish, game_time):
-        spinning_rod.retrieve_speed = 5  # оптимальная
-        spinning_rod.save()
-        chance_optimal = self.svc.calculate_bite_chance(player, location, spinning_rod)
-
-        spinning_rod.retrieve_speed = 1  # слишком медленная
-        spinning_rod.save()
-        chance_slow = self.svc.calculate_bite_chance(player, location, spinning_rod)
-
-        assert chance_optimal > chance_slow
-
     @patch.object(PotionService, 'get_potion_effect_value')
     def test_luck_potion_modifier(self, mock_potion, player, location, player_rod, location_fish, game_time):
         mock_potion.return_value = None
@@ -196,20 +185,6 @@ class TestFishSelector:
         # Запускаем несколько раз для статистической проверки
         results = [self.svc.select_fish(location, player_rod) for _ in range(10)]
         assert all(r == fish_species for r in results if r)
-
-    def test_depth_preference_spinning(self, location, spinning_rod, location_fish, fish_species):
-        fish_species.preferred_depth_min = 1.0
-        fish_species.preferred_depth_max = 3.0
-        fish_species.save()
-
-        spinning_rod.lure.depth_min = 1.0
-        spinning_rod.lure.depth_max = 4.0
-        spinning_rod.lure.save()
-        spinning_rod.retrieve_speed = 5
-        spinning_rod.save()
-
-        fish = self.svc.select_fish(location, spinning_rod)
-        assert fish is not None
 
     def test_groundbait_target_species_bonus(self, location, player_rod, groundbait, fish_species, location_fish, game_time):
         groundbait.target_species.add(fish_species)

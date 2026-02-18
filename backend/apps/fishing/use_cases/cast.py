@@ -29,7 +29,7 @@ class CastUseCase:
 
         try:
             rod = PlayerRod.objects.select_related(
-                'rod_type', 'reel', 'line', 'hook', 'float_tackle', 'lure', 'bait',
+                'rod_type', 'reel', 'line', 'hook', 'float_tackle', 'bait',
             ).get(pk=rod_id, player=player)
         except PlayerRod.DoesNotExist:
             raise PlayerRod.DoesNotExist('Снасть не найдена.')

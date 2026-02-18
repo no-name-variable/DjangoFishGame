@@ -1,0 +1,122 @@
+[
+  {
+    "model": "quests.quest",
+    "pk": 11,
+    "fields": {
+      "name": "Первый шаг",
+      "description": "Старый рыбак Михалыч рассказал вам про самогонный аппарат — с его помощью можно варить самогон, дающий полезные баффы на рыбалке: улучшение клёва, больше опыта и удача на редкую рыбу. Помогите ему с уловом — поймайте 15 рыб любого вида, и он отдаст вам перегонный куб — основу аппарата.",
+      "quest_type": "catch_fish",
+      "target_species": null,
+      "target_count": 15,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "100.00",
+      "reward_experience": 50,
+      "reward_karma": 5,
+      "reward_apparatus_part": 1,
+      "prerequisite_quest": null,
+      "min_rank": 2,
+      "order": 11
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 12,
+    "fields": {
+      "name": "Змеевик для аппарата",
+      "description": "Для аппарата нужен змеевик — спиральная медная трубка, в которой пары охлаждаются и превращаются в самогон. Мастер-медник готов его сделать, но просит достать ему 5 щук — у него намечается застолье.",
+      "quest_type": "catch_species",
+      "target_species": 16,
+      "target_count": 5,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "150.00",
+      "reward_experience": 75,
+      "reward_karma": 5,
+      "reward_apparatus_part": 2,
+      "prerequisite_quest": 11,
+      "min_rank": 2,
+      "order": 12
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 13,
+    "fields": {
+      "name": "Точный контроль",
+      "description": "Без термометра не угадаешь температуру — перегреешь брагу и получишь сивуху вместо самогона. Егерь на базе коллекционирует крупную рыбу — наловите 10 кг, и он отдаст свой старый термометр.",
+      "quest_type": "catch_weight",
+      "target_species": null,
+      "target_count": 0,
+      "target_weight": 10.0,
+      "target_location": null,
+      "reward_money": "200.00",
+      "reward_experience": 100,
+      "reward_karma": 10,
+      "reward_apparatus_part": 3,
+      "prerequisite_quest": 12,
+      "min_rank": 3,
+      "order": 13
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 14,
+    "fields": {
+      "name": "Чистый продукт",
+      "description": "Сухопарник — промежуточная ёмкость, которая очищает пары от сивушных масел. Без него самогон будет с неприятным запахом и вкусом. Местный кузнец возьмётся за работу, если вы обеспечите его рыбой на неделю — поймайте 20 штук.",
+      "quest_type": "catch_fish",
+      "target_species": null,
+      "target_count": 20,
+      "target_weight": 0,
+      "target_location": null,
+      "reward_money": "250.00",
+      "reward_experience": 120,
+      "reward_karma": 10,
+      "reward_apparatus_part": 4,
+      "prerequisite_quest": 13,
+      "min_rank": 3,
+      "order": 14
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 15,
+    "fields": {
+      "name": "Трубы и шланги",
+      "description": "Шланги нужны для системы охлаждения — по ним холодная вода будет циркулировать вокруг змеевика. На Мелководном заливе живёт умелец, который делает шланги из рыбьих пузырей. Поймайте для него 10 рыб прямо на заливе.",
+      "quest_type": "catch_fish",
+      "target_species": null,
+      "target_count": 10,
+      "target_weight": 0,
+      "target_location": 2,
+      "reward_money": "200.00",
+      "reward_experience": 100,
+      "reward_karma": 5,
+      "reward_apparatus_part": 5,
+      "prerequisite_quest": 14,
+      "min_rank": 3,
+      "order": 15
+    }
+  },
+  {
+    "model": "quests.quest",
+    "pk": 16,
+    "fields": {
+      "name": "Последний штрих",
+      "description": "Последняя деталь — герметичные прокладки для всех соединений. Без них аппарат будет пропускать пар и ничего не выйдет. Бабка-травница на базе делает их из особого состава, но ей нужна рыба для кота — и побольше. Наловите 25 кг, и аппарат будет собран!",
+      "quest_type": "catch_weight",
+      "target_species": null,
+      "target_count": 0,
+      "target_weight": 25.0,
+      "target_location": null,
+      "reward_money": "300.00",
+      "reward_experience": 150,
+      "reward_karma": 15,
+      "reward_apparatus_part": 6,
+      "prerequisite_quest": 15,
+      "min_rank": 4,
+      "order": 16
+    }
+  }
+]

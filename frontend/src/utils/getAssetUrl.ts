@@ -10,7 +10,6 @@ const CATEGORY_MAP: Record<string, { dir: string; ext: string }> = {
   line:        { dir: 'lines',       ext: 'png' },
   hook:        { dir: 'hooks',       ext: 'png' },
   floattackle: { dir: 'floats',      ext: 'bmp' },
-  lure:        { dir: 'lures',       ext: 'jpg' },
   bait:        { dir: 'baits',       ext: 'png' },
   groundbait:  { dir: 'groundbaits', ext: 'jpg' },
   flavoring:   { dir: 'flavorings',  ext: 'jpg' },

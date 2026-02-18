@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from django.conf import settings
 
 from apps.fishing.models import FishingSession
+from apps.home.services import MoonshineService
 from apps.inventory.models import CaughtFish
 from apps.inventory.serializers import CaughtFishSerializer
 from apps.potions.services import PotionService
@@ -29,10 +30,12 @@ class KeepFishUseCase:
         record_service: RecordService,
         quest_service: QuestService,
         potion_service: PotionService,
+        moonshine_service: MoonshineService,
     ):
         self._records = record_service
         self._quests = quest_service
         self._potions = potion_service
+        self._moonshine = moonshine_service
 
     def execute(self, player, session_id: int) -> KeepFishResult:
         """Raises: FishingSession.DoesNotExist, ValueError."""
@@ -63,6 +66,12 @@ class KeepFishUseCase:
         )
 
         player.add_experience(caught.experience_reward)
+
+        # Бонус опыта от самогона
+        exp_boost = self._moonshine.get_buff_effect_value(player, 'experience_boost')
+        if exp_boost:
+            bonus = int(caught.experience_reward * exp_boost)
+            player.add_experience(bonus)
 
         record = self._records.check_record(
             player, session.hooked_species, session.hooked_weight,

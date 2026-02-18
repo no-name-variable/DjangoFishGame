@@ -54,11 +54,7 @@ export default function FishingPage() {
     },
     onCastOk: () => {
       play('cast')
-      if (lastCastRodClassRef.current === 'spinning') {
-        setMessage('🌀 Спиннинг заброшен! Зажмите [R] для проводки')
-      } else {
-        setMessage('🎣 Заброс! Ожидаем поклёвку...')
-      }
+      setMessage('🎣 Заброс! Ожидаем поклёвку...')
     },
     onStrikeOk: (data) => {
       setMessage(`На крючке: ${data.fish}! Вываживай!`)
@@ -132,10 +128,6 @@ export default function FishingPage() {
     const sessionList = Object.values(sessions)
     const existingSession = sessionList.find((s) => s.rodId === selectedRodId)
     if (existingSession) {
-      // Для спиннинга в режиме проводки — тихо игнорируем, приманка уже в воде
-      if (existingSession.rodClass === 'spinning' && existingSession.state === 'waiting') {
-        return
-      }
       setMessage('Эта удочка уже заброшена')
       return
     }
@@ -219,28 +211,13 @@ export default function FishingPage() {
   }, [caughtInfo?.sessionId, activeSessionId, sessions, send])
 
   const handleRetrieve = useCallback((sessionId: number) => {
-    const session = sessions[sessionId]
     send('retrieve', { session_id: sessionId })
     removeSession(sessionId)
-    if (session?.rodClass === 'spinning') {
-      // Спиннинг — возвращаем выбор этой удочки для мгновенного перезаброса
-      setSelectedRodId(session.rodId)
-      setMessage('🌀 Приманка вытащена! Кликните по воде для нового заброса')
-    } else {
-      setMessage('Удочка вытащена')
-    }
+    setMessage('Удочка вытащена')
   }, [send, removeSession, sessions])
 
-  const handleStartRetrieve = useCallback((sessionId: number) => {
-    send('update_retrieve', { session_id: sessionId, is_retrieving: true })
-  }, [send])
-
-  const handleStopRetrieve = useCallback((sessionId: number) => {
-    send('update_retrieve', { session_id: sessionId, is_retrieving: false })
-  }, [send])
-
   const handleUpdateSettings = useCallback(async (
-    rodId: number, settings: { depth_setting?: number; retrieve_speed?: number },
+    rodId: number, settings: { depth_setting?: number },
   ) => {
     try {
       const updated = await updateRodSettings(rodId, settings)
@@ -299,29 +276,12 @@ export default function FishingPage() {
       } else if (e.key === ' ' || e.key === 'Enter') {
         // Space/Enter — подсечка (handleStrike сам найдёт bite/nibble)
         handleStrike()
-      } else if (activeSession?.state === 'waiting' && activeSession.rodClass === 'spinning') {
-        if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
-          if (!activeSession.isRetrieving) {
-            send('update_retrieve', { session_id: activeSession.id, is_retrieving: true })
-          }
-        }
-      }
-    }
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (!activeSession) return
-      if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
-        if (activeSession.state === 'waiting' && activeSession.rodClass === 'spinning' && activeSession.isRetrieving) {
-          send('update_retrieve', { session_id: activeSession.id, is_retrieving: false })
-        }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
     }
   }, [activeSessionId, sessions, handleFightAction, handleStrike, send, selectedRodId, rods, setActiveSession, setSelectedRodId])
 
@@ -351,11 +311,6 @@ export default function FishingPage() {
       setSelectedRodId(availableRods[0].id)
     }
   }, [selectedRodCast, availableRods.length])
-
-  // Формируем Set из сессий которые в режиме проводки
-  const retrievingSessions = new Set(
-    sessionList.filter((s) => s.isRetrieving).map((s) => s.id),
-  )
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -409,7 +364,6 @@ export default function FishingPage() {
             activeSessionId={activeSessionId}
             timeOfDay={gt?.time_of_day || 'day'}
             locationImageUrl={locationImage}
-            retrievingSessions={retrievingSessions}
             onWaterClick={handleWaterClick}
             onFloatClick={handleFloatClick}
           />
@@ -471,8 +425,6 @@ export default function FishingPage() {
             onKeep={handleKeep}
             onRelease={handleRelease}
             onRetrieve={handleRetrieve}
-            onStartRetrieve={handleStartRetrieve}
-            onStopRetrieve={handleStopRetrieve}
             onLeave={handleLeave}
             onUpdateSettings={handleUpdateSettings}
             onChangeTackle={handleChangeTackle}

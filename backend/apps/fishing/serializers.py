@@ -16,11 +16,6 @@ class SessionActionSerializer(serializers.Serializer):
     session_id = serializers.IntegerField()
 
 
-class UpdateRetrieveSerializer(serializers.Serializer):
-    """Включение/выключение проводки спиннинга."""
-    session_id = serializers.IntegerField()
-    is_retrieving = serializers.BooleanField()
-
 
 class ChangeBaitSerializer(serializers.Serializer):
     """Смена наживки на удочке во время рыбалки."""
@@ -33,7 +28,6 @@ class FishingSessionSerializer(serializers.ModelSerializer):
     rod_name = serializers.CharField(source='rod.display_name', read_only=True)
     rod_id = serializers.IntegerField(source='rod.pk', read_only=True)
     rod_class = serializers.CharField(source='rod.rod_class', read_only=True)
-    retrieve_speed = serializers.IntegerField(source='rod.retrieve_speed', read_only=True)
     hooked_species_name = serializers.CharField(source='hooked_species.name_ru', read_only=True, default=None)
     hooked_rarity = serializers.CharField(source='hooked_species.rarity', read_only=True, default=None)
     hooked_species_image = serializers.SerializerMethodField()
@@ -50,7 +44,7 @@ class FishingSessionSerializer(serializers.ModelSerializer):
         model = FishingSession
         fields = [
             'id', 'state', 'slot', 'location', 'location_name',
-            'rod_id', 'rod_name', 'rod_class', 'retrieve_speed', 'is_retrieving', 'retrieve_progress',
+            'rod_id', 'rod_name', 'rod_class',
             'cast_x', 'cast_y', 'cast_time', 'bite_time',
             'hooked_species_name', 'hooked_weight', 'hooked_length',
             'hooked_rarity', 'hooked_species_image',

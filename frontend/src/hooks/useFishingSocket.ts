@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePlayerStore } from '../store/playerStore'
-import { useFishingStore, type SessionInfo } from '../store/fishingStore'
+import { useFishingStore } from '../store/fishingStore'
 import type { SessionData, FightData } from '../api/fishing'
 
 interface FishingSocketCallbacks {
@@ -179,20 +179,6 @@ export function useFishingSocket(callbacks: FishingSocketCallbacks) {
         case 'release_result':
           cb.onReleaseResult?.(data)
           break
-        case 'update_retrieve_ok': {
-          // Оптимистичное обновление isRetrieving — state snapshot придёт следом
-          const store = useFishingStore.getState()
-          const session: SessionInfo | undefined = store.sessions[data.session_id as number]
-          if (session) {
-            useFishingStore.setState({
-              sessions: {
-                ...store.sessions,
-                [data.session_id as number]: { ...session, isRetrieving: data.is_retrieving as boolean },
-              },
-            })
-          }
-          break
-        }
         case 'error':
           cb.onError?.(data.message)
           break

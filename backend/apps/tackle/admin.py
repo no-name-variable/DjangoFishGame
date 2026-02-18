@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Bait, FishPriceDynamic, FishSpecies, Flavoring, FloatTackle, Food, Groundbait, Hook, Line, Lure, Reel, RodType
+from .models import Bait, FishPriceDynamic, FishSpecies, Flavoring, FloatTackle, Food, Groundbait, Hook, Line, Reel, RodType
 
 
 @admin.register(FishSpecies)
@@ -35,11 +35,6 @@ class HookAdmin(admin.ModelAdmin):
 class FloatTackleAdmin(admin.ModelAdmin):
     list_display = ('name', 'capacity', 'sensitivity', 'price')
 
-
-@admin.register(Lure)
-class LureAdmin(admin.ModelAdmin):
-    list_display = ('name', 'lure_type', 'depth_min', 'depth_max', 'price')
-    list_filter = ('lure_type',)
 
 
 @admin.register(Bait)

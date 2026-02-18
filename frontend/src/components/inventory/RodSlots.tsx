@@ -5,7 +5,7 @@ import React from 'react'
 import { usePlayerStore } from '../../store/playerStore'
 
 const ROD_CLASS_LABEL: Record<string, string> = {
-  float: 'Поплавочная', spinning: 'Спиннинг', bottom: 'Донная',
+  float: 'Поплавочная', bottom: 'Донная',
 }
 
 export const RodSlots: React.FC<{ onSelectSlot?: (slotNumber: number) => void; selectedSlot?: number }> = ({

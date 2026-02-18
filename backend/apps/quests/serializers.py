@@ -8,6 +8,9 @@ from .models import PlayerQuest, Quest
 class QuestSerializer(serializers.ModelSerializer):
     target_species_name = serializers.CharField(source='target_species.name_ru', read_only=True, default=None)
     target_location_name = serializers.CharField(source='target_location.name', read_only=True, default=None)
+    reward_apparatus_part_name = serializers.CharField(
+        source='reward_apparatus_part.name', read_only=True, default=None,
+    )
 
     class Meta:
         model = Quest
@@ -17,6 +20,7 @@ class QuestSerializer(serializers.ModelSerializer):
             'target_count', 'target_weight',
             'target_location', 'target_location_name',
             'reward_money', 'reward_experience', 'reward_karma',
+            'reward_apparatus_part_name',
             'min_rank', 'order',
         ]
 

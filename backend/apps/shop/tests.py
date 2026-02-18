@@ -22,9 +22,9 @@ class TestShopCategory:
         assert isinstance(resp.data, list)
         assert len(resp.data) >= 1
 
-    def test_multiple_categories(self, api_client, bait, lure, food):
+    def test_multiple_categories(self, api_client, bait, food):
         """Разные категории возвращают 200."""
-        for cat in ('baits', 'lures', 'food'):
+        for cat in ('baits', 'food'):
             resp = api_client.get(f'/api/shop/{cat}/')
             assert resp.status_code == status.HTTP_200_OK
 

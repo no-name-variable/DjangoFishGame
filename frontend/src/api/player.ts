@@ -20,10 +20,8 @@ export async function assembleRod(params: {
   line_id?: number
   hook_id?: number
   float_tackle_id?: number
-  lure_id?: number
   bait_id?: number
   depth_setting?: number
-  retrieve_speed?: number
   clip_distance?: number
 }) {
   const { data } = await api.post('/fishing/assemble-rod/', params)
@@ -37,7 +35,7 @@ export async function renameRod(rodId: number, customName: string) {
 
 export async function updateRodSettings(
   rodId: number,
-  settings: { depth_setting?: number; retrieve_speed?: number; clip_distance?: number },
+  settings: { depth_setting?: number; clip_distance?: number },
 ) {
   const { data } = await api.patch(`/player/rods/${rodId}/settings/`, settings)
   return data
@@ -45,7 +43,7 @@ export async function updateRodSettings(
 
 export async function changeTackle(
   rodId: number,
-  changes: { hook_id?: number | null; float_tackle_id?: number | null; lure_id?: number | null; bait_id?: number | null },
+  changes: { hook_id?: number | null; float_tackle_id?: number | null; bait_id?: number | null },
 ) {
   const { data } = await api.patch(`/player/rods/${rodId}/tackle/`, changes)
   return data

@@ -21,19 +21,18 @@ interface Props {
   onClose: () => void
 }
 
-const SLOT_ORDER = ['rodtype', 'reel', 'line', 'hook', 'floattackle', 'lure', 'bait'] as const
+const SLOT_ORDER = ['rodtype', 'reel', 'line', 'hook', 'floattackle', 'bait'] as const
 type SlotType = typeof SLOT_ORDER[number]
 
 const TYPE_LABELS: Record<string, string> = {
   rodtype: 'Удилище', reel: 'Катушка', line: 'Леска', hook: 'Крючок',
-  floattackle: 'Поплавок', lure: 'Приманка', bait: 'Наживка',
+  floattackle: 'Поплавок', bait: 'Наживка',
 }
 
 export default function RodAssemblyModal({ items, onAssembled, onClose }: Props) {
   const [selected, setSelected] = useState<Record<string, { id: number; name: string } | null>>({})
   const [pickerType, setPickerType] = useState<SlotType | null>(null)
   const [depth, setDepth] = useState(1.5)
-  const [speed, setSpeed] = useState(5)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -74,13 +73,11 @@ export default function RodAssemblyModal({ items, onAssembled, onClose }: Props)
       const params: Record<string, number | undefined> = {
         rod_type_id: selected.rodtype.id,
         depth_setting: depth,
-        retrieve_speed: speed,
       }
       if (selected.reel) params.reel_id = selected.reel.id
       if (selected.line) params.line_id = selected.line.id
       if (selected.hook) params.hook_id = selected.hook.id
       if (selected.floattackle) params.float_tackle_id = selected.floattackle.id
-      if (selected.lure) params.lure_id = selected.lure.id
       if (selected.bait) params.bait_id = selected.bait.id
       await assembleRod(params as Parameters<typeof assembleRod>[0])
       onAssembled()
@@ -161,22 +158,13 @@ export default function RodAssemblyModal({ items, onAssembled, onClose }: Props)
             padding: '10px 12px', borderRadius: '8px',
             background: 'rgba(7,18,7,0.3)', border: '1px solid rgba(92,61,30,0.25)',
           }}>
-            <div style={{ marginBottom: '10px' }}>
+            <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <label style={{ color: '#7898b8', fontSize: '0.72rem' }}>Глубина</label>
                 <span style={{ color: '#a8894e', fontSize: '0.72rem' }}>{depth.toFixed(1)} м</span>
               </div>
               <input type="range" min={0.5} max={10} step={0.5} value={depth}
                 onChange={(e) => setDepth(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#3b82f6' }} />
-            </div>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <label style={{ color: '#7898b8', fontSize: '0.72rem' }}>Проводка</label>
-                <span style={{ color: '#a8894e', fontSize: '0.72rem' }}>{speed}/10</span>
-              </div>
-              <input type="range" min={1} max={10} step={1} value={speed}
-                onChange={(e) => setSpeed(Number(e.target.value))}
                 style={{ width: '100%', accentColor: '#3b82f6' }} />
             </div>
           </div>

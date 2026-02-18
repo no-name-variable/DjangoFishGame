@@ -24,6 +24,7 @@ services:
              python manage.py loaddata fixtures/*.json 2>/dev/null;
              python manage.py load_images;
              python manage.py init_game_time;
+             python manage.py init_cafe_orders;
              daphne -b 0.0.0.0 -p 8000 config.asgi:application"
     volumes:
       - ./backend:/app

@@ -7,7 +7,7 @@ from apps.inventory.models import InventoryItem
 from ..models import MarketListing
 
 ALLOWED_ITEM_TYPES = {
-    'bait', 'lure', 'groundbait', 'flavoring', 'food',
+    'bait', 'groundbait', 'flavoring', 'food',
     'hook', 'floattackle', 'line', 'reel', 'rodtype',
 }
 

@@ -17,13 +17,11 @@ class PlayerRod(models.Model):
     float_tackle = models.ForeignKey(
         'tackle.FloatTackle', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Поплавок',
     )
-    lure = models.ForeignKey('tackle.Lure', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Приманка')
     bait = models.ForeignKey('tackle.Bait', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Наживка')
     bait_remaining = models.IntegerField('Осталось наживки', default=0)
     durability_current = models.IntegerField('Текущая прочность', default=100)
     is_assembled = models.BooleanField('Собрана', default=False)
     depth_setting = models.FloatField('Глубина (м)', default=1.5)
-    retrieve_speed = models.IntegerField('Скорость проводки (1-10)', default=5)
     clip_distance = models.FloatField('Клипса - дистанция заброса (м)', default=30.0)
 
     class Meta:
@@ -49,8 +47,6 @@ class PlayerRod(models.Model):
         base_ready = self.rod_type and self.line and self.hook
         if self.rod_type.rod_class == 'float':
             return bool(base_ready and self.float_tackle and self.bait and self.bait_remaining > 0)
-        elif self.rod_type.rod_class == 'spinning':
-            return bool(base_ready and self.reel and self.lure)
         elif self.rod_type.rod_class == 'bottom':
             return bool(base_ready and self.bait and self.bait_remaining > 0)
         return False

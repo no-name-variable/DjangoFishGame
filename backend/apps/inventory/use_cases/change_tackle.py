@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 
 from apps.fishing.models import FishingSession
-from apps.tackle.models import Bait, FloatTackle, Hook, Lure
+from apps.tackle.models import Bait, FloatTackle, Hook
 
 from ..models import InventoryItem, PlayerRod
 
@@ -12,7 +12,6 @@ from ..models import InventoryItem, PlayerRod
 COMPONENT_MAP = {
     'hook_id': ('hook', Hook),
     'float_tackle_id': ('float_tackle', FloatTackle),
-    'lure_id': ('lure', Lure),
     'bait_id': ('bait', Bait),
 }
 

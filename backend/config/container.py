@@ -20,6 +20,12 @@ def _build_container() -> punq.Container:
     from apps.bazaar.use_cases.buy_listing import BuyListingUseCase
     from apps.bazaar.use_cases.cancel_listing import CancelListingUseCase
     from apps.bazaar.use_cases.create_listing import CreateListingUseCase
+    from apps.cafe.use_cases.deliver_fish import DeliverFishUseCase
+    from apps.cafe.use_cases.get_orders import GetCafeOrdersUseCase
+    from apps.home.services import MoonshineService
+    from apps.home.use_cases.buy_ingredient import BuyIngredientUseCase
+    from apps.home.use_cases.collect_moonshine import CollectMoonshineUseCase
+    from apps.home.use_cases.start_brewing import StartBrewingUseCase
     from apps.inspection.services import InspectionService
     from apps.inventory.use_cases.assemble_rod import AssembleRodUseCase
     from apps.inventory.use_cases.change_tackle import ChangeTackleUseCase
@@ -48,6 +54,7 @@ def _build_container() -> punq.Container:
     # Сервисы без зависимостей
     container.register(TimeService)
     container.register(PotionService)
+    container.register(MoonshineService)
     container.register(FightEngineService)
     container.register(RecordService)
     container.register(QuestService)
@@ -103,6 +110,15 @@ def _build_container() -> punq.Container:
     container.register(CreateListingUseCase)
     container.register(BuyListingUseCase)
     container.register(CancelListingUseCase)
+
+    # Use cases — cafe
+    container.register(GetCafeOrdersUseCase)
+    container.register(DeliverFishUseCase)
+
+    # Use cases — home
+    container.register(BuyIngredientUseCase)
+    container.register(StartBrewingUseCase)
+    container.register(CollectMoonshineUseCase)
 
     return container
 

@@ -19,6 +19,8 @@ interface MenuItem {
 const coreItems: MenuItem[] = [
   { label: 'Рюкзак',          path: '/inventory', icon: '🎒', desc: 'Снасти, рыба, предметы' },
   { label: 'Магазин снастей', path: '/shop',      icon: '🛒', desc: 'Купить снаряжение'       },
+  { label: 'Кафе',            path: '/cafe',      icon: '☕', desc: 'Заказы за премиум-цену'   },
+  { label: 'Дом',             path: '/house',     icon: '🏠', desc: 'Самогонный аппарат'       },
 ]
 
 const socialItems: MenuItem[] = [

@@ -8,7 +8,7 @@ from django.utils import timezone
 from apps.accounts.models import Player
 from apps.world.models import Base, Location, LocationFish
 from apps.tackle.models import (
-    FishSpecies, RodType, Reel, Line, Hook, FloatTackle, Lure, Bait,
+    FishSpecies, RodType, Reel, Line, Hook, FloatTackle, Bait,
     Groundbait, Flavoring, Food,
 )
 from apps.inventory.models import PlayerRod, InventoryItem, CaughtFish
@@ -124,14 +124,6 @@ def bait():
 
 
 @pytest.fixture
-def lure():
-    return Lure.objects.create(
-        name='Блесна вращалка', lure_type='spinner',
-        price=Decimal('25.00'),
-    )
-
-
-@pytest.fixture
 def food():
     return Food.objects.create(
         name='Бутерброд', satiety=30, price=Decimal('20.00'),
@@ -160,26 +152,12 @@ def player_rod(player, rod_type, line, hook, float_tackle, bait):
         player=player, rod_type=rod_type,
         line=line, hook=hook, float_tackle=float_tackle,
         bait=bait, bait_remaining=20,
-        is_assembled=True, depth_setting=1.5, retrieve_speed=5,
+        is_assembled=True, depth_setting=1.5,
     )
     # Экипируем удочку в первый слот (CastView требует)
     player.rod_slot_1 = rod
     player.save(update_fields=['rod_slot_1'])
     return rod
-
-
-@pytest.fixture
-def spinning_rod(player, reel, line, hook, lure):
-    rod_type = RodType.objects.create(
-        name='Спиннинг тест', rod_class='spinning',
-        length=2.4, test_min=10, test_max=40,
-        price=Decimal('100.00'), min_rank=1,
-    )
-    return PlayerRod.objects.create(
-        player=player, rod_type=rod_type,
-        reel=reel, line=line, hook=hook, lure=lure,
-        is_assembled=True, depth_setting=1.5, retrieve_speed=5,
-    )
 
 
 @pytest.fixture

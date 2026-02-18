@@ -103,7 +103,6 @@ class RodType(models.Model):
 
     class RodClass(models.TextChoices):
         FLOAT = 'float', 'Поплавочное'
-        SPINNING = 'spinning', 'Спиннинговое'
         BOTTOM = 'bottom', 'Донное'
 
     name = models.CharField('Название', max_length=100)
@@ -200,31 +199,6 @@ class FloatTackle(models.Model):
     def __str__(self):
         return self.name
 
-
-class Lure(models.Model):
-    """Блесна / приманка."""
-
-    class LureType(models.TextChoices):
-        SPOON = 'spoon', 'Колебалка'
-        WOBBLER = 'wobbler', 'Воблер'
-        JIG = 'jig', 'Джиг'
-        SOFT = 'soft', 'Силикон'
-
-    name = models.CharField('Название', max_length=100)
-    image = models.ImageField('Изображение', upload_to='tackle/lures/', blank=True)
-    lure_type = models.CharField('Тип', max_length=20, choices=LureType.choices)
-    depth_min = models.FloatField('Мин. глубина проводки (м)', default=0.5)
-    depth_max = models.FloatField('Макс. глубина проводки (м)', default=3.0)
-    target_species = models.ManyToManyField(FishSpecies, verbose_name='Целевые виды', blank=True)
-    price = models.DecimalField('Цена', max_digits=10, decimal_places=2)
-
-    class Meta:
-        verbose_name = 'Приманка'
-        verbose_name_plural = 'Приманки'
-        ordering = ['price']
-
-    def __str__(self):
-        return self.name
 
 
 class Bait(models.Model):

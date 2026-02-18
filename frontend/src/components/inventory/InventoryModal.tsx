@@ -21,13 +21,13 @@ type Tab = 'inventory' | 'rods' | 'creel'
 
 interface Props {
   sessions: SessionInfo[]
-  onUpdateSettings: (rodId: number, settings: { depth_setting?: number; retrieve_speed?: number }) => void
+  onUpdateSettings: (rodId: number, settings: { depth_setting?: number }) => void
   onChangeTackle: (rodId: number, updatedRod: FullRod) => void
   onClose: () => void
 }
 
 const ROD_CLASS_LABEL: Record<string, string> = {
-  float: 'Поплавочная', spinning: 'Спиннинг', bottom: 'Донная',
+  float: 'Поплавочная', bottom: 'Донная',
 }
 
 interface InventoryItem {
@@ -36,16 +36,15 @@ interface InventoryItem {
 }
 interface PlayerRod {
   id: number; rod_type: number; rod_type_name: string; display_name: string
-  custom_name: string; rod_class: 'float' | 'spinning' | 'bottom'
+  custom_name: string; rod_class: 'float' | 'bottom'
   reel: number | null; reel_name: string | null
   line: number | null; line_name: string | null
   hook: number | null; hook_name: string | null
   float_tackle: number | null; float_name: string | null
-  lure: number | null; lure_name: string | null
   bait: number | null; bait_name: string | null
   bait_remaining: number; durability_current: number; durability_max: number
   is_assembled: boolean; is_ready: boolean
-  depth_setting: number; retrieve_speed: number
+  depth_setting: number
 }
 interface CaughtFish {
   id: number; species_name: string; species_image: string | null
@@ -59,8 +58,7 @@ function compactSlots(rod: RodData): TackleSlotData[] {
     { type: 'hook', itemId: rod.hook, name: rod.hook_name },
   ]
   if (rod.rod_class === 'float') slots.push({ type: 'floattackle', itemId: rod.float_tackle, name: rod.float_name })
-  if (rod.rod_class === 'spinning') slots.push({ type: 'lure', itemId: rod.lure, name: rod.lure_name })
-  if (rod.rod_class !== 'spinning') slots.push({ type: 'bait', itemId: rod.bait, name: rod.bait_name, remaining: rod.bait_remaining })
+  slots.push({ type: 'bait', itemId: rod.bait, name: rod.bait_name, remaining: rod.bait_remaining })
   return slots
 }
 

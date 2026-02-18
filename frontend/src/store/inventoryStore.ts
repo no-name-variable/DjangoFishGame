@@ -18,7 +18,7 @@ interface PlayerRod {
   rod_type_name: string
   display_name: string
   custom_name: string
-  rod_class: 'float' | 'spinning' | 'bottom'
+  rod_class: 'float' | 'bottom'
   reel: number | null
   reel_name: string | null
   line: number | null
@@ -27,8 +27,6 @@ interface PlayerRod {
   hook_name: string | null
   float_tackle: number | null
   float_name: string | null
-  lure: number | null
-  lure_name: string | null
   bait: number | null
   bait_name: string | null
   bait_remaining: number
@@ -37,7 +35,6 @@ interface PlayerRod {
   is_assembled: boolean
   is_ready: boolean
   depth_setting: number
-  retrieve_speed: number
 }
 
 interface CaughtFish {

@@ -19,7 +19,7 @@ import { getFallbackUrl } from '../utils/getAssetUrl'
 type Tab = 'inventory' | 'rods' | 'creel'
 
 const ROD_CLASS_LABEL: Record<string, string> = {
-  float: 'Поплавочная', spinning: 'Спиннинг', bottom: 'Донная',
+  float: 'Поплавочная', bottom: 'Донная',
 }
 
 /** Слоты, видимые для класса удочки */
@@ -32,12 +32,7 @@ function compactSlots(rod: RodData): TackleSlotData[] {
   if (rod.rod_class === 'float') {
     slots.push({ type: 'floattackle', itemId: rod.float_tackle, name: rod.float_name })
   }
-  if (rod.rod_class === 'spinning') {
-    slots.push({ type: 'lure', itemId: rod.lure, name: rod.lure_name })
-  }
-  if (rod.rod_class !== 'spinning') {
-    slots.push({ type: 'bait', itemId: rod.bait, name: rod.bait_name, remaining: rod.bait_remaining })
-  }
+  slots.push({ type: 'bait', itemId: rod.bait, name: rod.bait_name, remaining: rod.bait_remaining })
   return slots
 }
 

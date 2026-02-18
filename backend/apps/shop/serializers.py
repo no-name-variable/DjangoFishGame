@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 class BuySerializer(serializers.Serializer):
     item_type = serializers.ChoiceField(choices=[
-        'rod', 'reel', 'line', 'hook', 'float', 'lure', 'bait', 'groundbait', 'flavoring', 'food', # TODO: Хуйня переделывай
+        'rod', 'reel', 'line', 'hook', 'float', 'bait', 'groundbait', 'flavoring', 'food',
     ])
     item_id = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value=1, default=1)

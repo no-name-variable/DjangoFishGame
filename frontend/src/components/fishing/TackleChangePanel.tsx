@@ -18,7 +18,6 @@ interface InventoryItem {
 const typeToField: Record<string, string> = {
   hook: 'hook_id',
   floattackle: 'float_tackle_id',
-  lure: 'lure_id',
   bait: 'bait_id',
 }
 
@@ -26,7 +25,6 @@ const typeToField: Record<string, string> = {
 const typeLabel: Record<string, string> = {
   hook: 'Крючок',
   floattackle: 'Поплавок',
-  lure: 'Приманка',
   bait: 'Наживка',
 }
 
@@ -34,7 +32,6 @@ const typeLabel: Record<string, string> = {
 function allowedTypes(rodClass: string): string[] {
   switch (rodClass) {
     case 'float': return ['hook', 'floattackle', 'bait']
-    case 'spinning': return ['hook', 'lure']
     case 'bottom': return ['hook', 'bait']
     case 'feeder': return ['hook', 'bait']
     default: return ['hook', 'bait']

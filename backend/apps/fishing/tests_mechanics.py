@@ -17,7 +17,7 @@ from apps.fishing.services.time_service import TimeService
 from apps.fishing.utils import calc_bite_timeout_seconds
 from apps.potions.services import PotionService
 from apps.inventory.models import CaughtFish, InventoryItem, PlayerRod
-from apps.tackle.models import Bait, FishSpecies, Lure, RodType
+from apps.tackle.models import Bait, FishSpecies, RodType
 from apps.world.models import LocationFish
 
 
@@ -36,7 +36,7 @@ class TestMultiRodCast:
             player=player, rod_type=rod_type,
             line=line, hook=hook, float_tackle=float_tackle,
             bait=bait, bait_remaining=20,
-            is_assembled=True, depth_setting=1.5, retrieve_speed=5,
+            is_assembled=True, depth_setting=1.5,
         )
         setattr(player, slot_attr, rod)
         player.save(update_fields=[slot_attr])
@@ -445,124 +445,7 @@ class TestFightFullCycle:
 
 
 # ═══════════════════════════════════════════════════════════
-# 8. Спиннинг: проводка, retrieve_progress, без проводки нет поклёвки
-# ═══════════════════════════════════════════════════════════
-
-@pytest.mark.django_db
-class TestSpinningMechanics:
-    """Тесты спиннинга."""
-
-    def setup_method(self):
-        self.bite_calc = BiteCalculatorService(TimeService(), PotionService())
-
-    def test_no_bite_without_retrieve(self, player, location, spinning_rod, location_fish, game_time):
-        """Без проводки (is_retrieving=False) шанс поклёвки = 0."""
-        player.current_location = location
-        player.save(update_fields=['current_location'])
-
-        session = FishingSession.objects.create(
-            player=player, location=location, rod=spinning_rod, slot=1,
-            state=FishingSession.State.WAITING,
-            cast_time=timezone.now(),
-            is_retrieving=False,
-        )
-
-        chance = self.bite_calc.calculate_bite_chance(player, location, spinning_rod, session)
-        assert chance == 0.0
-
-    def test_bite_possible_with_retrieve(self, player, location, spinning_rod, location_fish, game_time):
-        """С проводкой (is_retrieving=True) шанс поклёвки > 0."""
-        player.current_location = location
-        player.save(update_fields=['current_location'])
-
-        session = FishingSession.objects.create(
-            player=player, location=location, rod=spinning_rod, slot=1,
-            state=FishingSession.State.WAITING,
-            cast_time=timezone.now(),
-            is_retrieving=True,
-        )
-
-        chance = self.bite_calc.calculate_bite_chance(player, location, spinning_rod, session)
-        assert chance > 0.0
-
-    def test_update_retrieve_on_off(self, api_client, player, location, spinning_rod, game_time):
-        """UpdateRetrieveView включает и выключает проводку."""
-        player.current_location = location
-        player.rod_slot_1 = spinning_rod
-        player.save(update_fields=['current_location', 'rod_slot_1'])
-
-        session = FishingSession.objects.create(
-            player=player, location=location, rod=spinning_rod, slot=1,
-            state=FishingSession.State.WAITING,
-            cast_time=timezone.now(),
-            is_retrieving=False,
-        )
-
-        # Включаем
-        resp = api_client.post('/api/fishing/update-retrieve/', {
-            'session_id': session.pk, 'is_retrieving': True,
-        })
-        assert resp.status_code == 200
-        assert resp.data['is_retrieving'] is True
-
-        session.refresh_from_db()
-        assert session.is_retrieving is True
-
-        # Выключаем
-        resp = api_client.post('/api/fishing/update-retrieve/', {
-            'session_id': session.pk, 'is_retrieving': False,
-        })
-        assert resp.status_code == 200
-        assert resp.data['is_retrieving'] is False
-
-        session.refresh_from_db()
-        assert session.is_retrieving is False
-        assert session.retrieve_progress == 0.0  # Прогресс сброшен
-
-    def test_retrieve_progress_increases_on_status(self, api_client, player, location,
-                                                    spinning_rod, game_time):
-        """Polling status увеличивает retrieve_progress для спиннинга."""
-        player.current_location = location
-        player.rod_slot_1 = spinning_rod
-        player.save(update_fields=['current_location', 'rod_slot_1'])
-
-        session = FishingSession.objects.create(
-            player=player, location=location, rod=spinning_rod, slot=1,
-            state=FishingSession.State.WAITING,
-            cast_time=timezone.now(),
-            is_retrieving=True,
-            retrieve_progress=0.0,
-        )
-
-        api_client.get('/api/fishing/status/')
-        session.refresh_from_db()
-
-        expected_increment = spinning_rod.retrieve_speed * 0.005
-        assert session.retrieve_progress == pytest.approx(expected_increment, abs=0.001)
-
-    def test_retrieve_progress_auto_delete_at_100(self, api_client, player, location,
-                                                   spinning_rod, game_time):
-        """Когда retrieve_progress >= 1.0 — сессия автоудаляется."""
-        player.current_location = location
-        player.rod_slot_1 = spinning_rod
-        player.save(update_fields=['current_location', 'rod_slot_1'])
-
-        session = FishingSession.objects.create(
-            player=player, location=location, rod=spinning_rod, slot=1,
-            state=FishingSession.State.WAITING,
-            cast_time=timezone.now(),
-            is_retrieving=True,
-            retrieve_progress=0.99,
-        )
-
-        api_client.get('/api/fishing/status/')
-
-        # Сессия должна быть удалена (progress >= 1.0)
-        assert not FishingSession.objects.filter(pk=session.pk).exists()
-
-
-# ═══════════════════════════════════════════════════════════
-# 9. Смена наживки (ChangeBaitView)
+# 8. Смена наживки (ChangeBaitView)
 # ═══════════════════════════════════════════════════════════
 
 @pytest.mark.django_db
@@ -764,7 +647,7 @@ class TestStatusPolling:
                 player=player, rod_type=rod_type,
                 line=line, hook=hook, float_tackle=float_tackle,
                 bait=bait, bait_remaining=20,
-                is_assembled=True, depth_setting=1.5, retrieve_speed=5,
+                is_assembled=True, depth_setting=1.5,
             )
             setattr(player, slot, rod)
             rods.append(rod)

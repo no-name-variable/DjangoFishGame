@@ -48,14 +48,6 @@ export async function retrieveRod(sessionId: number) {
   return data as { status: string }
 }
 
-export async function updateRetrieve(sessionId: number, isRetrieving: boolean) {
-  const { data } = await api.post('/fishing/update-retrieve/', {
-    session_id: sessionId,
-    is_retrieving: isRetrieving,
-  })
-  return data as { status: string; is_retrieving: boolean }
-}
-
 export async function changeBait(sessionId: number, baitId: number) {
   const { data } = await api.post('/fishing/change-bait/', {
     session_id: sessionId,
@@ -82,10 +74,7 @@ export interface SessionData {
   location_name: string
   rod_id: number
   rod_name: string
-  rod_class: 'float' | 'spinning' | 'bottom'
-  retrieve_speed: number
-  is_retrieving: boolean
-  retrieve_progress: number
+  rod_class: 'float' | 'bottom'
   cast_x: number
   cast_y: number
   cast_time: string | null

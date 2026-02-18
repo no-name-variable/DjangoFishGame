@@ -27,6 +27,10 @@ class Quest(models.Model):
     reward_money = models.DecimalField('Награда (деньги)', max_digits=10, decimal_places=2, default=0)
     reward_experience = models.IntegerField('Награда (опыт)', default=0)
     reward_karma = models.IntegerField('Награда (карма)', default=0)
+    reward_apparatus_part = models.ForeignKey(
+        'home.ApparatusPart', on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='Награда: деталь аппарата',
+    )
     prerequisite_quest = models.ForeignKey(
         'self', on_delete=models.SET_NULL, null=True, blank=True,
         verbose_name='Предварительный квест',
