@@ -28,7 +28,9 @@ class StrikeUseCase:
     @transaction.atomic
     def execute(self, player, session_id: int) -> StrikeResult:
         """Raises: FishingSession.DoesNotExist, ValueError."""
-        session = FishingSession.objects.select_for_update().select_related(
+        session = FishingSession.objects.select_for_update(
+            of=('self',),
+        ).select_related(
             'rod__rod_type', 'rod__reel', 'rod__line',
             'rod__hook', 'hooked_species',
         ).get(pk=session_id, player=player)
@@ -37,7 +39,9 @@ class StrikeUseCase:
             raise ValueError('Сессия не в нужном состоянии.')
 
         # Проверяем, что нет другой сессии в FIGHTING (с блокировкой)
-        if FishingSession.objects.select_for_update().filter(
+        if FishingSession.objects.select_for_update(
+            of=('self',),
+        ).filter(
             player=player, state=FishingSession.State.FIGHTING,
         ).exists():
             raise ValueError('Уже идёт вываживание на другой удочке.')
