@@ -30,6 +30,7 @@ class BarDrinkOrder(models.Model):
     drink = models.ForeignKey(
         BarDrink, on_delete=models.CASCADE, verbose_name='Напиток',
     )
+    game_day = models.IntegerField('Игровой день', default=1)
     created_at = models.DateTimeField('Время', auto_now_add=True)
 
     class Meta:
@@ -37,7 +38,7 @@ class BarDrinkOrder(models.Model):
         verbose_name_plural = 'Заказы напитков'
 
     def __str__(self):
-        return f'{self.player.nickname}: {self.drink.name}'
+        return f'{self.player.nickname}: {self.drink.name} (день {self.game_day})'
 
 
 class BarSnackOrder(models.Model):

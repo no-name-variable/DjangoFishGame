@@ -7,7 +7,7 @@ import { getCreel } from '../api/player'
 import { usePlayerStore } from '../store/playerStore'
 import ChatWindow from '../components/chat/ChatWindow'
 
-/** Виджет радио radiobells, встроенный через iframe-подобный подход */
+/** Виджет радио radiobells */
 function RadioWidget() {
   const containerRef = useRef<HTMLDivElement>(null)
   const loaded = useRef(false)
@@ -18,14 +18,12 @@ function RadioWidget() {
 
     const el = containerRef.current
 
-    // Стили виджета
     const link = document.createElement('link')
     link.rel = 'stylesheet'
     link.type = 'text/css'
     link.href = 'https://www.radiobells.com/script/style.css'
     el.appendChild(link)
 
-    // Конфиг
     const configScript = document.createElement('script')
     configScript.type = 'text/javascript'
     configScript.textContent = `
@@ -44,12 +42,10 @@ function RadioWidget() {
     `
     el.appendChild(configScript)
 
-    // Контейнер виджета
     const wrapper = document.createElement('div')
     wrapper.id = 'radiobells_container'
     el.appendChild(wrapper)
 
-    // Скрипт виджета
     const mainScript = document.createElement('script')
     mainScript.type = 'text/javascript'
     mainScript.src = 'https://www.radiobells.com/script/v2_1.js'
@@ -154,7 +150,6 @@ export default function BarPage() {
     }
   }
 
-  // Бар — общее место, не привязан к базе
   const barChannelId = 0
 
   if (loading) {
@@ -166,16 +161,16 @@ export default function BarPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%', gap: '16px', padding: '14px', maxWidth: '1100px', margin: '0 auto' }}>
+    <div className="flex flex-col lg:flex-row h-full gap-3 lg:gap-4 p-3 lg:p-4 max-w-[1100px] mx-auto">
 
-      {/* ── Левая колонка: контент как было ── */}
-      <main className="p-0 max-w-4xl" style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
-        {/* Баннер бара */}
+      {/* ── Контент ── */}
+      <main className="flex-1 min-w-0 overflow-y-auto">
+        {/* Баннер */}
         <div
           style={{
             borderRadius: '12px',
             overflow: 'hidden',
-            marginBottom: '16px',
+            marginBottom: '14px',
             border: '2px solid rgba(212,168,74,0.35)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 0 30px rgba(0,0,0,0.2)',
           }}
@@ -183,14 +178,14 @@ export default function BarPage() {
           <img
             src="/images/other_images/bar/bar.png"
             alt="Бар"
-            style={{ width: '100%', display: 'block', borderRadius: '10px' }}
+            className="w-full block rounded-[10px]"
           />
         </div>
 
         {/* Сообщение */}
         {msg && (
           <div
-            className="wood-panel px-3 py-2 mb-3 text-sm"
+            className="wood-panel px-3 py-2 mb-3 text-xs sm:text-sm"
             style={{
               color: msg.includes('Ошибка') ? '#f87171' : '#4ade80',
               display: 'flex',
@@ -209,55 +204,31 @@ export default function BarPage() {
         )}
 
         {/* Напитки */}
-        <section style={{ marginBottom: '20px' }}>
-          <h2
-            style={{
-              fontFamily: 'Georgia, serif',
-              fontSize: '0.9rem',
-              color: '#8b6d3f',
-              marginBottom: '10px',
-              paddingBottom: '4px',
-              borderBottom: '1px solid rgba(92,61,30,0.3)',
-            }}
-          >
+        <section style={{ marginBottom: '16px' }}>
+          <h2 className="font-serif text-sm text-wood-500 mb-2 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
             Напитки
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {drinks.map((drink) => (
               <div
                 key={drink.id}
-                className="card"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '12px 8px',
-                  textAlign: 'center',
-                }}
+                className="card flex flex-col items-center gap-1 p-2 sm:p-3 text-center"
               >
-                <span style={{ fontSize: '2rem' }}>🍺</span>
-                <span
-                  style={{
-                    fontFamily: 'Georgia, serif',
-                    fontSize: '0.8rem',
-                    color: '#d4c5a9',
-                    lineHeight: 1.2,
-                  }}
-                >
+                <span className="text-xl sm:text-2xl">🍺</span>
+                <span className="font-serif text-xs sm:text-sm text-wood-200 leading-tight">
                   {drink.name}
                 </span>
-                <span style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>
+                <span className="text-[0.6rem] sm:text-xs text-wood-500 hidden sm:block">
                   {drink.description}
                 </span>
-                <div style={{ display: 'flex', gap: '8px', fontSize: '0.7rem', color: '#8b6d3f' }}>
+                <div className="flex gap-1 text-[0.6rem] sm:text-xs text-wood-400">
                   <span>{drink.price}$</span>
-                  <span>+{drink.satiety} сыт.</span>
+                  <span>+{drink.satiety}</span>
                 </div>
                 <button
-                  className="btn btn-action text-xs"
-                  style={{ minWidth: '80px', minHeight: '28px' }}
+                  className="btn btn-action text-[0.65rem] sm:text-xs w-full"
+                  style={{ minHeight: '26px' }}
                   onClick={() => handleOrder(drink.id)}
                   disabled={ordering === drink.id}
                 >
@@ -268,23 +239,14 @@ export default function BarPage() {
           </div>
         </section>
 
-        {/* Закуска из рыбы */}
+        {/* Закуска */}
         <section>
-          <h2
-            style={{
-              fontFamily: 'Georgia, serif',
-              fontSize: '0.9rem',
-              color: '#8b6d3f',
-              marginBottom: '10px',
-              paddingBottom: '4px',
-              borderBottom: '1px solid rgba(92,61,30,0.3)',
-            }}
-          >
+          <h2 className="font-serif text-sm text-wood-500 mb-2 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
             Закуска из рыбы
           </h2>
 
           {creel.length === 0 ? (
-            <p style={{ color: '#5c3d1e', fontSize: '0.8rem', textAlign: 'center', padding: '16px' }}>
+            <p className="text-wood-500 text-xs sm:text-sm text-center py-4">
               В садке нет рыбы для приготовления
             </p>
           ) : (
@@ -296,28 +258,16 @@ export default function BarPage() {
                     <button
                       key={fish.id}
                       onClick={() => setSelectedFish(isSelected ? null : fish.id)}
-                      className="card"
+                      className="card w-full flex justify-between items-center px-3 py-2 cursor-pointer"
                       style={{
-                        width: '100%',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '8px 12px',
-                        cursor: 'pointer',
                         border: isSelected
                           ? '1px solid rgba(212,168,74,0.6)'
                           : '1px solid rgba(74,49,24,0.4)',
-                        background: isSelected
-                          ? 'rgba(42,60,42,0.5)'
-                          : undefined,
+                        background: isSelected ? 'rgba(42,60,42,0.5)' : undefined,
                       }}
                     >
-                      <span style={{ color: '#d4c5a9', fontSize: '0.8rem' }}>
-                        {fish.species_name}
-                      </span>
-                      <span style={{ color: '#8b6d3f', fontSize: '0.7rem' }}>
-                        {fish.weight.toFixed(2)} кг
-                      </span>
+                      <span className="text-wood-200 text-xs sm:text-sm">{fish.species_name}</span>
+                      <span className="text-wood-400 text-[0.65rem] sm:text-xs">{fish.weight.toFixed(2)} кг</span>
                     </button>
                   )
                 })}
@@ -325,15 +275,12 @@ export default function BarPage() {
 
               {/* Пагинация */}
               {totalFishPages > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+                <div className="flex items-center justify-center gap-3 mb-2">
                   <button
                     onClick={() => setFishPage((p) => Math.max(0, p - 1))}
                     disabled={fishPage === 0}
+                    className="px-2 py-0.5 rounded text-xs"
                     style={{
-                      padding: '2px 10px',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      cursor: fishPage === 0 ? 'default' : 'pointer',
                       border: '1px solid rgba(74,49,24,0.4)',
                       background: 'rgba(13,31,13,0.5)',
                       color: fishPage === 0 ? '#3a2a14' : '#8b6d3f',
@@ -341,17 +288,14 @@ export default function BarPage() {
                   >
                     &lt;
                   </button>
-                  <span style={{ fontSize: '0.7rem', color: '#8b6d3f' }}>
+                  <span className="text-[0.65rem] sm:text-xs text-wood-400">
                     {fishPage + 1} / {totalFishPages} ({creel.length} шт.)
                   </span>
                   <button
                     onClick={() => setFishPage((p) => Math.min(totalFishPages - 1, p + 1))}
                     disabled={fishPage >= totalFishPages - 1}
+                    className="px-2 py-0.5 rounded text-xs"
                     style={{
-                      padding: '2px 10px',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      cursor: fishPage >= totalFishPages - 1 ? 'default' : 'pointer',
                       border: '1px solid rgba(74,49,24,0.4)',
                       background: 'rgba(13,31,13,0.5)',
                       color: fishPage >= totalFishPages - 1 ? '#3a2a14' : '#8b6d3f',
@@ -363,17 +307,8 @@ export default function BarPage() {
               )}
 
               {selectedFish && (
-                <div
-                  className="card"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 12px',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <span style={{ color: '#8b6d3f', fontSize: '0.75rem' }}>Способ:</span>
+                <div className="card flex items-center gap-2 p-2 sm:p-3 flex-wrap">
+                  <span className="text-wood-400 text-xs">Способ:</span>
                   {PREPARATIONS.map((p) => {
                     const fish = creel.find((f) => f.id === selectedFish)
                     const satiety = fish ? Math.floor(fish.weight * p.coeff) : 0
@@ -381,11 +316,8 @@ export default function BarPage() {
                       <button
                         key={p.value}
                         onClick={() => setSelectedPrep(p.value)}
+                        className="px-2 py-1 rounded text-[0.65rem] sm:text-xs"
                         style={{
-                          padding: '4px 10px',
-                          borderRadius: '6px',
-                          fontSize: '0.7rem',
-                          cursor: 'pointer',
                           border: selectedPrep === p.value
                             ? '1px solid rgba(212,168,74,0.6)'
                             : '1px solid rgba(74,49,24,0.4)',
@@ -393,6 +325,7 @@ export default function BarPage() {
                             ? 'rgba(42,60,42,0.5)'
                             : 'rgba(13,31,13,0.5)',
                           color: selectedPrep === p.value ? '#d4c5a9' : '#8b6d3f',
+                          cursor: 'pointer',
                         }}
                       >
                         {p.label} (+{satiety})
@@ -400,8 +333,8 @@ export default function BarPage() {
                     )
                   })}
                   <button
-                    className="btn btn-action text-xs"
-                    style={{ minHeight: '28px', marginLeft: 'auto' }}
+                    className="btn btn-action text-xs ml-auto"
+                    style={{ minHeight: '28px' }}
                     onClick={handleCook}
                     disabled={cooking}
                   >
@@ -414,58 +347,25 @@ export default function BarPage() {
         </section>
       </main>
 
-      {/* ── Правая колонка: чат на всю высоту ── */}
-      <aside
-        style={{
-          width: '300px',
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-        }}
-      >
-        {/* Радио */}
+      {/* ── Сайдбар: радио + чат ── */}
+      <aside className="w-full lg:w-[300px] flex-shrink-0 flex flex-col gap-2 min-h-0 h-80 lg:h-auto">
         <RadioWidget />
 
-        <h2
-          style={{
-            fontFamily: 'Georgia, serif',
-            fontSize: '0.9rem',
-            color: '#8b6d3f',
-            paddingBottom: '4px',
-            borderBottom: '1px solid rgba(92,61,30,0.3)',
-          }}
-        >
+        <h2 className="font-serif text-sm text-wood-500 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
           Барный чат
         </h2>
 
-        {/* Участники в баре */}
+        {/* Участники */}
         {members.length > 0 && (
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '6px',
-              padding: '6px 10px',
-              borderRadius: '8px',
-              background: 'rgba(13,31,13,0.5)',
-              border: '1px solid rgba(74,49,24,0.3)',
-            }}
-          >
-            <span style={{ color: '#5c3d1e', fontSize: '0.65rem', width: '100%' }}>
+          <div className="flex flex-wrap gap-1.5 p-2 rounded-lg" style={{ background: 'rgba(13,31,13,0.5)', border: '1px solid rgba(74,49,24,0.3)' }}>
+            <span className="text-wood-500 text-[0.6rem] w-full">
               В баре ({members.length}):
             </span>
             {members.map((name) => (
               <span
                 key={name}
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: '10px',
-                  background: 'rgba(42,60,42,0.5)',
-                  border: '1px solid rgba(92,61,30,0.3)',
-                  fontSize: '0.7rem',
-                  color: '#d4c5a9',
-                }}
+                className="text-wood-200 text-[0.65rem] px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(42,60,42,0.5)', border: '1px solid rgba(92,61,30,0.3)' }}
               >
                 {name}
               </span>

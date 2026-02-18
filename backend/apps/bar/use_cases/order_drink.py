@@ -1,10 +1,10 @@
 """Use case: заказ напитка в баре."""
 
 from django.db import transaction
-from django.utils import timezone
 
 from apps.bar.models import BarDrink, BarDrinkOrder
 from apps.bar.services import send_bar_notification
+from apps.fishing.models import GameTime
 
 
 class OrderDrinkUseCase:
@@ -21,16 +21,19 @@ class OrderDrinkUseCase:
         if player.money < drink.price:
             raise ValueError('Недостаточно денег.')
 
+        game_time = GameTime.get_instance()
+
         with transaction.atomic():
             player.money -= drink.price
             player.hunger = min(100, player.hunger + drink.satiety)
             player.save(update_fields=['money', 'hunger'])
-            BarDrinkOrder.objects.create(player=player, drink=drink)
+            BarDrinkOrder.objects.create(
+                player=player, drink=drink, game_day=game_time.current_day,
+            )
 
-        # Считаем выпитое за сегодня и шлём уведомление
-        today = timezone.now().date()
+        # Считаем выпитое за текущий игровой день
         drink_count = BarDrinkOrder.objects.filter(
-            player=player, created_at__date=today,
+            player=player, game_day=game_time.current_day,
         ).count()
         send_bar_notification(player, drink_count)
 
