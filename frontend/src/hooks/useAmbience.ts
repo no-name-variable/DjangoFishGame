@@ -1,8 +1,8 @@
 /**
  * Хук фонового эмбиента с поддержкой времени суток.
  *
- * - loops (fon*) играют непрерывно на пониженной громкости
- * - clips (природные звуки) играют периодически со случайными паузами
+ * - loops (fon*) — один случайный луп играет, после окончания пауза и следующий
+ * - clips (природные звуки) — играют периодически со случайными паузами 8-20с
  * - при смене timeOfDay старые звуки останавливаются, запускаются новые
  */
 import { useEffect, useRef } from 'react'
@@ -13,23 +13,32 @@ const LOOP_VOLUME_MULT = 0.3
 const CLIP_VOLUME_MULT = 0.2
 const CLIP_MIN_DELAY = 8000
 const CLIP_MAX_DELAY = 20000
+const LOOP_GAP_MIN = 1000
+const LOOP_GAP_MAX = 3000
 
-function randomDelay(): number {
-  return CLIP_MIN_DELAY + Math.random() * (CLIP_MAX_DELAY - CLIP_MIN_DELAY)
+function randomInRange(min: number, max: number): number {
+  return min + Math.random() * (max - min)
 }
 
 export function useAmbience(active: boolean, timeOfDay?: string) {
-  const loopsRef = useRef<HTMLAudioElement[]>([])
+  const loopAudioRef = useRef<HTMLAudioElement | null>(null)
+  const loopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const clipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const clipAudioRef = useRef<HTMLAudioElement | null>(null)
   const cleanedUpRef = useRef(false)
 
   useEffect(() => {
-    // Очистка предыдущих звуков
     const cleanup = () => {
       cleanedUpRef.current = true
-      loopsRef.current.forEach((a) => { a.pause(); a.currentTime = 0 })
-      loopsRef.current = []
+      if (loopAudioRef.current) {
+        loopAudioRef.current.pause()
+        loopAudioRef.current.currentTime = 0
+        loopAudioRef.current = null
+      }
+      if (loopTimerRef.current) {
+        clearTimeout(loopTimerRef.current)
+        loopTimerRef.current = null
+      }
       if (clipTimerRef.current) {
         clearTimeout(clipTimerRef.current)
         clipTimerRef.current = null
@@ -46,30 +55,37 @@ export function useAmbience(active: boolean, timeOfDay?: string) {
       return
     }
 
-    const phase = timeOfDay
-    const set = AMBIENCE_MAP[phase]
+    const set = AMBIENCE_MAP[timeOfDay]
     if (!set) {
       cleanup()
       return
     }
 
     cleanedUpRef.current = false
-    const store = useSoundStore.getState()
 
-    // Запуск лупов
-    const loops = set.loops.map((src) => {
-      const a = new Audio(src)
-      a.loop = true
-      a.volume = store.volume * LOOP_VOLUME_MULT
-      return a
-    })
-    loopsRef.current = loops
-
-    if (store.enabled) {
-      loops.forEach((a) => a.play().catch(() => {}))
+    // Цепочка лупов: один случайный → пауза → следующий случайный
+    const scheduleLoop = () => {
+      if (cleanedUpRef.current || set.loops.length === 0) return
+      const { enabled, volume } = useSoundStore.getState()
+      if (!enabled) {
+        // Если звук выключен — проверяем позже
+        loopTimerRef.current = setTimeout(scheduleLoop, 2000)
+        return
+      }
+      const src = set.loops[Math.floor(Math.random() * set.loops.length)]!
+      const audio = new Audio(src)
+      audio.volume = volume * LOOP_VOLUME_MULT
+      loopAudioRef.current = audio
+      audio.play().catch(() => {})
+      audio.addEventListener('ended', () => {
+        loopAudioRef.current = null
+        if (cleanedUpRef.current) return
+        loopTimerRef.current = setTimeout(scheduleLoop, randomInRange(LOOP_GAP_MIN, LOOP_GAP_MAX))
+      }, { once: true })
     }
+    scheduleLoop()
 
-    // Запуск периодических клипов
+    // Периодические клипы природы
     const scheduleClip = () => {
       if (cleanedUpRef.current) return
       clipTimerRef.current = setTimeout(() => {
@@ -88,20 +104,17 @@ export function useAmbience(active: boolean, timeOfDay?: string) {
           clipAudioRef.current = null
           scheduleClip()
         }, { once: true })
-      }, randomDelay())
+      }, randomInRange(CLIP_MIN_DELAY, CLIP_MAX_DELAY))
     }
     scheduleClip()
 
-    // Подписка на изменения громкости/вкл-выкл
+    // Подписка на изменения громкости / вкл-выкл
     const unsub = useSoundStore.subscribe((s) => {
-      loopsRef.current.forEach((a) => {
-        a.volume = s.volume * LOOP_VOLUME_MULT
-        if (s.enabled) {
-          if (a.paused) a.play().catch(() => {})
-        } else {
-          a.pause()
-        }
-      })
+      if (loopAudioRef.current) {
+        loopAudioRef.current.volume = s.volume * LOOP_VOLUME_MULT
+        if (!s.enabled) loopAudioRef.current.pause()
+        else if (loopAudioRef.current.paused) loopAudioRef.current.play().catch(() => {})
+      }
       if (clipAudioRef.current) {
         clipAudioRef.current.volume = s.volume * CLIP_VOLUME_MULT
         if (!s.enabled) clipAudioRef.current.pause()
