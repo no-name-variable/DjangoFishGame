@@ -316,20 +316,25 @@ export default function FishingPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Инфо-панель */}
-      <div style={{
-        background: 'rgba(7,18,7,0.85)', backdropFilter: 'blur(4px)',
-        padding: '5px 12px', display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', borderBottom: '1px solid rgba(92,61,30,0.3)',
-        flexShrink: 0,
-      }}>
-        <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.78rem', color: '#a8894e' }}>
+      <div className="flex items-center justify-between px-2 sm:px-3 py-1 shrink-0"
+        style={{
+          background: 'rgba(7,18,7,0.85)', backdropFilter: 'blur(4px)',
+          borderBottom: '1px solid rgba(92,61,30,0.3)',
+        }}>
+        <span className="font-serif text-xs sm:text-sm truncate min-w-0" style={{ color: '#a8894e' }}>
           📍 {player?.current_location_name || 'Локация'}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {gt && (
-            <span style={{ fontSize: '0.72rem', color: '#7898b8' }}>
+            <span className="hidden sm:inline text-[0.72rem]" style={{ color: '#7898b8' }}>
               {gt.time_of_day === 'morning' ? '🌅' : gt.time_of_day === 'day' ? '☀️' : gt.time_of_day === 'evening' ? '🌆' : '🌙'}
               {' '}{timeLabels[gt.time_of_day] || gt.time_of_day} {gt.hour}:00 · День {gt.day}
+            </span>
+          )}
+          {gt && (
+            <span className="sm:hidden text-[0.65rem]" style={{ color: '#7898b8' }}>
+              {gt.time_of_day === 'morning' ? '🌅' : gt.time_of_day === 'day' ? '☀️' : gt.time_of_day === 'evening' ? '🌆' : '🌙'}
+              {' '}{gt.hour}:00
             </span>
           )}
           <button
@@ -345,8 +350,9 @@ export default function FishingPage() {
           </button>
           <span
             title={connected ? 'Подключено' : 'Нет соединения'}
+            className="shrink-0"
             style={{
-              width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+              width: '8px', height: '8px', borderRadius: '50%',
               background: connected ? '#4ade80' : '#f87171',
               boxShadow: connected ? '0 0 6px rgba(74,222,128,0.5)' : '0 0 6px rgba(248,113,113,0.5)',
             }}

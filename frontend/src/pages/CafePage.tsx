@@ -166,96 +166,56 @@ export default function CafePage() {
                 const remaining = order.quantity_required - order.quantity_delivered
 
                 return (
-                  <div key={order.id} className="card" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    {/* Изображение рыбы */}
-                    <div
-                      style={{
-                        width: '52px',
-                        height: '52px',
-                        flexShrink: 0,
-                        background: 'rgba(13,31,13,0.5)',
-                        borderRadius: '8px',
+                  <div key={order.id} className="card flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
+                    {/* Верх: рыба + инфо */}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="shrink-0" style={{
+                        width: '48px', height: '48px',
+                        background: 'rgba(13,31,13,0.5)', borderRadius: '8px',
                         border: '1px solid rgba(74,49,24,0.4)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '4px',
-                      }}
-                    >
-                      <GameImage
-                        src={order.species_image || getFallbackUrl('fish')}
-                        fallback={getFallbackUrl('fish')}
-                        alt={order.species_name}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-
-                    {/* Инфо */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h3
-                        style={{
-                          fontFamily: 'Georgia, serif',
-                          fontSize: '0.85rem',
-                          color: '#d4c5a9',
-                          marginBottom: '3px',
-                        }}
-                      >
-                        {order.species_name}
-                      </h3>
-                      <p style={{ fontSize: '0.65rem', color: '#5c3d1e', marginBottom: '4px' }}>
-                        {order.quantity_required} шт. от{' '}
-                        {order.min_weight_grams >= 1000
-                          ? `${(order.min_weight_grams / 1000).toFixed(1)} кг`
-                          : `${order.min_weight_grams} г`}
-                      </p>
-
-                      {/* Прогресс-бар */}
-                      <div
-                        style={{
-                          height: '6px',
-                          borderRadius: '3px',
-                          background: 'rgba(13,31,13,0.5)',
-                          overflow: 'hidden',
-                          marginBottom: '3px',
-                        }}
-                      >
-                        <div
-                          style={{
-                            height: '100%',
-                            width: `${Math.min(100, progress * 100)}%`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px',
+                      }}>
+                        <GameImage
+                          src={order.species_image || getFallbackUrl('fish')}
+                          fallback={getFallbackUrl('fish')}
+                          alt={order.species_name}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-serif text-sm text-wood-200 mb-0.5">{order.species_name}</h3>
+                        <p className="text-[0.65rem] text-wood-600 mb-1">
+                          {order.quantity_required} шт. от{' '}
+                          {order.min_weight_grams >= 1000
+                            ? `${(order.min_weight_grams / 1000).toFixed(1)} кг`
+                            : `${order.min_weight_grams} г`}
+                        </p>
+                        {/* Прогресс-бар */}
+                        <div style={{
+                          height: '6px', borderRadius: '3px',
+                          background: 'rgba(13,31,13,0.5)', overflow: 'hidden', marginBottom: '3px',
+                        }}>
+                          <div style={{
+                            height: '100%', width: `${Math.min(100, progress * 100)}%`,
                             background: isCompleted
                               ? 'linear-gradient(90deg, #22c55e, #4ade80)'
                               : 'linear-gradient(90deg, #d4a84a, #b8922e)',
-                            borderRadius: '3px',
-                            transition: 'width 0.3s ease',
-                          }}
-                        />
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem' }}>
-                        <span style={{ color: isCompleted ? '#4ade80' : '#8b6d3f' }}>
-                          {order.quantity_delivered}/{order.quantity_required}
-                          {isCompleted && ' Выполнено'}
-                        </span>
-                        <span style={{ color: '#5c3d1e' }}>
-                          {getTimeLeft(order.expires_at)}
-                        </span>
+                            borderRadius: '3px', transition: 'width 0.3s ease',
+                          }} />
+                        </div>
+                        <div className="flex justify-between text-[0.6rem]">
+                          <span style={{ color: isCompleted ? '#4ade80' : '#8b6d3f' }}>
+                            {order.quantity_delivered}/{order.quantity_required}
+                            {isCompleted && ' Выполнено'}
+                          </span>
+                          <span className="text-wood-600">{getTimeLeft(order.expires_at)}</span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Награда + кнопка */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
-                      <span
-                        className="gold-text"
-                        style={{
-                          fontFamily: 'Georgia, serif',
-                          fontSize: '0.85rem',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {order.reward_total}$
-                      </span>
-
+                    <div className="flex items-center sm:flex-col sm:items-end gap-2 shrink-0">
+                      <span className="gold-text font-serif text-sm font-bold">{order.reward_total}$</span>
                       {!isCompleted && (
                         <button
                           className="btn btn-action text-xs"

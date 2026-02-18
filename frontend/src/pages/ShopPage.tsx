@@ -73,63 +73,62 @@ export default function ShopPage() {
   const activeCat = categories.find((c) => c.key === category)
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div className="flex flex-col sm:flex-row h-full overflow-hidden">
 
-      {/* ── Боковое меню категорий ────────────────────────────────── */}
-      <aside style={{
-        width: '160px',
-        flexShrink: 0,
-        background: 'rgba(7,18,7,0.6)',
-        borderRight: '1px solid rgba(74,49,24,0.4)',
-        padding: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '2px',
-        overflowY: 'auto',
-      }}>
-        <button onClick={() => navigate('/')} className="btn btn-secondary w-full mb-3 text-xs">
-          ← База
-        </button>
-        {categories.map((c) => {
-          const active = category === c.key
-          return (
-            <button
-              key={c.key}
-              onClick={() => setCategory(c.key)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                width: '100%', textAlign: 'left',
-                padding: '8px 10px',
-                borderRadius: '8px',
-                border: active ? '1px solid rgba(212,168,74,0.35)' : '1px solid transparent',
-                background: active ? 'rgba(58,37,18,0.85)' : 'transparent',
-                color: active ? '#d4a84a' : '#8b6d3f',
-                fontSize: '0.8rem',
-                fontFamily: 'Georgia, serif',
-                cursor: 'pointer',
-                transition: 'all 0.18s ease',
-                WebkitTapHighlightColor: 'transparent',
-                minHeight: '40px',
-              }}
-              onMouseEnter={e => {
-                if (!active) Object.assign(e.currentTarget.style, { background: 'rgba(26,58,26,0.4)', color: '#d4c5a9' })
-              }}
-              onMouseLeave={e => {
-                if (!active) Object.assign(e.currentTarget.style, { background: 'transparent', color: '#8b6d3f' })
-              }}
-            >
-              <span style={{ fontSize: '1rem' }}>{c.icon}</span>
-              <span>{c.label}</span>
-            </button>
-          )
-        })}
+      {/* ── Меню категорий: горизонтальное на мобильных, боковое на десктопе ── */}
+      <aside className="shrink-0 sm:w-[160px] overflow-x-auto sm:overflow-x-hidden sm:overflow-y-auto border-b sm:border-b-0 sm:border-r"
+        style={{
+          background: 'rgba(7,18,7,0.6)',
+          borderColor: 'rgba(74,49,24,0.4)',
+          padding: '6px 8px',
+        }}>
+        <div className="flex sm:flex-col gap-1.5 sm:gap-0.5">
+          <button onClick={() => navigate('/')} className="btn btn-secondary shrink-0 text-xs sm:w-full sm:mb-3 px-3 sm:px-2">
+            ← База
+          </button>
+          {categories.map((c) => {
+            const active = category === c.key
+            return (
+              <button
+                key={c.key}
+                onClick={() => setCategory(c.key)}
+                className="shrink-0 sm:w-full"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  textAlign: 'left',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  border: active ? '1px solid rgba(212,168,74,0.35)' : '1px solid transparent',
+                  background: active ? 'rgba(58,37,18,0.85)' : 'transparent',
+                  color: active ? '#d4a84a' : '#8b6d3f',
+                  fontSize: '0.78rem',
+                  fontFamily: 'Georgia, serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.18s ease',
+                  WebkitTapHighlightColor: 'transparent',
+                  minHeight: '36px',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => {
+                  if (!active) Object.assign(e.currentTarget.style, { background: 'rgba(26,58,26,0.4)', color: '#d4c5a9' })
+                }}
+                onMouseLeave={e => {
+                  if (!active) Object.assign(e.currentTarget.style, { background: 'transparent', color: '#8b6d3f' })
+                }}
+              >
+                <span style={{ fontSize: '1rem' }}>{c.icon}</span>
+                <span className="hidden sm:inline">{c.label}</span>
+              </button>
+            )
+          })}
+        </div>
       </aside>
 
       {/* ── Основной контент ─────────────────────────────────────── */}
-      <main style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
+      <main className="flex-1 p-3 sm:p-4 overflow-y-auto min-h-0">
         {/* Заголовок */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <h1 className="gold-text text-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+          <h1 className="gold-text text-lg sm:text-xl">
             {activeCat?.icon} {activeCat?.label}
           </h1>
           {message && (

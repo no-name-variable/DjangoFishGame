@@ -15,9 +15,9 @@ const TOD_ICON: Record<string, string> = {
 }
 
 /** Маленький горизонтальный прогресс-бар */
-function MiniBar({ value, color, width = 52 }: { value: number; color: string; width?: number }) {
+function MiniBar({ value, color, width = 52, className }: { value: number; color: string; width?: number; className?: string }) {
   return (
-    <div style={{
+    <div className={className} style={{
       width, height: '5px', borderRadius: '3px',
       background: 'rgba(13,31,13,0.8)',
       border: '1px solid rgba(74,49,24,0.4)',
@@ -32,9 +32,9 @@ function MiniBar({ value, color, width = 52 }: { value: number; color: string; w
 }
 
 /** Иконка + контент в ряд */
-function Stat({ icon, title, children }: { icon: string; title?: string; children: ReactNode }) {
+function Stat({ icon, title, children, className }: { icon: string; title?: string; children: ReactNode; className?: string }) {
   return (
-    <div title={title} style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+    <div title={title} className={className} style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
       <span style={{ fontSize: '0.82rem', lineHeight: 1 }}>{icon}</span>
       {children}
     </div>
@@ -78,63 +78,56 @@ export default function TopBar() {
     <header className="wood-panel" style={{ borderRadius: '12px 12px 0 0', padding: 0 }}>
 
       {/* ── Основная строка ──────────────────────────────────────── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '6px 10px', gap: '8px', flexWrap: 'nowrap',
-      }}>
+      <div className="flex items-center justify-between gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5">
 
         {/* ── Левая часть: никнейм + разряд + XP ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flexShrink: 1 }}>
+        <div className="flex items-center gap-2 min-w-0 shrink">
           {/* Аватар-инициал */}
-          <div style={{
+          <div className="shrink-0" style={{
             width: '28px', height: '28px', borderRadius: '50%',
             background: 'linear-gradient(135deg, #2e7d2e, #1a5a1a)',
             border: '1px solid rgba(212,168,74,0.4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.75rem', color: '#d4a84a', fontWeight: 'bold', flexShrink: 0,
+            fontSize: '0.75rem', color: '#d4a84a', fontWeight: 'bold',
           }}>
             {player.nickname.charAt(0).toUpperCase()}
           </div>
 
-          <div style={{ minWidth: 0 }}>
+          <div className="min-w-0">
             {/* Ник + ранг */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap' }}>
-              <span className="gold-text" style={{ fontSize: '0.85rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+            <div className="flex items-center gap-1.5">
+              <span className="gold-text text-sm font-bold whitespace-nowrap truncate max-w-[80px] sm:max-w-none">
                 {player.nickname}
               </span>
-              <span style={{
+              <span className="hidden sm:inline-block shrink-0" style={{
                 background: 'rgba(46,125,46,0.3)', border: '1px solid rgba(46,125,46,0.45)',
                 borderRadius: '4px', padding: '0 4px',
-                fontSize: '0.58rem', color: '#7bc67b', whiteSpace: 'nowrap', flexShrink: 0,
+                fontSize: '0.58rem', color: '#7bc67b', whiteSpace: 'nowrap',
               }}>
                 {player.rank} · {player.rank_title}
               </span>
             </div>
             {/* XP */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
-              <MiniBar value={expPercent} color="#d4a84a" width={64} />
-              <span style={{ fontSize: '0.6rem', color: '#8b6d3f', whiteSpace: 'nowrap' }}>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <MiniBar value={expPercent} color="#d4a84a" width={48} />
+              <span className="text-[0.6rem] text-wood-500 whitespace-nowrap">
                 {expPercent}%
               </span>
             </div>
           </div>
         </div>
 
-        {/* ── Центр: локация + время ── */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '5px',
-          fontSize: '0.68rem', color: '#8b6d3f',
-          overflow: 'hidden', flexShrink: 1, minWidth: 0,
-        }}>
+        {/* ── Центр: локация + время (скрыто на мобильных) ── */}
+        <div className="hidden md:flex items-center gap-1.5 text-[0.68rem] text-wood-500 overflow-hidden shrink min-w-0">
           {player.current_base_name && (
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span className="whitespace-nowrap overflow-hidden text-ellipsis">
               🏕️ {player.current_base_name}
             </span>
           )}
           {player.current_location_name && (
             <>
               <span style={{ opacity: 0.35 }}>/</span>
-              <span style={{ color: '#7898b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span className="whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: '#7898b8' }}>
                 {player.current_location_name}
               </span>
             </>
@@ -142,30 +135,30 @@ export default function TopBar() {
           {todIcon && timeStr && (
             <>
               <span style={{ opacity: 0.35 }}>·</span>
-              <span style={{ color: '#7898b8', whiteSpace: 'nowrap' }}>{todIcon} {timeStr}</span>
+              <span className="whitespace-nowrap" style={{ color: '#7898b8' }}>{todIcon} {timeStr}</span>
             </>
           )}
         </div>
 
         {/* ── Правая часть: ресурсы + кнопки ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Деньги */}
           <Stat icon="💰" title={`Серебро: ${player.money}`}>
-            <span style={{ fontSize: '0.75rem', color: '#eab308', fontWeight: 600, whiteSpace: 'nowrap' }}>
+            <span className="text-xs font-semibold whitespace-nowrap" style={{ color: '#eab308' }}>
               {Number(player.money).toFixed(0)}
             </span>
           </Stat>
 
-          {/* Карма */}
-          <Stat icon="⚖️" title={`Карма: ${player.karma}`}>
-            <span style={{ fontSize: '0.75rem', color: karmaColor, fontWeight: 500 }}>
+          {/* Карма — скрыта на маленьких экранах */}
+          <Stat icon="⚖️" title={`Карма: ${player.karma}`} className="hidden sm:flex">
+            <span className="text-xs font-medium" style={{ color: karmaColor }}>
               {player.karma >= 0 ? '+' : ''}{player.karma}
             </span>
           </Stat>
 
           {/* Сытость */}
           <Stat icon="🍖" title={`Сытость: ${player.hunger}%`}>
-            <MiniBar value={player.hunger} color={hungerColor} width={40} />
+            <MiniBar value={player.hunger} color={hungerColor} width={32} />
           </Stat>
 
           {/* Звук */}
@@ -177,11 +170,12 @@ export default function TopBar() {
             {soundEnabled ? '🔊' : '🔇'}
           </button>
 
+          {/* Громкость — скрыта на мобильных */}
           {soundEnabled && (
             <input
               type="range" min="0" max="1" step="0.1" value={volume}
               onChange={(e) => setVolume(Number(e.target.value))}
-              className="accent-gold"
+              className="accent-gold hidden sm:block"
               style={{ width: '40px', height: '4px', cursor: 'pointer' }}
               title={`Громкость: ${Math.round(volume * 100)}%`}
             />
@@ -215,14 +209,32 @@ export default function TopBar() {
 
       {/* ── Раскрытая дополнительная инфо ────────────────────────── */}
       {expanded && (
-        <div style={{
-          padding: '5px 12px 7px',
-          borderTop: '1px solid rgba(74,49,24,0.35)',
-          display: 'flex', alignItems: 'center', gap: '14px',
-          flexWrap: 'wrap', fontSize: '0.7rem',
-        }}>
+        <div className="flex items-center gap-3 sm:gap-4 flex-wrap text-[0.7rem] px-3 py-1.5"
+          style={{ borderTop: '1px solid rgba(74,49,24,0.35)' }}>
+
+          {/* Локация + время — показываем только на мобильных (на десктопе уже видно) */}
+          {(player.current_base_name || (todIcon && timeStr)) && (
+            <div className="flex md:hidden items-center gap-1.5 text-wood-500">
+              {player.current_base_name && <span>🏕️ {player.current_base_name}</span>}
+              {player.current_location_name && <span style={{ color: '#7898b8' }}>/ {player.current_location_name}</span>}
+              {todIcon && timeStr && <span style={{ color: '#7898b8' }}>{todIcon} {timeStr}</span>}
+            </div>
+          )}
+
+          {/* Карма — на мобильных (на десктопе видна в основной строке) */}
+          <div className="flex sm:hidden items-center gap-1">
+            <span>⚖️</span>
+            <span style={{ color: karmaColor }}>{player.karma >= 0 ? '+' : ''}{player.karma} кармы</span>
+          </div>
+
+          {/* Разряд — на мобильных */}
+          <div className="flex sm:hidden items-center gap-1">
+            <span>⭐</span>
+            <span style={{ color: '#7bc67b' }}>{player.rank} · {player.rank_title}</span>
+          </div>
+
           {/* XP детально */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <div className="flex items-center gap-1.5">
             <span style={{ color: '#8b6d3f' }}>✨ Опыт:</span>
             <span style={{ color: '#d4a84a' }}>{player.experience}</span>
             <span style={{ color: '#4a3118' }}>/</span>
@@ -231,14 +243,14 @@ export default function TopBar() {
 
           {/* Золото */}
           {player.gold > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="flex items-center gap-1">
               <span>🥇</span>
               <span style={{ color: '#d4a84a' }}>{player.gold}</span>
             </div>
           )}
 
           {/* Сытость детально */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <div className="flex items-center gap-1.5">
             <span style={{ color: '#8b6d3f' }}>🍖 Сытость:</span>
             <MiniBar value={player.hunger} color={hungerColor} width={56} />
             <span style={{ color: hungerColor }}>{player.hunger}%</span>
@@ -246,9 +258,22 @@ export default function TopBar() {
 
           {/* Игровой день */}
           {gameTime && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#7898b8' }}>
+            <div className="flex items-center gap-1" style={{ color: '#7898b8' }}>
               <span>📅</span>
               <span>День {gameTime.day}</span>
+            </div>
+          )}
+
+          {/* Громкость — на мобильных (если звук включён) */}
+          {soundEnabled && (
+            <div className="flex sm:hidden items-center gap-1.5">
+              <span className="text-wood-500">🔊</span>
+              <input
+                type="range" min="0" max="1" step="0.1" value={volume}
+                onChange={(e) => setVolume(Number(e.target.value))}
+                className="accent-gold"
+                style={{ width: '50px', height: '4px', cursor: 'pointer' }}
+              />
             </div>
           )}
         </div>

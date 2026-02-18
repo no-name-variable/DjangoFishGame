@@ -54,11 +54,8 @@ export default function ProfilePage() {
   return (
     <div className="p-4 max-w-3xl mx-auto">
       {/* Шапка профиля */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px',
-        padding: '14px', borderRadius: '12px',
-        background: 'rgba(42,26,13,0.6)', border: '1px solid rgba(92,61,30,0.5)',
-      }}>
+      <div className="flex items-center gap-3 sm:gap-4 mb-4 p-3 sm:p-4 rounded-xl"
+        style={{ background: 'rgba(42,26,13,0.6)', border: '1px solid rgba(92,61,30,0.5)' }}>
         {/* Аватар */}
         <div style={{
           width: '52px', height: '52px', borderRadius: '50%',
@@ -92,7 +89,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Табы */}
-      <div className="flex gap-1 mb-4">
+      <div className="flex flex-wrap gap-1 mb-4">
         {tabs.map((t) => (
           <button key={t.key}
             className={`game-tab ${tab === t.key ? 'game-tab-active' : 'game-tab-inactive'}`}
@@ -105,7 +102,7 @@ export default function ProfilePage() {
       {/* Данные профиля */}
       {tab === 'profile' && (
         <div className="card">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {statRows.map((item) => (
               <div key={item.label} style={{
                 padding: '10px', borderRadius: '8px',

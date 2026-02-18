@@ -58,7 +58,7 @@ export default function WorldMapPage() {
       )}
 
       {/* Визуальная карта */}
-      <div className="card mb-4" style={{ height: '320px', padding: 0, overflow: 'hidden', position: 'relative' }}>
+      <div className="card mb-4" style={{ height: 'clamp(200px, 40vw, 320px)', padding: 0, overflow: 'hidden', position: 'relative' }}>
         <div style={{
           position: 'absolute', inset: 0,
           background: 'radial-gradient(ellipse at 40% 60%, #1a3a1a 0%, #0d1f0d 50%, #0a1020 100%)',

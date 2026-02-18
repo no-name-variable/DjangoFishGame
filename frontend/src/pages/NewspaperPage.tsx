@@ -45,7 +45,7 @@ export default function NewspaperPage() {
       </div>
 
       {/* Статистика */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '18px' }}>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
         {[
           { value: data.stats.total_fish.toLocaleString('ru'), label: 'Рыб поймано', icon: '🐟' },
           { value: `${data.stats.total_weight.toFixed(1)} кг`,  label: 'Общий вес',   icon: '⚖️' },
@@ -62,7 +62,7 @@ export default function NewspaperPage() {
       </div>
 
       {/* Основные блоки */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         {/* Рекордсмены недели */}
         <div className="card">
           <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', color: '#d4a84a', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -128,7 +128,7 @@ export default function NewspaperPage() {
       </div>
 
       {/* Абсолютные рекорды */}
-      <div className="card">
+      <div className="card overflow-x-auto">
         <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', color: '#d4a84a', marginBottom: '10px' }}>
           📜 Абсолютные рекорды всех времён
         </h2>

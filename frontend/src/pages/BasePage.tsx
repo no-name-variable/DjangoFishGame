@@ -303,13 +303,7 @@ export default function BasePage() {
       <AtmosphericBg />
 
       {/* Контент поверх фона */}
-      <div style={{
-        position: 'relative',
-        zIndex: 1,
-        padding: '14px 14px 28px',
-        maxWidth: '680px',
-        margin: '0 auto',
-      }}>
+      <div className="relative z-[1] px-3 sm:px-4 pt-3 sm:pt-4 pb-7 max-w-[680px] mx-auto">
 
         {/* ── Шапка ── */}
         <header style={{ textAlign: 'center', marginBottom: '18px' }}>
@@ -353,8 +347,8 @@ export default function BasePage() {
             <PrimaryFishingButton navigate={navigate} />
           </div>
 
-          {/* Рюкзак + Магазин */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          {/* Рюкзак + Магазин + ... */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {coreItems.map(item => (
               <MenuCard key={item.path} item={item} navigate={navigate} />
             ))}
@@ -364,7 +358,7 @@ export default function BasePage() {
         {/* ── Секция 2: Соревнования ── */}
         <section style={{ marginBottom: '16px' }}>
           <SectionLabel>Соревнования</SectionLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+          <div className="grid grid-cols-2 gap-2">
             {socialItems.map(item => (
               <MenuCard key={item.path} item={item} navigate={navigate} />
             ))}
@@ -374,7 +368,7 @@ export default function BasePage() {
         {/* ── Секция 3: Прочее ── */}
         <section>
           <SectionLabel>Прочее</SectionLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {miscItems.map(item => (
               <SmallCard key={item.path} item={item} navigate={navigate} />
             ))}

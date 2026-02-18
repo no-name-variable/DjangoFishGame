@@ -154,31 +154,32 @@ export default function BazaarPage() {
           ) : (
             <div className="space-y-2">
               {listings.map((l) => (
-                <div key={l.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{
-                    width: '44px', height: '44px', flexShrink: 0,
-                    background: 'rgba(13,31,13,0.5)', borderRadius: '8px',
-                    border: '1px solid rgba(74,49,24,0.4)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px',
-                  }}>
-                    <GameImage
-                      src={l.item_image || getFallbackUrl('tackle')}
-                      fallback={getFallbackUrl('tackle')}
-                      alt={l.item_type}
-                      className="w-full h-full object-contain"
-                    />
+                <div key={l.id} className="card flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="shrink-0" style={{
+                      width: '44px', height: '44px',
+                      background: 'rgba(13,31,13,0.5)', borderRadius: '8px',
+                      border: '1px solid rgba(74,49,24,0.4)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px',
+                    }}>
+                      <GameImage
+                        src={l.item_image || getFallbackUrl('tackle')}
+                        fallback={getFallbackUrl('tackle')}
+                        alt={l.item_type}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-serif text-sm text-wood-200 truncate mb-0.5">
+                        {l.item_name}
+                      </h3>
+                      <p className="text-[0.65rem] text-wood-600">
+                        📦 {l.quantity} шт. · 👤 {l.seller_nickname}
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', color: '#d4c5a9',
-                      overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginBottom: '2px' }}>
-                      {l.item_name}
-                    </h3>
-                    <p style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>
-                      📦 {l.quantity} шт. · 👤 {l.seller_nickname}
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                    <span className="gold-text" style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 'bold' }}>
+                  <div className="flex items-center gap-2.5 shrink-0 sm:ml-auto">
+                    <span className="gold-text font-serif text-[0.95rem] font-bold">
                       {l.price}$
                     </span>
                     <button className="btn btn-action text-xs" style={{ minHeight: '34px', minWidth: '64px' }}
