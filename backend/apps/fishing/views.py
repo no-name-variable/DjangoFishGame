@@ -226,12 +226,7 @@ class UpdateRetrieveView(APIView):
             return Response({'error': 'Сессия не найдена.'}, status=status.HTTP_404_NOT_FOUND)
 
         session.is_retrieving = data['is_retrieving']
-
-        if not session.is_retrieving:
-            session.retrieve_progress = 0.0
-            session.save(update_fields=['is_retrieving', 'retrieve_progress'])
-        else:
-            session.save(update_fields=['is_retrieving'])
+        session.save(update_fields=['is_retrieving'])
 
         return Response({'status': 'ok', 'is_retrieving': session.is_retrieving})
 

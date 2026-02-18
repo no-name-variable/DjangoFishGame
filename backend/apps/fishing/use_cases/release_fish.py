@@ -23,6 +23,9 @@ class ReleaseFishUseCase:
         if session.state != FishingSession.State.CAUGHT:
             raise ValueError('Сессия не в нужном состоянии.')
 
+        if not session.hooked_species or session.hooked_weight is None:
+            raise ValueError('Данные о рыбе повреждены.')
+
         karma_bonus = max(1, int(session.hooked_weight))
         player.karma += karma_bonus
         player.save(update_fields=['karma'])

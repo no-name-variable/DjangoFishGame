@@ -153,8 +153,25 @@ export function useFishingSocket(callbacks: FishingSocketCallbacks) {
             cb.onCaught?.(data as CaughtData)
           } else if (data.result === 'line_break' || data.result === 'rod_break') {
             cb.onBreak?.(data.result, data.session_id)
+          } else if (data.result === 'fighting') {
+            // Мгновенно обновляем fight data (не ждём следующий state snapshot)
+            const sid = data.session_id as number
+            const store = useFishingStore.getState()
+            const prevFight = store.fights[sid]
+            if (prevFight) {
+              useFishingStore.setState({
+                fights: {
+                  ...store.fights,
+                  [sid]: {
+                    ...prevFight,
+                    tension: data.tension as number,
+                    distance: data.distance as number,
+                    rodDurability: data.rod_durability as number,
+                  },
+                },
+              })
+            }
           }
-          // 'fighting' — state уже обновится через следующий state message
           break
         case 'keep_result':
           cb.onKeepResult?.(data)

@@ -41,9 +41,9 @@ class FightEngineService:
         pull_distance = reel_power * random.uniform(0.5, 1.5)
         fight.distance = max(0, fight.distance - pull_distance)
 
-        # Натяжение увеличивается
+        # Натяжение увеличивается (без жёсткого кепа — может превысить 100)
         tension_add = fight.fish_strength * random.uniform(0.3, 1.0)
-        fight.line_tension = min(100, fight.line_tension + tension_add)
+        fight.line_tension += tension_add
 
         # Рыба сопротивляется
         _fish_action(fight)
@@ -58,9 +58,9 @@ class FightEngineService:
         pull_distance = reel_power * random.uniform(1.0, 2.0)
         fight.distance = max(0, fight.distance - pull_distance)
 
-        # Больше натяжение
+        # Больше натяжение (без жёсткого кепа)
         tension_add = fight.fish_strength * random.uniform(0.5, 1.5)
-        fight.line_tension = min(100, fight.line_tension + tension_add)
+        fight.line_tension += tension_add
 
         # Износ удилища
         fight.rod_durability -= 1
@@ -81,9 +81,9 @@ class FightEngineService:
 def _fish_action(fight):
     """Рывок рыбы (автоматический)."""
     if random.random() < 0.3:
-        # Рывок
+        # Рывок — увеличивает дистанцию и натяжение
         fight.distance += fight.fish_strength * random.uniform(0.5, 2.0)
-        fight.line_tension = min(100, fight.line_tension + random.uniform(5, 15))
+        fight.line_tension += random.uniform(5, 15)
 
     # Естественное снижение натяжения
     fight.line_tension = max(0, fight.line_tension - 2)
@@ -94,15 +94,13 @@ def _fish_action(fight):
 
 def _check_result(fight):
     """Проверка результата вываживания."""
-    # Проверка прочности лески
+    # Проверка обрыва лески: натяжение vs прочность лески
+    # Формула: 5кг леска → порог 100, 2кг → 82, 8кг → 118
     line = fight.session.rod.line
-    if line and fight.line_tension >= 100:
-        line_strength_check = fight.line_tension / 100
-        if random.random() < line_strength_check:
-            return 'line_break'
-
-    if fight.line_tension >= 100:
+    line_limit = (70 + line.breaking_strength * 6) if line else 100
+    if fight.line_tension >= line_limit:
         return 'line_break'
+
     if fight.distance <= 0:
         return 'caught'
     if fight.rod_durability <= 0:

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from django.db import transaction
 from django.utils import timezone
 
 from apps.fishing.models import FishingSession
@@ -24,9 +25,10 @@ class StrikeUseCase:
     def __init__(self, fight_engine: FightEngineService):
         self._engine = fight_engine
 
+    @transaction.atomic
     def execute(self, player, session_id: int) -> StrikeResult:
         """Raises: FishingSession.DoesNotExist, ValueError."""
-        session = FishingSession.objects.select_related(
+        session = FishingSession.objects.select_for_update().select_related(
             'rod__rod_type', 'rod__reel', 'rod__line',
             'rod__hook', 'hooked_species',
         ).get(pk=session_id, player=player)
@@ -34,8 +36,8 @@ class StrikeUseCase:
         if session.state != FishingSession.State.BITE:
             raise ValueError('Сессия не в нужном состоянии.')
 
-        # Проверяем, что нет другой сессии в FIGHTING
-        if FishingSession.objects.filter(
+        # Проверяем, что нет другой сессии в FIGHTING (с блокировкой)
+        if FishingSession.objects.select_for_update().filter(
             player=player, state=FishingSession.State.FIGHTING,
         ).exists():
             raise ValueError('Уже идёт вываживание на другой удочке.')

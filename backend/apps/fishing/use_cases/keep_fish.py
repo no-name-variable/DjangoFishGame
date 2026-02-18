@@ -43,6 +43,9 @@ class KeepFishUseCase:
         if session.state != FishingSession.State.CAUGHT:
             raise ValueError('Сессия не в нужном состоянии.')
 
+        if not session.hooked_species or session.hooked_weight is None or session.hooked_length is None:
+            raise ValueError('Данные о рыбе повреждены.')
+
         # Проверяем лимит садка
         creel_count = CaughtFish.objects.filter(
             player=player, is_sold=False, is_released=False,

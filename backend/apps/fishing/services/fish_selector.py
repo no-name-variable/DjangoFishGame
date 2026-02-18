@@ -33,7 +33,8 @@ class FishSelectorService:
         from apps.fishing.models import GroundbaitSpot
         groundbait_species_ids = set()
         active_spot = GroundbaitSpot.objects.filter(
-            player__current_location=location,
+            player=rod_setup.player,
+            location=location,
         ).select_related('groundbait').first()
         if active_spot and active_spot.is_active():
             groundbait_species_ids = set(

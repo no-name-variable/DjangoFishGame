@@ -48,13 +48,15 @@ class CastUseCase:
         if FishingSession.objects.filter(player=player, rod=rod).exists():
             raise ValueError('Эта удочка уже заброшена.')
 
-        # Проверяем лимит удочек (только активные состояния)
+        # Проверяем лимит удочек (все активные состояния)
         active_sessions = FishingSession.objects.filter(
             player=player,
             state__in=[
                 FishingSession.State.WAITING,
+                FishingSession.State.NIBBLE,
                 FishingSession.State.BITE,
                 FishingSession.State.FIGHTING,
+                FishingSession.State.CAUGHT,
             ],
         )
         if active_sessions.count() >= MAX_RODS:
