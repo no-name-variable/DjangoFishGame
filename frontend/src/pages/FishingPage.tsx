@@ -13,7 +13,7 @@ import { useFishingSocket } from '../hooks/useFishingSocket'
 import WaterScene from '../components/fishing/WaterScene'
 import CaughtFishModal from '../components/fishing/CaughtFishModal'
 import TacklePanel, { type FullRod } from '../components/fishing/TacklePanel'
-import FishingGearModal from '../components/fishing/FishingGearModal'
+import InventoryModal from '../components/inventory/InventoryModal'
 import { useSound } from '../hooks/useSound'
 import { useAmbience } from '../hooks/useAmbience'
 import { getLocationImageUrl, normalizeMediaUrl } from '../utils/getAssetUrl'
@@ -498,9 +498,8 @@ export default function FishingPage() {
       )}
 
       {gearOpen && (
-        <FishingGearModal
+        <InventoryModal
           sessions={sessionList}
-          rods={rods}
           onUpdateSettings={handleUpdateSettings}
           onChangeTackle={handleChangeTackle}
           onClose={() => setGearOpen(false)}

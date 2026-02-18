@@ -1,17 +1,28 @@
 /**
  * Модальное окно управления снастями прямо на FishingPage.
- * Три вкладки: Удочки (слоты), Снасть (замена компонентов), Настройки (глубина/скорость).
+ * Три вкладки: Удочки (слоты), Снасть (визуальные слоты), Настройки (глубина/скорость).
  */
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { getRods, equipRod, unequipRod, type PlayerRod } from '../../api/inventory'
 import { repairRod } from '../../api/shop'
+import { getInventory, changeTackle } from '../../api/player'
 import { getProfile } from '../../api/auth'
 import { usePlayerStore } from '../../store/playerStore'
-import TackleChangePanel from './TackleChangePanel'
+import TackleSlot, { type TackleSlotData } from '../inventory/TackleSlot'
+import TacklePickerPopup, { type PickerItem } from '../inventory/TacklePickerPopup'
 import type { FullRod } from './TacklePanel'
 import type { SessionInfo } from '../../store/fishingStore'
 
 type Tab = 'rods' | 'tackle' | 'settings'
+
+interface InventoryItem {
+  id: number
+  item_type: string
+  object_id: number
+  item_name: string
+  item_image: string | null
+  quantity: number
+}
 
 interface Props {
   sessions: SessionInfo[]
@@ -52,15 +63,44 @@ const slotBtn = (danger: boolean, disabled: boolean): CSSProperties => ({
   opacity: disabled ? 0.6 : 1,
 })
 
-const selectStyle: CSSProperties = {
-  width: '100%',
-  marginTop: '4px',
-  background: 'rgba(7,18,7,0.8)',
-  border: '1px solid rgba(92,61,30,0.5)',
-  borderRadius: '6px',
-  color: '#a8894e',
-  fontSize: '0.78rem',
-  padding: '5px 8px',
+/** Типы компонентов для класса удочки (заменяемые) */
+function changeableTypes(rodClass: string): string[] {
+  switch (rodClass) {
+    case 'float': return ['hook', 'floattackle', 'bait']
+    case 'spinning': return ['hook', 'lure']
+    case 'bottom': return ['hook', 'bait']
+    default: return ['hook', 'bait']
+  }
+}
+
+const TYPE_TO_FIELD: Record<string, string> = {
+  hook: 'hook_id', floattackle: 'float_tackle_id', lure: 'lure_id', bait: 'bait_id',
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  hook: 'Крючок', floattackle: 'Поплавок', lure: 'Приманка', bait: 'Наживка',
+}
+
+/** Все слоты (включая статичные) */
+function allSlots(rodClass: string): string[] {
+  switch (rodClass) {
+    case 'float': return ['reel', 'line', 'hook', 'floattackle', 'bait']
+    case 'spinning': return ['reel', 'line', 'hook', 'lure']
+    case 'bottom': return ['reel', 'line', 'hook', 'bait']
+    default: return ['reel', 'line', 'hook', 'bait']
+  }
+}
+
+function buildSlot(rod: FullRod, type: string): TackleSlotData {
+  switch (type) {
+    case 'reel': return { type, itemId: rod.reel ?? null, name: rod.reel_name }
+    case 'line': return { type, itemId: rod.line ?? null, name: rod.line_name }
+    case 'hook': return { type, itemId: rod.hook ?? null, name: rod.hook_name }
+    case 'floattackle': return { type, itemId: rod.float_tackle ?? null, name: rod.float_name }
+    case 'lure': return { type, itemId: rod.lure ?? null, name: rod.lure_name }
+    case 'bait': return { type, itemId: rod.bait ?? null, name: rod.bait_name, remaining: rod.bait_remaining }
+    default: return { type, itemId: null, name: null }
+  }
 }
 
 export default function FishingGearModal({ sessions, rods, onUpdateSettings, onChangeTackle, onClose }: Props) {
@@ -72,28 +112,28 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
   const [selectedRodId, setSelectedRodId] = useState<number | null>(rods[0]?.id ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [pickerType, setPickerType] = useState<string | null>(null)
 
-  // Слайдеры настроек
   const [sliderDepth, setSliderDepth] = useState(0)
   const [sliderSpeed, setSliderSpeed] = useState(0)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Синхронизируем слайдеры при смене удочки
   useEffect(() => {
     const rod = rods.find((r) => r.id === selectedRodId)
-    if (rod) {
-      setSliderDepth(rod.depth_setting)
-      setSliderSpeed(rod.retrieve_speed)
-    }
+    if (rod) { setSliderDepth(rod.depth_setting); setSliderSpeed(rod.retrieve_speed) }
   }, [selectedRodId, rods])
 
-  // Загрузка всех удочек при открытии
   useEffect(() => {
     setLoading(true)
-    getRods()
-      .then(({ results }) => setAllRods(results))
-      .catch(() => setError('Ошибка загрузки удочек'))
-      .finally(() => setLoading(false))
+    Promise.all([
+      getRods().then(({ results }) => setAllRods(results)),
+      getInventory().then((res) => {
+        const data = res.data
+        setInventory(Array.isArray(data) ? data : (data.results ?? data))
+      }),
+    ]).catch(() => setError('Ошибка загрузки'))
+    .finally(() => setLoading(false))
   }, [])
 
   const refreshProfile = () => getProfile().then(setPlayer).catch(() => {})
@@ -111,21 +151,15 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
     try {
       await equipRod(rodId, slot)
       await refreshProfile()
-      // Перезагрузить список, чтобы обновить статус экипировки
       const { results } = await getRods()
       setAllRods(results)
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error
-        ?? 'Ошибка экипировки'
-      setError(msg)
+      setError((e as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Ошибка экипировки')
     }
   }
 
   const handleUnequip = async (rodId: number) => {
-    if (hasSession(rodId)) {
-      setError('Нельзя снять удочку с активной сессией рыбалки')
-      return
-    }
+    if (hasSession(rodId)) { setError('Нельзя снять удочку с активной сессией'); return }
     setError('')
     try {
       await unequipRod(rodId)
@@ -133,9 +167,7 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
       const { results } = await getRods()
       setAllRods(results)
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error
-        ?? 'Ошибка снятия'
-      setError(msg)
+      setError((e as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Ошибка снятия')
     }
   }
 
@@ -148,16 +180,13 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
       setAllRods(results)
       setError(`✅ Отремонтировано за ${result.cost} монет`)
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error
-        ?? 'Ошибка ремонта'
-      setError(msg)
+      setError((e as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Ошибка ремонта')
     }
   }
 
   const handleSlider = (field: 'depth_setting' | 'retrieve_speed', value: number) => {
     if (field === 'depth_setting') setSliderDepth(value)
     else setSliderSpeed(value)
-
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       if (!selectedRodId) return
@@ -170,15 +199,66 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
 
   const selectedRod = rods.find((r) => r.id === selectedRodId)
 
-  // ─── Рендер ───────────────────────────────────────────────────────────────
+  const pickerItems = (type: string): PickerItem[] =>
+    inventory
+      .filter((i) => i.item_type === type && i.quantity > 0)
+      .map((i) => ({ objectId: i.object_id, name: i.item_name, quantity: i.quantity, itemType: i.item_type }))
+
+  const handleSelectTackle = async (objectId: number) => {
+    if (!pickerType || !selectedRodId) return
+    const field = TYPE_TO_FIELD[pickerType]
+    if (!field) return
+    setPickerType(null)
+    setError('')
+    try {
+      const updated = await changeTackle(selectedRodId, { [field]: objectId })
+      onChangeTackle(selectedRodId, updated)
+      await refreshProfile()
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Ошибка замены')
+    }
+  }
+
+  const handleRemoveTackle = async () => {
+    if (!pickerType || !selectedRodId) return
+    const field = TYPE_TO_FIELD[pickerType]
+    if (!field) return
+    setPickerType(null)
+    setError('')
+    try {
+      const updated = await changeTackle(selectedRodId, { [field]: null })
+      onChangeTackle(selectedRodId, updated)
+      await refreshProfile()
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Ошибка снятия')
+    }
+  }
+
+  const rodInWater = selectedRodId ? hasSession(selectedRodId) : false
+
+  // Выбор удочки для вкладки
+  const rodSelector = (
+    <div style={{ marginBottom: '10px' }}>
+      <label style={{ color: '#7898b8', fontSize: '0.72rem' }}>Удочка:</label>
+      <select value={selectedRodId ?? ''} onChange={(e) => setSelectedRodId(Number(e.target.value))}
+        style={{
+          width: '100%', marginTop: '4px',
+          background: 'rgba(7,18,7,0.8)', border: '1px solid rgba(92,61,30,0.5)',
+          borderRadius: '6px', color: '#a8894e', fontSize: '0.78rem', padding: '5px 8px',
+        }}>
+        {rods.map((r) => (
+          <option key={r.id} value={r.id}>{r.display_name || r.rod_type_name}</option>
+        ))}
+      </select>
+    </div>
+  )
 
   return (
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 50,
         background: 'rgba(0,0,0,0.65)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
       }}
       onClick={onClose}
     >
@@ -202,19 +282,15 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
           background: 'rgba(7,18,7,0.5)',
         }}>
           <span style={{ color: '#a8894e', fontSize: '0.92rem' }}>🎒 Управление снастями</span>
-          <button
-            onClick={onClose}
-            style={{ color: '#5c3d1e', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1 }}
-          >
+          <button onClick={onClose}
+            style={{ color: '#5c3d1e', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1 }}>
             ✕
           </button>
         </div>
 
         {/* Вкладки */}
         <div style={{
-          display: 'flex',
-          borderBottom: '1px solid rgba(92,61,30,0.3)',
-          background: 'rgba(7,18,7,0.3)',
+          display: 'flex', borderBottom: '1px solid rgba(92,61,30,0.3)', background: 'rgba(7,18,7,0.3)',
         }}>
           <button style={tabBtn(tab === 'rods')} onClick={() => setTab('rods')}>🎣 Удочки</button>
           <button style={tabBtn(tab === 'tackle')} onClick={() => setTab('tackle')}>🔧 Снасть</button>
@@ -230,9 +306,7 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
               background: error.startsWith('✅') ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)',
               borderRadius: '4px',
               border: `1px solid ${error.startsWith('✅') ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)'}`,
-            }}>
-              {error}
-            </div>
+            }}>{error}</div>
           )}
 
           {/* Вкладка: Удочки */}
@@ -247,9 +321,7 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ color: '#a8894e', fontSize: '0.78rem' }}>
                         Слот {slot}:{' '}
-                        {rod
-                          ? (rod.custom_name || rod.rod_type_name)
-                          : <span style={{ color: '#5c3d1e' }}>— пусто —</span>}
+                        {rod ? (rod.custom_name || rod.rod_type_name) : <span style={{ color: '#5c3d1e' }}>— пусто —</span>}
                       </span>
                       {rod && (
                         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -299,26 +371,18 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
                       </div>
                       <div style={{ display: 'flex', gap: '3px', alignItems: 'center', flexShrink: 0 }}>
                         {rod.durability_current < 100 && (
-                          <button
-                            onClick={() => handleRepair(rod.id)}
+                          <button onClick={() => handleRepair(rod.id)}
                             title={`Ремонт: ${(100 - rod.durability_current) * 5} монет`}
                             style={{
-                              background: 'rgba(251,191,36,0.15)',
-                              border: '1px solid rgba(251,191,36,0.4)',
-                              borderRadius: '4px',
-                              color: '#fbbf24', fontSize: '0.65rem',
+                              background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.4)',
+                              borderRadius: '4px', color: '#fbbf24', fontSize: '0.65rem',
                               padding: '2px 6px', cursor: 'pointer',
-                            }}
-                          >
-                            🔧
-                          </button>
+                            }}>🔧</button>
                         )}
                         {equippedSlot ? (
                           <>
                             {active && <span style={{ color: '#4ade80', fontSize: '0.65rem' }}>🎣</span>}
-                            <button disabled={active} onClick={() => handleUnequip(rod.id)} style={slotBtn(true, active)}>
-                              Снять
-                            </button>
+                            <button disabled={active} onClick={() => handleUnequip(rod.id)} style={slotBtn(true, active)}>Снять</button>
                           </>
                         ) : (
                           <>
@@ -337,26 +401,32 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
             </div>
           )}
 
-          {/* Вкладка: Снасть */}
+          {/* Вкладка: Снасть — визуальные слоты */}
           {tab === 'tackle' && (
             rods.length === 0
               ? <p style={{ color: '#5c3d1e', fontSize: '0.8rem' }}>Нет экипированных готовых удочек</p>
               : (
                 <>
-                  <div style={{ marginBottom: '10px' }}>
-                    <label style={{ color: '#7898b8', fontSize: '0.72rem' }}>Удочка:</label>
-                    <select value={selectedRodId ?? ''} onChange={(e) => setSelectedRodId(Number(e.target.value))} style={selectStyle}>
-                      {rods.map((r) => (
-                        <option key={r.id} value={r.id}>{r.display_name || r.rod_type_name}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {rodSelector}
                   {selectedRod && (
-                    <TackleChangePanel
-                      rod={selectedRod}
-                      onApply={(rodId, updatedRod) => { onChangeTackle(rodId, updatedRod); refreshProfile() }}
-                      onClose={onClose}
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      {allSlots(selectedRod.rod_class).map((type) => {
+                        const isChangeable = changeableTypes(selectedRod.rod_class).includes(type)
+                        return (
+                          <TackleSlot
+                            key={type}
+                            slot={buildSlot(selectedRod, type)}
+                            onClick={isChangeable && !rodInWater ? () => setPickerType(type) : undefined}
+                            disabled={rodInWater}
+                          />
+                        )
+                      })}
+                      {rodInWater && (
+                        <p style={{ color: '#f59e0b', fontSize: '0.68rem', textAlign: 'center', marginTop: '4px' }}>
+                          ⚠️ Нельзя менять снасть — удочка в воде
+                        </p>
+                      )}
+                    </div>
                   )}
                 </>
               )
@@ -368,14 +438,7 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
               ? <p style={{ color: '#5c3d1e', fontSize: '0.8rem' }}>Нет экипированных готовых удочек</p>
               : (
                 <>
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ color: '#7898b8', fontSize: '0.72rem' }}>Удочка:</label>
-                    <select value={selectedRodId ?? ''} onChange={(e) => setSelectedRodId(Number(e.target.value))} style={selectStyle}>
-                      {rods.map((r) => (
-                        <option key={r.id} value={r.id}>{r.display_name || r.rod_type_name}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {rodSelector}
                   {selectedRod && (
                     <div>
                       {selectedRod.rod_class !== 'spinning' && (
@@ -386,8 +449,7 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
                           </div>
                           <input type="range" min={0.5} max={10} step={0.1} value={sliderDepth}
                             onChange={(e) => handleSlider('depth_setting', Number(e.target.value))}
-                            style={{ width: '100%', accentColor: '#3b82f6' }}
-                          />
+                            style={{ width: '100%', accentColor: '#3b82f6' }} />
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
                             <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>0.5 м</span>
                             <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>10 м</span>
@@ -402,8 +464,7 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
                           </div>
                           <input type="range" min={0.5} max={10} step={0.1} value={sliderSpeed}
                             onChange={(e) => handleSlider('retrieve_speed', Number(e.target.value))}
-                            style={{ width: '100%', accentColor: '#3b82f6' }}
-                          />
+                            style={{ width: '100%', accentColor: '#3b82f6' }} />
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
                             <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>медленно</span>
                             <span style={{ color: '#5c3d1e', fontSize: '0.62rem' }}>быстро</span>
@@ -417,6 +478,18 @@ export default function FishingGearModal({ sessions, rods, onUpdateSettings, onC
           )}
         </div>
       </div>
+
+      {/* Picker popup */}
+      {pickerType && (
+        <TacklePickerPopup
+          title={TYPE_LABELS[pickerType] || pickerType}
+          items={pickerItems(pickerType)}
+          allowRemove={selectedRod ? buildSlot(selectedRod, pickerType).itemId !== null : false}
+          onSelect={handleSelectTackle}
+          onRemove={handleRemoveTackle}
+          onClose={() => setPickerType(null)}
+        />
+      )}
     </div>
   )
 }

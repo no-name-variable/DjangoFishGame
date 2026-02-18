@@ -7,19 +7,27 @@ import ChatWindow from '../chat/ChatWindow'
 import PlayerList from '../chat/PlayerList'
 import RodDock from './RodDock'
 import TackleChangePanel from './TackleChangePanel'
+import TackleSlot, { type TackleSlotData } from '../inventory/TackleSlot'
 import type { SessionInfo, FightInfo } from '../../store/fishingStore'
 
 export interface FullRod {
   id: number
+  rod_type?: number
   rod_type_name: string
   display_name: string
   custom_name: string
   rod_class: string
+  reel?: number | null
   reel_name: string | null
+  line?: number | null
   line_name: string | null
+  hook?: number | null
   hook_name: string | null
+  float_tackle?: number | null
   float_name: string | null
+  lure?: number | null
   lure_name: string | null
+  bait?: number | null
   bait_name: string | null
   bait_remaining: number
   durability_current: number
@@ -63,18 +71,23 @@ const rodClassLabel: Record<string, string> = {
   match: '🎯 Матчевая',
 }
 
-function TackleRow({ label, value, valueClass }: {
-  label: string
-  value: string | number | null
-  valueClass?: string
-}) {
-  if (!value && value !== 0) return null
-  return (
-    <>
-      <span className="text-wood-500 text-xs">{label}:</span>
-      <span className={`text-xs ${valueClass || 'text-wood-200'}`}>{value}</span>
-    </>
-  )
+/** Компактные слоты снасти для панели */
+function buildTackleSlots(rod: FullRod): TackleSlotData[] {
+  const slots: TackleSlotData[] = [
+    { type: 'reel', itemId: rod.reel ?? null, name: rod.reel_name },
+    { type: 'line', itemId: rod.line ?? null, name: rod.line_name },
+    { type: 'hook', itemId: rod.hook ?? null, name: rod.hook_name },
+  ]
+  if (rod.rod_class === 'float') {
+    slots.push({ type: 'floattackle', itemId: rod.float_tackle ?? null, name: rod.float_name })
+  }
+  if (rod.rod_class === 'spinning') {
+    slots.push({ type: 'lure', itemId: rod.lure ?? null, name: rod.lure_name })
+  }
+  if (rod.rod_class !== 'spinning') {
+    slots.push({ type: 'bait', itemId: rod.bait ?? null, name: rod.bait_name, remaining: rod.bait_remaining })
+  }
+  return slots
 }
 
 function durabilityColor(d: number): string {
@@ -207,22 +220,15 @@ export default function TacklePanel({
             }} />
           </div>
 
-          {/* Детали в 2 колонки */}
-          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
-            <TackleRow label="Катушка" value={activeRod.reel_name} />
-            <TackleRow label="Леска"   value={activeRod.line_name} />
-            <TackleRow label="Крючок"  value={activeRod.hook_name} />
-            {activeRod.float_name && <TackleRow label="Поплавок" value={activeRod.float_name} />}
-            {activeRod.lure_name  && <TackleRow label="Приманка" value={activeRod.lure_name} />}
-            {activeRod.bait_name && (
-              <TackleRow
-                label="Наживка"
-                value={`${activeRod.bait_name} (${activeRod.bait_remaining})`}
-                valueClass={activeRod.bait_remaining < 5 ? 'text-xs text-red-400' : 'text-xs text-wood-200'}
-              />
-            )}
+          {/* Компактные слоты снастей */}
+          <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '5px' }}>
+            {buildTackleSlots(activeRod).map((slot, i) => (
+              <TackleSlot key={i} slot={slot} size="compact" />
+            ))}
+          </div>
 
-            {/* Слайдер глубины */}
+          {/* Слайдеры */}
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
             {showDepth && (
               <SettingSlider
                 label="Глубина"
@@ -233,7 +239,6 @@ export default function TacklePanel({
               />
             )}
 
-            {/* Слайдер проводки */}
             {showRetrieve && (
               <>
                 <SettingSlider

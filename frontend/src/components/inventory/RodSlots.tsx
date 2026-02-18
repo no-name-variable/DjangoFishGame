@@ -1,8 +1,12 @@
 /**
- * Компонент отображения слотов удочек игрока
+ * Компонент отображения слотов удочек игрока (wood-тема).
  */
 import React from 'react'
 import { usePlayerStore } from '../../store/playerStore'
+
+const ROD_CLASS_LABEL: Record<string, string> = {
+  float: 'Поплавочная', spinning: 'Спиннинг', bottom: 'Донная',
+}
 
 export const RodSlots: React.FC<{ onSelectSlot?: (slotNumber: number) => void; selectedSlot?: number }> = ({
   onSelectSlot,
@@ -13,9 +17,12 @@ export const RodSlots: React.FC<{ onSelectSlot?: (slotNumber: number) => void; s
   if (!player) return null
 
   return (
-    <div className="flex gap-4 p-4 bg-slate-800 rounded-lg">
-      <div className="text-white font-semibold">Слоты удочек:</div>
-
+    <div style={{
+      display: 'flex', gap: '8px', padding: '10px 12px',
+      background: 'rgba(42,26,13,0.35)',
+      border: '1px solid rgba(92,61,30,0.3)',
+      borderRadius: '10px',
+    }}>
       {([1, 2, 3] as const).map((slotNum) => {
         const rodKey = `rod_slot_${slotNum}` as 'rod_slot_1' | 'rod_slot_2' | 'rod_slot_3'
         const rod = player[rodKey]
@@ -25,31 +32,41 @@ export const RodSlots: React.FC<{ onSelectSlot?: (slotNumber: number) => void; s
           <div
             key={slotNum}
             onClick={() => onSelectSlot?.(slotNum)}
-            className={`
-              flex-1 p-4 rounded-lg border-2 transition-all
-              ${isSelected ? 'border-blue-500 bg-blue-900/30' : 'border-slate-600 bg-slate-700'}
-              ${onSelectSlot ? 'cursor-pointer hover:border-blue-400' : ''}
-              ${!rod ? 'border-dashed' : ''}
-            `}
+            style={{
+              flex: 1, padding: '8px 10px', borderRadius: '8px',
+              background: rod
+                ? (isSelected ? 'rgba(92,61,30,0.35)' : 'rgba(13,31,13,0.4)')
+                : 'rgba(13,31,13,0.15)',
+              border: rod
+                ? (isSelected ? '2px solid rgba(168,137,78,0.6)' : '1px solid rgba(92,61,30,0.45)')
+                : '1px dashed rgba(92,61,30,0.3)',
+              cursor: onSelectSlot ? 'pointer' : 'default',
+              transition: 'border-color 0.15s, background 0.15s',
+            }}
           >
-            <div className="text-center">
-              <div className="text-sm text-slate-400 mb-2">Слот {slotNum}</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '0.65rem', color: '#5c3d1e', marginBottom: '4px' }}>
+                Слот {slotNum}
+              </div>
               {rod ? (
                 <div>
-                  <div className="text-white font-medium">
+                  <div style={{
+                    fontFamily: 'Georgia, serif', fontSize: '0.78rem', color: '#d4c5a9',
+                    overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+                  }}>
                     {rod.custom_name || rod.rod_type_name}
                   </div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    {rod.rod_class === 'float' && '🎣 Поплавочная'}
-                    {rod.rod_class === 'spinning' && '🎣 Спиннинг'}
-                    {rod.rod_class === 'bottom' && '🎣 Донная'}
+                  <div style={{ fontSize: '0.62rem', color: '#8b6d3f', marginTop: '2px' }}>
+                    {ROD_CLASS_LABEL[rod.rod_class] ?? rod.rod_class}
                   </div>
                   {!rod.is_ready && (
-                    <div className="text-xs text-orange-400 mt-1">⚠️ Не готова</div>
+                    <div style={{ fontSize: '0.6rem', color: '#f59e0b', marginTop: '2px' }}>
+                      ⚠️ Не готова
+                    </div>
                   )}
                 </div>
               ) : (
-                <div className="text-slate-500 text-sm">Пусто</div>
+                <div style={{ fontSize: '0.75rem', color: '#5c3d1e' }}>Пусто</div>
               )}
             </div>
           </div>

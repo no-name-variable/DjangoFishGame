@@ -1,11 +1,12 @@
 /**
- * Компонент управления удочками - разборка, удаление, экипировка
+ * Компонент управления удочками — разборка, удаление, экипировка (wood-тема).
  */
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { PlayerRod, disassembleRod, deleteRod, equipRod, unequipRod } from '../../api/inventory'
 import { usePlayerStore } from '../../store/playerStore'
 import { getProfile } from '../../api/auth'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 interface RodManagementProps {
   rod: PlayerRod
@@ -14,42 +15,33 @@ interface RodManagementProps {
 
 export const RodManagement: React.FC<RodManagementProps> = ({ rod, onUpdate }) => {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [showEquipMenu, setShowEquipMenu] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
+  const [confirm, setConfirm] = useState<{
+    title: string; message: string; action: () => Promise<void>
+  } | null>(null)
   const { setPlayer, player } = usePlayerStore()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Обновление позиции меню
   const updateMenuPosition = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
-      setMenuPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-      })
+      setMenuPosition({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX })
     }
   }
 
-  // Закрытие меню при клике вне его и обновление позиции при скролле
   useEffect(() => {
     if (!showEquipMenu) return
-
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        buttonRef.current &&
+      if (menuRef.current && buttonRef.current &&
         !menuRef.current.contains(event.target as Node) &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
+        !buttonRef.current.contains(event.target as Node)) {
         setShowEquipMenu(false)
       }
     }
-
-    const handleScroll = () => {
-      updateMenuPosition()
-    }
-
+    const handleScroll = () => updateMenuPosition()
     document.addEventListener('mousedown', handleClickOutside)
     window.addEventListener('scroll', handleScroll, true)
     return () => {
@@ -58,15 +50,11 @@ export const RodManagement: React.FC<RodManagementProps> = ({ rod, onUpdate }) =
     }
   }, [showEquipMenu])
 
-  // Открытие/закрытие меню
   const toggleEquipMenu = () => {
-    if (!showEquipMenu) {
-      updateMenuPosition()
-    }
+    if (!showEquipMenu) updateMenuPosition()
     setShowEquipMenu(!showEquipMenu)
   }
 
-  // Проверяем, в каком слоте находится удочка
   const getEquippedSlot = (): number | null => {
     if (!player) return null
     if (player.rod_slot_1?.id === rod.id) return 1
@@ -77,48 +65,57 @@ export const RodManagement: React.FC<RodManagementProps> = ({ rod, onUpdate }) =
 
   const equippedSlot = getEquippedSlot()
 
-  const handleDisassemble = async () => {
-    if (!confirm('Разобрать удочку? Компоненты вернутся в инвентарь (кроме наживки).')) return
-
-    try {
-      setLoading(true)
-      await disassembleRod(rod.id)
-      const playerData = await getProfile()
-      setPlayer(playerData)
-      onUpdate()
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка разборки')
-    } finally {
-      setLoading(false)
-    }
+  const handleDisassemble = () => {
+    setConfirm({
+      title: 'Разобрать удочку?',
+      message: 'Компоненты вернутся в инвентарь (кроме наживки).',
+      action: async () => {
+        await disassembleRod(rod.id)
+        const playerData = await getProfile()
+        setPlayer(playerData)
+        onUpdate()
+      },
+    })
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Удалить удочку безвозвратно? Компоненты НЕ вернутся в инвентарь!')) return
+  const handleDelete = () => {
+    setConfirm({
+      title: 'Удалить удочку?',
+      message: 'Удочка будет удалена безвозвратно. Компоненты НЕ вернутся!',
+      action: async () => {
+        await deleteRod(rod.id)
+        const playerData = await getProfile()
+        setPlayer(playerData)
+        onUpdate()
+      },
+    })
+  }
 
+  const handleConfirmAction = async () => {
+    if (!confirm) return
+    setLoading(true)
+    setError('')
     try {
-      setLoading(true)
-      await deleteRod(rod.id)
-      const playerData = await getProfile()
-      setPlayer(playerData)
-      onUpdate()
+      await confirm.action()
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка удаления')
+      setError(err.response?.data?.error || 'Ошибка')
     } finally {
       setLoading(false)
+      setConfirm(null)
     }
   }
 
   const handleEquip = async (slot: 1 | 2 | 3) => {
     try {
       setLoading(true)
+      setError('')
       await equipRod(rod.id, slot)
       const playerData = await getProfile()
       setPlayer(playerData)
       setShowEquipMenu(false)
       onUpdate()
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка экипировки')
+      setError(err.response?.data?.error || 'Ошибка экипировки')
     } finally {
       setLoading(false)
     }
@@ -127,79 +124,91 @@ export const RodManagement: React.FC<RodManagementProps> = ({ rod, onUpdate }) =
   const handleUnequip = async () => {
     try {
       setLoading(true)
+      setError('')
       await unequipRod(rod.id)
       const playerData = await getProfile()
       setPlayer(playerData)
       onUpdate()
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка снятия')
+      setError(err.response?.data?.error || 'Ошибка снятия')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex gap-2 mt-2">
-      {equippedSlot ? (
-        <button
-          onClick={handleUnequip}
-          disabled={loading}
-          className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded disabled:opacity-50"
-        >
-          Снять (слот {equippedSlot})
-        </button>
-      ) : (
-        <>
-          <button
-            ref={buttonRef}
-            onClick={toggleEquipMenu}
-            disabled={loading || !rod.is_ready}
-            className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded disabled:opacity-50"
-          >
-            Экипировать
+    <>
+      {error && (
+        <div style={{
+          color: '#f87171', fontSize: '0.68rem', padding: '4px 8px', marginBottom: '4px',
+          background: 'rgba(248,113,113,0.1)', borderRadius: '4px',
+          border: '1px solid rgba(248,113,113,0.2)',
+        }}>{error}</div>
+      )}
+
+      <div className="flex gap-2 mt-2">
+        {equippedSlot ? (
+          <button onClick={handleUnequip} disabled={loading}
+            className="btn btn-secondary text-xs" style={{ minHeight: '30px' }}>
+            Снять (слот {equippedSlot})
           </button>
-          {showEquipMenu &&
-            createPortal(
-              <div
-                ref={menuRef}
-                className="absolute bg-slate-700 border border-slate-600 rounded shadow-lg z-[9999]"
+        ) : (
+          <>
+            <button ref={buttonRef} onClick={toggleEquipMenu} disabled={loading || !rod.is_ready}
+              className="btn btn-primary text-xs" style={{ minHeight: '30px' }}>
+              Экипировать
+            </button>
+            {showEquipMenu && createPortal(
+              <div ref={menuRef}
                 style={{
-                  top: `${menuPosition.top}px`,
-                  left: `${menuPosition.left}px`,
-                }}
-              >
+                  position: 'absolute', zIndex: 9999,
+                  top: `${menuPosition.top}px`, left: `${menuPosition.left}px`,
+                  background: 'rgba(10,20,10,0.97)',
+                  border: '1px solid rgba(92,61,30,0.5)',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+                  overflow: 'hidden',
+                }}>
                 {([1, 2, 3] as const).map((slot) => (
-                  <button
-                    key={slot}
-                    onClick={() => handleEquip(slot)}
-                    className="block w-full px-4 py-2 text-white text-sm hover:bg-slate-600 text-left whitespace-nowrap"
-                  >
+                  <button key={slot} onClick={() => handleEquip(slot)}
+                    style={{
+                      display: 'block', width: '100%', padding: '7px 16px',
+                      color: '#d4c5a9', fontSize: '0.78rem', fontFamily: 'Georgia, serif',
+                      background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(92,61,30,0.25)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}>
                     Слот {slot}
                   </button>
                 ))}
               </div>,
-              document.body
+              document.body,
             )}
-        </>
+          </>
+        )}
+
+        <button onClick={handleDisassemble} disabled={loading || equippedSlot !== null}
+          className="btn btn-secondary text-xs" style={{ minHeight: '30px' }}
+          title={equippedSlot ? 'Сначала снимите из слота' : 'Разобрать удочку'}>
+          Разобрать
+        </button>
+
+        <button onClick={handleDelete} disabled={loading}
+          className="btn btn-danger text-xs" style={{ minHeight: '30px' }}>
+          Удалить
+        </button>
+      </div>
+
+      {confirm && (
+        <ConfirmDialog
+          title={confirm.title}
+          message={confirm.message}
+          danger
+          onConfirm={handleConfirmAction}
+          onCancel={() => setConfirm(null)}
+        />
       )}
-
-      <button
-        onClick={handleDisassemble}
-        disabled={loading || equippedSlot !== null}
-        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded disabled:opacity-50"
-        title={equippedSlot ? 'Сначала снимите из слота' : 'Разобрать удочку'}
-      >
-        Разобрать
-      </button>
-
-      <button
-        onClick={handleDelete}
-        disabled={loading}
-        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded disabled:opacity-50"
-      >
-        Удалить
-      </button>
-    </div>
+    </>
   )
 }
 

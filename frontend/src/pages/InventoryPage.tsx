@@ -1,5 +1,5 @@
 /**
- * Рюкзак — инвентарь, снасти, садок. Улучшенный UI с иконками и прогресс-барами.
+ * Рюкзак — инвентарь, снасти, садок. Улучшенный UI с иконками и модалами.
  */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -8,22 +8,50 @@ import { sellFish } from '../api/shop'
 import { getProfile } from '../api/auth'
 import { usePlayerStore } from '../store/playerStore'
 import { useInventoryStore } from '../store/inventoryStore'
-import RodAssembly from '../components/inventory/RodAssembly'
 import RodSlots from '../components/inventory/RodSlots'
 import RodManagement from '../components/inventory/RodManagement'
+import RodAssemblyModal from '../components/inventory/RodAssemblyModal'
+import RodDetailModal, { type RodData } from '../components/inventory/RodDetailModal'
+import TackleSlot, { type TackleSlotData } from '../components/inventory/TackleSlot'
 import GameImage from '../components/ui/GameImage'
 import { getFallbackUrl } from '../utils/getAssetUrl'
 
 type Tab = 'inventory' | 'rods' | 'creel'
 
 const ROD_CLASS_LABEL: Record<string, string> = {
-  float: '🪣 Поплавочная', spinning: '🌀 Спиннинг', bottom: '⚓ Донная',
+  float: 'Поплавочная', spinning: 'Спиннинг', bottom: 'Донная',
+}
+
+/** Слоты, видимые для класса удочки */
+function compactSlots(rod: RodData): TackleSlotData[] {
+  const slots: TackleSlotData[] = [
+    { type: 'reel', itemId: rod.reel, name: rod.reel_name },
+    { type: 'line', itemId: rod.line, name: rod.line_name },
+    { type: 'hook', itemId: rod.hook, name: rod.hook_name },
+  ]
+  if (rod.rod_class === 'float') {
+    slots.push({ type: 'floattackle', itemId: rod.float_tackle, name: rod.float_name })
+  }
+  if (rod.rod_class === 'spinning') {
+    slots.push({ type: 'lure', itemId: rod.lure, name: rod.lure_name })
+  }
+  if (rod.rod_class !== 'spinning') {
+    slots.push({ type: 'bait', itemId: rod.bait, name: rod.bait_name, remaining: rod.bait_remaining })
+  }
+  return slots
+}
+
+function durabilityColor(d: number): string {
+  if (d > 50) return '#22c55e'
+  if (d > 20) return '#eab308'
+  return '#ef4444'
 }
 
 export default function InventoryPage() {
   const [tab, setTab]               = useState<Tab>('inventory')
   const [message, setMessage]       = useState('')
   const [assembling, setAssembling] = useState(false)
+  const [detailRod, setDetailRod]   = useState<RodData | null>(null)
   const [editingRodId, setEditingRodId] = useState<number | null>(null)
   const [editName, setEditName]     = useState('')
   const [eating, setEating]         = useState<number | null>(null)
@@ -176,31 +204,25 @@ export default function InventoryPage() {
       {/* ── Снасти ── */}
       {tab === 'rods' && (
         <div className="space-y-3">
-          {!assembling && (
-            <button onClick={() => setAssembling(true)} className="btn btn-primary mb-2" style={{ minHeight: '40px' }}>
-              🔧 Собрать удочку
-            </button>
-          )}
-          {assembling && (
-            <RodAssembly
-              items={items}
-              onAssembled={() => { setAssembling(false); setMessage('✅ Удочка собрана!'); loadData() }}
-              onCancel={() => setAssembling(false)}
-            />
-          )}
-          {rods.length === 0 && !assembling && (
+          <button onClick={() => setAssembling(true)} className="btn btn-primary mb-2" style={{ minHeight: '40px' }}>
+            🔧 Собрать удочку
+          </button>
+
+          {rods.length === 0 && (
             <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🎣</div>
               <p style={{ fontSize: '0.85rem' }}>Нет собранных снастей. Соберите удочку!</p>
             </div>
           )}
           {rods.map((rod) => (
-            <div key={rod.id} className="card-large">
+            <div key={rod.id} className="card-large" style={{ cursor: 'pointer' }}
+              onClick={() => setDetailRod(rod as unknown as RodData)}>
               {/* Шапка удочки */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 {editingRodId === rod.id ? (
                   <form
                     style={{ display: 'flex', gap: '6px', flex: 1, marginRight: '8px' }}
+                    onClick={(e) => e.stopPropagation()}
                     onSubmit={async (e) => {
                       e.preventDefault()
                       try { await renameRod(rod.id, editName); setEditingRodId(null); loadData() }
@@ -219,13 +241,14 @@ export default function InventoryPage() {
                   </form>
                 ) : (
                   <h3
-                    style={{ fontFamily: 'Georgia, serif', color: '#d4c5a9', fontSize: '0.9rem', cursor: 'pointer', flex: 1 }}
-                    title="Нажмите для переименования"
-                    onClick={() => { setEditingRodId(rod.id); setEditName(rod.custom_name || '') }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#d4a84a' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '#d4c5a9' }}
+                    style={{ fontFamily: 'Georgia, serif', color: '#d4c5a9', fontSize: '0.9rem', flex: 1 }}
                   >
-                    {rod.display_name} <span style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>✏️</span>
+                    {rod.display_name}
+                    <span
+                      style={{ fontSize: '0.65rem', color: '#5c3d1e', marginLeft: '6px', cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); setEditingRodId(rod.id); setEditName(rod.custom_name || '') }}
+                      title="Переименовать"
+                    >✏️</span>
                   </h3>
                 )}
                 <span className={`badge ${rod.is_ready ? 'badge-green' : 'badge-red'} flex-shrink-0`}>
@@ -234,7 +257,7 @@ export default function InventoryPage() {
               </div>
 
               {rod.custom_name && (
-                <div style={{ fontSize: '0.65rem', color: '#5c3d1e', marginBottom: '8px' }}>
+                <div style={{ fontSize: '0.65rem', color: '#5c3d1e', marginBottom: '6px' }}>
                   {rod.rod_type_name}
                 </div>
               )}
@@ -245,41 +268,30 @@ export default function InventoryPage() {
                   {ROD_CLASS_LABEL[rod.rod_class] ?? rod.rod_class}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>Прочность:</span>
                   <div style={{ width: '50px', height: '5px', borderRadius: '3px',
                     background: 'rgba(13,31,13,0.8)', border: '1px solid rgba(74,49,24,0.4)', overflow: 'hidden' }}>
                     <div style={{
                       width: `${rod.durability_current}%`, height: '100%', borderRadius: '3px',
-                      background: rod.durability_current > 50 ? '#22c55e' : rod.durability_current > 20 ? '#eab308' : '#ef4444',
+                      background: durabilityColor(rod.durability_current),
                     }} />
                   </div>
                   <span style={{
                     fontSize: '0.65rem',
-                    color: rod.durability_current > 50 ? '#22c55e' : rod.durability_current > 20 ? '#eab308' : '#ef4444',
+                    color: durabilityColor(rod.durability_current),
                   }}>{rod.durability_current}%</span>
                 </div>
               </div>
 
-              {/* Характеристики */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', marginBottom: '8px' }}>
-                {[
-                  rod.reel_name  && `⚙️ ${rod.reel_name}`,
-                  rod.line_name  && `🧵 ${rod.line_name}`,
-                  rod.hook_name  && `🪝 ${rod.hook_name}`,
-                  rod.float_name && `🔴 ${rod.float_name}`,
-                  rod.lure_name  && `🪱 ${rod.lure_name}`,
-                  rod.bait_name  && `🪱 ${rod.bait_name} (${rod.bait_remaining})`,
-                  `📐 Глубина: ${rod.depth_setting}м`,
-                  `🔄 Проводка: ${rod.retrieve_speed}/10`,
-                ].filter(Boolean).map((spec, i) => (
-                  <div key={i} style={{ fontSize: '0.68rem', color: '#6b5030',
-                    overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                    {spec}
-                  </div>
+              {/* Компактные слоты снастей */}
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                {compactSlots(rod as unknown as RodData).map((slot, i) => (
+                  <TackleSlot key={i} slot={slot} size="compact" />
                 ))}
               </div>
 
-              <RodManagement rod={rod} onUpdate={loadData} />
+              <div onClick={(e) => e.stopPropagation()}>
+                <RodManagement rod={rod} onUpdate={loadData} />
+              </div>
             </div>
           ))}
         </div>
@@ -288,7 +300,6 @@ export default function InventoryPage() {
       {/* ── Садок ── */}
       {tab === 'creel' && (
         <div>
-          {/* Итоги садка */}
           {creel.length > 0 && (
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap',
@@ -345,6 +356,25 @@ export default function InventoryPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Модал сборки */}
+      {assembling && (
+        <RodAssemblyModal
+          items={items}
+          onAssembled={() => { setAssembling(false); setMessage('✅ Удочка собрана!'); loadData() }}
+          onClose={() => setAssembling(false)}
+        />
+      )}
+
+      {/* Модал детальной удочки */}
+      {detailRod && (
+        <RodDetailModal
+          rod={detailRod}
+          mode="inventory"
+          onClose={() => setDetailRod(null)}
+          onUpdate={() => { loadData(); setDetailRod(null) }}
+        />
       )}
     </div>
   )
