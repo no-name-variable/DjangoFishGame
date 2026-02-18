@@ -87,9 +87,17 @@ def _fight_action(player, session_id, action_func) -> FightActionResult:
         if result == 'rod_break':
             rod.durability_current = 0
         else:
-            # Обрыв лески тоже изнашивает удилище
             rod.durability_current = max(0, int(fight.rod_durability))
-        rod.save(update_fields=['durability_current'])
+            # Обрыв лески — теряем леску, крючок и наживку
+            rod.line = None
+            rod.hook = None
+            rod.bait = None
+            rod.bait_remaining = 0
+            rod.is_assembled = False
+        rod.save(update_fields=[
+            'durability_current', 'line', 'hook', 'bait',
+            'bait_remaining', 'is_assembled',
+        ])
         session.delete()
         return FightActionResult(result=result, session_id=session_id)
 

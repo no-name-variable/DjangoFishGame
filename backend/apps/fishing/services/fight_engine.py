@@ -1,8 +1,21 @@
 """Движок вываживания рыбы."""
 
+import math
 import random
 
 from apps.fishing.models import FightState
+
+# Нормализованная сила рыбы: 1–10 (логарифмическая шкала)
+_RARITY_MULT = {
+    'common': 1.0, 'uncommon': 1.2, 'rare': 1.5,
+    'trophy': 2.0, 'legendary': 3.0,
+}
+
+
+def _normalized_strength(fish_weight, rarity):
+    """Сила рыбы 1–10: лог. шкала от веса × редкость."""
+    raw = fish_weight * _RARITY_MULT.get(rarity, 1.0)
+    return min(max(1.0 + math.log1p(raw) * 2.0, 1.0), 10.0)
 
 
 class FightEngineService:
@@ -10,12 +23,7 @@ class FightEngineService:
 
     def create_fight(self, session, fish_weight, fish_species):
         """Создать состояние вываживания."""
-        # Сила рыбы зависит от веса и редкости
-        rarity_mult = {
-            'common': 1.0, 'uncommon': 1.2, 'rare': 1.5,
-            'trophy': 2.0, 'legendary': 3.0,
-        }
-        strength = fish_weight * 3 * rarity_mult.get(fish_species.rarity, 1.0)
+        strength = _normalized_strength(fish_weight, fish_species.rarity)
 
         # Дистанция зависит от точки заброса (упрощённо — от 10 до 30 м)
         distance = random.uniform(10, 30)
@@ -36,16 +44,15 @@ class FightEngineService:
         """
         rod = fight.session.rod
 
-        # Тяга катушки
+        # Тяга катушки (3–8 кг) → подтяжка 0.3–1.2 м
         reel_power = rod.reel.drag_power if rod.reel else 2.0
-        pull_distance = reel_power * random.uniform(0.5, 1.5)
+        pull_distance = (reel_power / 8) * random.uniform(0.3, 1.2)
         fight.distance = max(0, fight.distance - pull_distance)
 
-        # Натяжение увеличивается (без жёсткого кепа — может превысить 100)
-        tension_add = fight.fish_strength * random.uniform(0.3, 1.0)
+        # Натяжение: +3..8 в зависимости от силы рыбы (1–10)
+        tension_add = 2 + fight.fish_strength * random.uniform(0.1, 0.6)
         fight.line_tension += tension_add
 
-        # Рыба сопротивляется
         _fish_action(fight)
 
         fight.save()
@@ -55,11 +62,11 @@ class FightEngineService:
         """Подтяжка удилищем — сильнее приближает, больше нагрузка."""
         rod = fight.session.rod
         reel_power = rod.reel.drag_power if rod.reel else 2.0
-        pull_distance = reel_power * random.uniform(1.0, 2.0)
+        pull_distance = (reel_power / 8) * random.uniform(0.8, 2.0)
         fight.distance = max(0, fight.distance - pull_distance)
 
-        # Больше натяжение (без жёсткого кепа)
-        tension_add = fight.fish_strength * random.uniform(0.5, 1.5)
+        # Больше натяжение: +5..12
+        tension_add = 4 + fight.fish_strength * random.uniform(0.2, 0.8)
         fight.line_tension += tension_add
 
         # Износ удилища
@@ -81,9 +88,9 @@ class FightEngineService:
 def _fish_action(fight):
     """Рывок рыбы (автоматический)."""
     if random.random() < 0.3:
-        # Рывок — увеличивает дистанцию и натяжение
-        fight.distance += fight.fish_strength * random.uniform(0.5, 2.0)
-        fight.line_tension += random.uniform(5, 15)
+        # Рывок: +0.5..3 м дистанции, +3..8 натяжения
+        fight.distance += random.uniform(0.5, 1.0) + fight.fish_strength * 0.2
+        fight.line_tension += random.uniform(3, 5) + fight.fish_strength * 0.3
 
     # Естественное снижение натяжения
     fight.line_tension = max(0, fight.line_tension - 2)
