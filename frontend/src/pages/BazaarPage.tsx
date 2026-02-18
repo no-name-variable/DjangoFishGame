@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { buyListing, cancelListing, createListing, getListings, getMyListings } from '../api/bazaar'
 import { getInventory } from '../api/player'
+import { useSound } from '../hooks/useSound'
 import GameImage from '../components/ui/GameImage'
 import { getFallbackUrl } from '../utils/getAssetUrl'
 
@@ -46,6 +47,7 @@ export default function BazaarPage() {
   const [sellQuantity, setSellQuantity] = useState(1)
   const [sellPrice, setSellPrice]     = useState(100)
   const [creating, setCreating]       = useState(false)
+  const { play } = useSound()
 
   const loadMarket = () => {
     setLoading(true)
@@ -65,7 +67,7 @@ export default function BazaarPage() {
 
   const handleBuy = async (id: number) => {
     setBuying(id)
-    try { await buyListing(id); setMsg('✅ Покупка успешна!'); loadMarket() }
+    try { await buyListing(id); play('buy'); setMsg('✅ Покупка успешна!'); loadMarket() }
     catch (e: unknown) { setMsg(`⚠️ ${(e as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Ошибка'}`) }
     finally { setBuying(null) }
   }
@@ -91,6 +93,7 @@ export default function BazaarPage() {
     setCreating(true)
     try {
       await createListing(selectedItem.item_type, selectedItem.object_id, sellQuantity, sellPrice)
+      play('coin')
       setMsg('✅ Лот создан!')
       setShowCreateModal(false); setSelectedItem(null); setSellQuantity(1); setSellPrice(100)
       loadMy()

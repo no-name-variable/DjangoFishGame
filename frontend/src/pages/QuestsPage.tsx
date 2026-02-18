@@ -3,6 +3,7 @@
  */
 import { useEffect, useState } from 'react'
 import { acceptQuest, claimQuestReward, getAvailableQuests, getPlayerQuests } from '../api/quests'
+import { useSound } from '../hooks/useSound'
 
 interface Quest {
   id: number; name: string; description: string; quest_type: string
@@ -25,6 +26,7 @@ export default function QuestsPage() {
   const [tab, setTab]             = useState<'my' | 'available'>('my')
   const [loading, setLoading]     = useState(true)
   const [claiming, setClaiming]   = useState<number | null>(null)
+  const { play } = useSound()
 
   const load = () => {
     setLoading(true)
@@ -40,7 +42,7 @@ export default function QuestsPage() {
   const handleAccept = async (id: number) => { await acceptQuest(id); load() }
   const handleClaim  = async (id: number) => {
     setClaiming(id)
-    try { await claimQuestReward(id); load() }
+    try { await claimQuestReward(id); play('quest_complete'); load() }
     finally { setClaiming(null) }
   }
 

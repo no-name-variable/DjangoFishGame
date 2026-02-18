@@ -3,6 +3,7 @@
  */
 import { useEffect, useState } from 'react'
 import { craftPotion, getActivePotions, getMyStars, getPotions } from '../api/potions'
+import { useSound } from '../hooks/useSound'
 
 interface Star         { color: string; name: string; quantity: number }
 interface Potion       { id: number; name: string; description: string; effect_type: string; effect_value: number; karma_cost: number; duration_hours: number; required_stars: Record<string, number>; is_one_time: boolean; can_craft: boolean }
@@ -27,6 +28,7 @@ export default function PotionsPage() {
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [crafting, setCrafting] = useState<number | null>(null)
+  const { play } = useSound()
 
   const load = () => {
     setLoading(true)
@@ -38,7 +40,7 @@ export default function PotionsPage() {
 
   const handleCraft = async (id: number) => {
     setCrafting(id)
-    try { const res = await craftPotion(id); setMessage(`✅ ${res.data.message}`); load() }
+    try { const res = await craftPotion(id); play('craft'); setMessage(`✅ ${res.data.message}`); load() }
     catch (e: unknown) { setMessage(`⚠️ ${(e as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Ошибка'}`) }
     finally { setCrafting(null) }
   }

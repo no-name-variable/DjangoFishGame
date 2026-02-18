@@ -8,6 +8,7 @@ import { sellFish } from '../api/shop'
 import { getProfile } from '../api/auth'
 import { usePlayerStore } from '../store/playerStore'
 import { useInventoryStore } from '../store/inventoryStore'
+import { useSound } from '../hooks/useSound'
 import RodSlots from '../components/inventory/RodSlots'
 import RodManagement from '../components/inventory/RodManagement'
 import RodAssemblyModal from '../components/inventory/RodAssemblyModal'
@@ -54,9 +55,10 @@ export default function InventoryPage() {
 
   const { items, rods, creel, setItems, setRods, setCreel } = useInventoryStore()
   const setPlayer = usePlayerStore((s) => s.setPlayer)
+  const { play } = useSound()
   const navigate  = useNavigate()
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { play('open_pack'); loadData() }, [])
 
   const loadData = async () => {
     try {
@@ -74,6 +76,7 @@ export default function InventoryPage() {
     setSelling(true)
     try {
       const result = await sellFish(creel.map((f) => f.id))
+      play('sell_fish')
       setMessage(`✅ Продано ${result.fish_sold} рыб за ${result.money_earned}$`)
       setCreel([])
       const profile = await getProfile()
@@ -86,6 +89,7 @@ export default function InventoryPage() {
     setEating(objectId)
     try {
       await eat(objectId)
+      play('eat')
       setMessage('✅ Вы перекусили! Сытость восстановлена.')
       loadData()
       const profile = await getProfile()
@@ -357,7 +361,7 @@ export default function InventoryPage() {
       {assembling && (
         <RodAssemblyModal
           items={items}
-          onAssembled={() => { setAssembling(false); setMessage('✅ Удочка собрана!'); loadData() }}
+          onAssembled={() => { setAssembling(false); play('equip'); setMessage('✅ Удочка собрана!'); loadData() }}
           onClose={() => setAssembling(false)}
         />
       )}

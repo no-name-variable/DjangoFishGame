@@ -41,8 +41,9 @@ export default function FishingPage() {
   const waterRef = useRef<HTMLDivElement>(null)
   const lastCastRodClassRef = useRef<string | null>(null)
   const { play } = useSound()
+  const gt = useFishingStore((s) => s.gameTime)
 
-  useAmbience(!!player?.current_location)
+  useAmbience(!!player?.current_location, gt?.time_of_day)
 
   // WebSocket — колбэки для событий
   const { send, connected } = useFishingSocket({
@@ -57,6 +58,7 @@ export default function FishingPage() {
       setMessage('🎣 Заброс! Ожидаем поклёвку...')
     },
     onStrikeOk: (data) => {
+      play('strike')
       setMessage(`На крючке: ${data.fish}! Вываживай!`)
     },
     onCaught: (data) => {
@@ -72,7 +74,7 @@ export default function FishingPage() {
       setMessage('Рыба поймана!')
     },
     onBreak: (result) => {
-      play('break')
+      play(result === 'line_break' ? 'line_break' : 'break')
       setMessage(result === 'line_break' ? 'Обрыв лески!' : 'Удилище сломалось!')
     },
     onKeepResult: (data) => {
@@ -191,7 +193,7 @@ export default function FishingPage() {
     if (!activeSessionId) return
     const wsAction = action === 'reel' ? 'reel_in' : 'pull'
     send(wsAction, { session_id: activeSessionId })
-    if (action === 'reel') play('reel')
+    play(action === 'reel' ? 'reel' : 'pull')
   }, [activeSessionId, send, play])
 
   const handleKeep = useCallback(() => {
@@ -285,7 +287,6 @@ export default function FishingPage() {
     }
   }, [activeSessionId, sessions, handleFightAction, handleStrike, send, selectedRodId, rods, setActiveSession, setSelectedRodId])
 
-  const gt = useFishingStore((s) => s.gameTime)
   const timeLabels: Record<string, string> = {
     morning: 'Утро', day: 'День', evening: 'Вечер', night: 'Ночь',
   }

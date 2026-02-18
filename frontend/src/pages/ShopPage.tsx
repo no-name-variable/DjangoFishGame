@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { getShopCategory, buyItem } from '../api/shop'
 import { getProfile } from '../api/auth'
 import { usePlayerStore } from '../store/playerStore'
+import { useSound } from '../hooks/useSound'
 import GameImage from '../components/ui/GameImage'
 import { getFallbackUrl } from '../utils/getAssetUrl'
 
@@ -41,7 +42,10 @@ export default function ShopPage() {
   const [message, setMessage]   = useState('')
   const [buying, setBuying]     = useState<number | null>(null)
   const setPlayer = usePlayerStore((s) => s.setPlayer)
+  const { play } = useSound()
   const navigate  = useNavigate()
+
+  useEffect(() => { play('open_store') }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -54,6 +58,7 @@ export default function ShopPage() {
     setBuying(item.id)
     try {
       const result = await buyItem(itemTypeMap[category], item.id)
+      play('buy')
       setMessage(`✅ Куплено: ${item.name}. Осталось ${result.money_left}$`)
       const profile = await getProfile()
       setPlayer(profile)
