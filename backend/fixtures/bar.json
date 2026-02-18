@@ -1,0 +1,57 @@
+[
+  {
+    "model": "bar.bardrink",
+    "pk": 1,
+    "fields": {
+      "name": "Светлое пиво",
+      "description": "Лёгкое освежающее пиво — идеальный выбор после рыбалки.",
+      "price": "15.00",
+      "satiety": 5,
+      "image": ""
+    }
+  },
+  {
+    "model": "bar.bardrink",
+    "pk": 2,
+    "fields": {
+      "name": "Тёмное пиво",
+      "description": "Насыщенное тёмное пиво с карамельными нотками.",
+      "price": "20.00",
+      "satiety": 8,
+      "image": ""
+    }
+  },
+  {
+    "model": "bar.bardrink",
+    "pk": 3,
+    "fields": {
+      "name": "Нефильтрованное",
+      "description": "Мутное живое пиво с мягким вкусом.",
+      "price": "25.00",
+      "satiety": 10,
+      "image": ""
+    }
+  },
+  {
+    "model": "bar.bardrink",
+    "pk": 4,
+    "fields": {
+      "name": "Медовуха",
+      "description": "Крепкий медовый напиток по старинному рецепту.",
+      "price": "35.00",
+      "satiety": 15,
+      "image": ""
+    }
+  },
+  {
+    "model": "bar.bardrink",
+    "pk": 5,
+    "fields": {
+      "name": "Квас",
+      "description": "Холодный хлебный квас — бодрит и утоляет жажду.",
+      "price": "10.00",
+      "satiety": 12,
+      "image": ""
+    }
+  }
+]

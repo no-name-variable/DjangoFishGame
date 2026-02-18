@@ -57,7 +57,8 @@ loaddata:          ## Загрузить фикстуры + картинки
 		fixtures/world_expansion.json \
 		fixtures/quests.json \
 		fixtures/achievements.json \
-		fixtures/potions.json
+		fixtures/potions.json \
+		fixtures/bar.json
 	$(BACK) python manage.py load_images
 
 static:            ## Собрать статику Django (для админки)

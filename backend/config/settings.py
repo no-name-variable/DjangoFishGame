@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.bazaar',
     'apps.cafe',
     'apps.home',
+    'apps.bar',
     'channels',
 ]
 

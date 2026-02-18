@@ -44,13 +44,13 @@ class FightEngineService:
         """
         rod = fight.session.rod
 
-        # Тяга катушки (3–8 кг) → подтяжка 0.3–1.2 м
+        # Тяга катушки → подтяжка ~1 м (слабая катушка) .. ~2 м (сильная)
         reel_power = rod.reel.drag_power if rod.reel else 2.0
-        pull_distance = (reel_power / 8) * random.uniform(0.3, 1.2)
+        pull_distance = (reel_power / 6) * random.uniform(0.8, 1.8)
         fight.distance = max(0, fight.distance - pull_distance)
 
-        # Натяжение: +3..8 в зависимости от силы рыбы (1–10)
-        tension_add = 2 + fight.fish_strength * random.uniform(0.1, 0.6)
+        # Натяжение: +1..4 в зависимости от силы рыбы (1–10)
+        tension_add = 1 + fight.fish_strength * random.uniform(0.1, 0.5)
         fight.line_tension += tension_add
 
         _fish_action(fight)
@@ -62,11 +62,11 @@ class FightEngineService:
         """Подтяжка удилищем — сильнее приближает, больше нагрузка."""
         rod = fight.session.rod
         reel_power = rod.reel.drag_power if rod.reel else 2.0
-        pull_distance = (reel_power / 8) * random.uniform(0.8, 2.0)
+        pull_distance = (reel_power / 6) * random.uniform(1.5, 3.0)
         fight.distance = max(0, fight.distance - pull_distance)
 
-        # Больше натяжение: +5..12
-        tension_add = 4 + fight.fish_strength * random.uniform(0.2, 0.8)
+        # Больше натяжение: +3..9
+        tension_add = 2 + fight.fish_strength * random.uniform(0.2, 0.7)
         fight.line_tension += tension_add
 
         # Износ удилища
@@ -79,7 +79,7 @@ class FightEngineService:
 
     def wait_action(self, fight):
         """Ожидание — натяжение снижается, рыба может дёрнуть."""
-        fight.line_tension = max(0, fight.line_tension - 5)
+        fight.line_tension = max(0, fight.line_tension - 8)
         _fish_action(fight)
         fight.save()
         return _check_result(fight)
@@ -87,16 +87,16 @@ class FightEngineService:
 
 def _fish_action(fight):
     """Рывок рыбы (автоматический)."""
-    if random.random() < 0.3:
-        # Рывок: +0.5..3 м дистанции, +3..8 натяжения
-        fight.distance += random.uniform(0.5, 1.0) + fight.fish_strength * 0.2
-        fight.line_tension += random.uniform(3, 5) + fight.fish_strength * 0.3
+    if random.random() < 0.2:
+        # Рывок: дистанция +0.5..2.5 м, натяжение +2..6
+        fight.distance += random.uniform(0.3, 0.8) + fight.fish_strength * 0.15
+        fight.line_tension += random.uniform(1.5, 3.5) + fight.fish_strength * 0.2
 
     # Естественное снижение натяжения
     fight.line_tension = max(0, fight.line_tension - 2)
 
     # Рыба устаёт со временем
-    fight.fish_strength = max(fight.fish_strength * 0.98, 1.0)
+    fight.fish_strength = max(fight.fish_strength * 0.97, 1.0)
 
 
 def _check_result(fight):

@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/', include('apps.bazaar.urls')),
     path('api/', include('apps.cafe.urls')),
     path('api/', include('apps.home.urls')),
+    path('api/', include('apps.bar.urls')),
 ]
 
 if settings.DEBUG:

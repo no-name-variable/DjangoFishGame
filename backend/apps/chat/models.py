@@ -10,6 +10,7 @@ class ChatMessage(models.Model):
         LOCATION = 'location', 'Локация'
         BASE = 'base', 'База'
         GLOBAL = 'global', 'Общий'
+        BAR = 'bar', 'Бар'
 
     player = models.ForeignKey('accounts.Player', on_delete=models.CASCADE, related_name='messages')
     channel = models.CharField('Канал', max_length=20, choices=Channel.choices, default=Channel.LOCATION)

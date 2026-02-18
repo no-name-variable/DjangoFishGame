@@ -21,6 +21,7 @@ const coreItems: MenuItem[] = [
   { label: 'Магазин снастей', path: '/shop',      icon: '🛒', desc: 'Купить снаряжение'       },
   { label: 'Кафе',            path: '/cafe',      icon: '☕', desc: 'Заказы за премиум-цену'   },
   { label: 'Дом',             path: '/house',     icon: '🏠', desc: 'Самогонный аппарат'       },
+  { label: 'Бар',             path: '/bar',       icon: '🍺', desc: 'Пиво и общение'           },
 ]
 
 const socialItems: MenuItem[] = [

@@ -18,6 +18,7 @@ import WorldMapPage from './pages/WorldMapPage'
 import BazaarPage from './pages/BazaarPage'
 import CafePage from './pages/CafePage'
 import HousePage from './pages/HousePage'
+import BarPage from './pages/BarPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = usePlayerStore((s) => s.token)
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/bazaar" element={<ProtectedRoute><BazaarPage /></ProtectedRoute>} />
             <Route path="/cafe" element={<ProtectedRoute><CafePage /></ProtectedRoute>} />
             <Route path="/house" element={<ProtectedRoute><HousePage /></ProtectedRoute>} />
+            <Route path="/bar" element={<ProtectedRoute><BarPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </GameLayout>

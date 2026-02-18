@@ -24,6 +24,8 @@ def _build_container() -> punq.Container:
     from apps.cafe.use_cases.get_orders import GetCafeOrdersUseCase
     from apps.home.services import MoonshineService
     from apps.home.use_cases.collect_moonshine import CollectMoonshineUseCase
+    from apps.bar.use_cases.order_drink import OrderDrinkUseCase
+    from apps.bar.use_cases.prepare_snack import PrepareSnackUseCase
     from apps.home.use_cases.start_brewing import StartBrewingUseCase
     from apps.inspection.services import InspectionService
     from apps.inventory.use_cases.assemble_rod import AssembleRodUseCase
@@ -117,6 +119,10 @@ def _build_container() -> punq.Container:
     # Use cases — home
     container.register(StartBrewingUseCase)
     container.register(CollectMoonshineUseCase)
+
+    # Use cases — bar
+    container.register(OrderDrinkUseCase)
+    container.register(PrepareSnackUseCase)
 
     return container
 

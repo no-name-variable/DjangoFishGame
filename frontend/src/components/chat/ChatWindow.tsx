@@ -12,12 +12,13 @@ interface ChatMessage {
 }
 
 interface Props {
-  channelType: 'location' | 'base' | 'global'
+  channelType: 'location' | 'base' | 'global' | 'bar'
   channelId: number
   className?: string
+  onMembersChange?: (members: string[]) => void
 }
 
-export default function ChatWindow({ channelType, channelId, className }: Props) {
+export default function ChatWindow({ channelType, channelId, className, onMembersChange }: Props) {
   const token = usePlayerStore((s) => s.token)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -46,6 +47,8 @@ export default function ChatWindow({ channelType, channelId, className }: Props)
         setMessages(data.messages)
       } else if (data.type === 'message') {
         setMessages((prev) => [...prev, data])
+      } else if (data.type === 'members') {
+        onMembersChange?.(data.members)
       }
     }
 
@@ -68,7 +71,7 @@ export default function ChatWindow({ channelType, channelId, className }: Props)
     <div className={`card flex flex-col ${className || 'h-64'}`}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-serif text-sm text-wood-200">
-          Чат {channelType === 'location' ? 'локации' : channelType === 'base' ? 'базы' : 'общий'}
+          Чат {channelType === 'location' ? 'локации' : channelType === 'base' ? 'базы' : channelType === 'bar' ? 'бара' : 'общий'}
         </h3>
         <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
       </div>

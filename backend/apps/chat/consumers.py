@@ -9,6 +9,9 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     """WebSocket consumer для чата локации/базы/глобального."""
 
+    # Онлайн-участники по комнатам: {room_group: {channel_name: nickname}}
+    _online = {}
+
     async def connect(self):
         self.channel_type = self.scope['url_route']['kwargs'].get('channel_type', 'global')
         self.channel_id = self.scope['url_route']['kwargs'].get('channel_id', 0)
@@ -31,9 +34,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         messages = await self._get_recent_messages()
         await self.send_json({'type': 'history', 'messages': messages})
 
+        # Трекинг присутствия
+        if self.room_group not in self._online:
+            self._online[self.room_group] = {}
+        self._online[self.room_group][self.channel_name] = self.player.nickname
+        await self._broadcast_members()
+
     async def disconnect(self, code):
         if hasattr(self, 'room_group'):
+            # Убрать из онлайн-списка
+            room = self._online.get(self.room_group)
+            if room:
+                room.pop(self.channel_name, None)
+                if not room:
+                    self._online.pop(self.room_group, None)
             await self.channel_layer.group_discard(self.room_group, self.channel_name)
+            await self._broadcast_members()
 
     async def receive_json(self, content):
         text = content.get('text', '').strip()
@@ -52,6 +68,18 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def chat_message(self, event):
         await self.send_json({'type': 'message', **event['message']})
+
+    async def chat_members(self, event):
+        await self.send_json({'type': 'members', 'members': event['members']})
+
+    async def _broadcast_members(self):
+        """Рассылает список онлайн-участников комнаты."""
+        room = self._online.get(self.room_group, {})
+        members = sorted(set(room.values()))
+        await self.channel_layer.group_send(
+            self.room_group,
+            {'type': 'chat.members', 'members': members},
+        )
 
     @database_sync_to_async
     def _get_player(self, user):
