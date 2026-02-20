@@ -53,7 +53,7 @@ export default function WorldMapPage() {
       {msg && (
         <div className="wood-panel px-3 py-2 mb-3 text-sm" style={{ color: '#f87171', display: 'flex', gap: '6px' }}>
           ⚠️ {msg}
-          <button style={{ marginLeft: 'auto', color: '#5c3d1e' }} onClick={() => setMsg('')}>✖</button>
+          <button style={{ marginLeft: 'auto', color: '#a8894e' }} onClick={() => setMsg('')}>✖</button>
         </div>
       )}
 
@@ -105,7 +105,7 @@ export default function WorldMapPage() {
                     ? '#d4a84a'
                     : isSel
                       ? '#7898b8'
-                      : canGo ? '#3a6088' : '#5c3d1e',
+                      : canGo ? '#3a6088' : '#a8894e',
                   border: `2px solid ${isCur ? '#d4a84a' : isSel ? '#7898b8' : canGo ? '#5078a0' : '#4a3118'}`,
                   boxShadow: isCur
                     ? '0 0 12px rgba(212,168,74,0.6)'
@@ -119,7 +119,7 @@ export default function WorldMapPage() {
                 <span style={{
                   fontSize: '0.58rem',
                   whiteSpace: 'nowrap',
-                  color: isCur ? '#d4a84a' : isSel ? '#7898b8' : canGo ? '#a8894e' : '#5c3d1e',
+                  color: isCur ? '#d4a84a' : isSel ? '#7898b8' : canGo ? '#a8894e' : '#a8894e',
                   fontFamily: 'Georgia, serif',
                   background: 'rgba(7,18,7,0.7)',
                   padding: '0 4px', borderRadius: '3px',
@@ -141,7 +141,7 @@ export default function WorldMapPage() {
             {[
               { color: '#d4a84a', label: 'Вы здесь' },
               { color: '#3a6088', label: 'Доступно' },
-              { color: '#5c3d1e', label: 'Недоступно' },
+              { color: '#a8894e', label: 'Недоступно' },
             ].map((l) => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.55rem', color: '#8b6d3f' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: l.color, flexShrink: 0 }} />
@@ -159,10 +159,10 @@ export default function WorldMapPage() {
             <div>
               <h2 className="gold-text text-lg">{selected.name}</h2>
               {selected.description && (
-                <p style={{ fontSize: '0.75rem', color: '#6b5030', marginTop: '2px' }}>{selected.description}</p>
+                <p style={{ fontSize: '0.75rem', color: '#8b6d3f', marginTop: '2px' }}>{selected.description}</p>
               )}
             </div>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5c3d1e', fontSize: '1rem', padding: '4px' }}
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a8894e', fontSize: '1rem', padding: '4px' }}
               onClick={() => setSelected(null)}>✖</button>
           </div>
 
@@ -232,11 +232,11 @@ export default function WorldMapPage() {
                   {isCurrentBase(b) && <span className="gold-text" style={{ fontSize: '0.7rem', marginLeft: '6px' }}>(текущая)</span>}
                 </h3>
               </div>
-              <p style={{ fontSize: '0.65rem', color: '#5c3d1e', marginTop: '2px', marginLeft: '18px' }}>
+              <p style={{ fontSize: '0.65rem', color: '#a8894e', marginTop: '2px', marginLeft: '18px' }}>
                 ⭐ {b.min_rank}+ · 🗺️ {b.locations_count} лок. · 💰 {b.travel_cost}$
               </p>
             </div>
-            <span style={{ color: '#5c3d1e', fontSize: '0.8rem', flexShrink: 0 }}>›</span>
+            <span style={{ color: '#a8894e', fontSize: '0.8rem', flexShrink: 0 }}>›</span>
           </div>
         ))}
       </div>

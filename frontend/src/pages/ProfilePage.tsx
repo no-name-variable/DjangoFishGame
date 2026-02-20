@@ -108,7 +108,7 @@ export default function ProfilePage() {
                 padding: '10px', borderRadius: '8px',
                 background: 'rgba(13,31,13,0.4)', border: '1px solid rgba(74,49,24,0.3)',
               }}>
-                <div style={{ fontSize: '0.65rem', color: '#5c3d1e', marginBottom: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ fontSize: '0.65rem', color: '#a8894e', marginBottom: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span>{item.icon}</span> {item.label}
                 </div>
                 <div style={{ color: item.color, fontFamily: 'Georgia, serif', fontSize: '1rem', fontWeight: 'bold' }}>
@@ -136,15 +136,15 @@ export default function ProfilePage() {
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', color: '#d4c5a9', marginBottom: '2px' }}>
                   {pa.achievement.name}
                 </h3>
-                <p style={{ fontSize: '0.72rem', color: '#6b5030' }}>{pa.achievement.description}</p>
+                <p style={{ fontSize: '0.72rem', color: '#8b6d3f' }}>{pa.achievement.description}</p>
               </div>
-              <div style={{ fontSize: '0.65rem', color: '#5c3d1e', flexShrink: 0, textAlign: 'right' }}>
+              <div style={{ fontSize: '0.65rem', color: '#a8894e', flexShrink: 0, textAlign: 'right' }}>
                 📅 {new Date(pa.unlocked_at).toLocaleDateString('ru')}
               </div>
             </div>
           ))}
           {achievements.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+            <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🏅</div>
               <p style={{ fontSize: '0.85rem' }}>Достижений пока нет. Рыбачьте!</p>
             </div>
@@ -167,15 +167,15 @@ export default function ProfilePage() {
                   <td style={{ fontFamily: 'Georgia, serif', color: '#d4c5a9' }}>{j.species_name}</td>
                   <td><span className="gold-text">{j.weight.toFixed(2)} кг</span></td>
                   <td style={{ color: '#a8894e' }}>{j.length.toFixed(1)} см</td>
-                  <td style={{ color: '#5c3d1e' }}>{j.location_name ?? '—'}</td>
-                  <td style={{ color: '#5c3d1e', fontSize: '0.72rem' }}>
+                  <td style={{ color: '#a8894e' }}>{j.location_name ?? '—'}</td>
+                  <td style={{ color: '#a8894e', fontSize: '0.72rem' }}>
                     {new Date(j.caught_at).toLocaleDateString('ru')}
                   </td>
                 </tr>
               ))}
               {journal.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: '#5c3d1e' }}>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: '#a8894e' }}>
                     <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>🎣</div>
                     Журнал пуст — начните ловить!
                   </td>

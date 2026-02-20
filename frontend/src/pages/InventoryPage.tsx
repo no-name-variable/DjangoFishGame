@@ -121,7 +121,7 @@ export default function InventoryPage() {
           display: 'flex', gap: '6px', alignItems: 'center',
         }}>
           {message}
-          <button style={{ marginLeft: 'auto', color: '#5c3d1e' }} onClick={() => setMessage('')}>✖</button>
+          <button style={{ marginLeft: 'auto', color: '#a8894e' }} onClick={() => setMessage('')}>✖</button>
         </div>
       )}
 
@@ -154,7 +154,7 @@ export default function InventoryPage() {
       {tab === 'inventory' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
           {items.length === 0 && (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#a8894e' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📦</div>
               <p style={{ fontSize: '0.85rem' }}>Инвентарь пуст</p>
             </div>
@@ -180,7 +180,7 @@ export default function InventoryPage() {
                     overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                     {item.item_name}
                   </div>
-                  <div style={{ fontSize: '0.62rem', color: '#5c3d1e', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.62rem', color: '#a8894e', marginTop: '2px' }}>
                     x{item.quantity} шт.
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export default function InventoryPage() {
           </button>
 
           {rods.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+            <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🎣</div>
               <p style={{ fontSize: '0.85rem' }}>Нет собранных снастей. Соберите удочку!</p>
             </div>
@@ -244,7 +244,7 @@ export default function InventoryPage() {
                   >
                     {rod.display_name}
                     <span
-                      style={{ fontSize: '0.65rem', color: '#5c3d1e', marginLeft: '6px', cursor: 'pointer' }}
+                      style={{ fontSize: '0.65rem', color: '#a8894e', marginLeft: '6px', cursor: 'pointer' }}
                       onClick={(e) => { e.stopPropagation(); setEditingRodId(rod.id); setEditName(rod.custom_name || '') }}
                       title="Переименовать"
                     >✏️</span>
@@ -256,7 +256,7 @@ export default function InventoryPage() {
               </div>
 
               {rod.custom_name && (
-                <div style={{ fontSize: '0.65rem', color: '#5c3d1e', marginBottom: '6px' }}>
+                <div style={{ fontSize: '0.65rem', color: '#a8894e', marginBottom: '6px' }}>
                   {rod.rod_type_name}
                 </div>
               )}
@@ -318,7 +318,7 @@ export default function InventoryPage() {
 
           <div className="space-y-2">
             {creel.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+              <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🐟</div>
                 <p style={{ fontSize: '0.85rem' }}>Садок пуст. Пора на рыбалку!</p>
               </div>
@@ -342,7 +342,7 @@ export default function InventoryPage() {
                   <div style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', color: '#d4c5a9', marginBottom: '2px' }}>
                     {fish.species_name}
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: '#5c3d1e' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#a8894e' }}>
                     ⚖️ {fish.weight.toFixed(2)} кг · 📏 {fish.length} см
                   </div>
                 </div>

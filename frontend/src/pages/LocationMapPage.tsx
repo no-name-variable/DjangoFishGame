@@ -174,12 +174,12 @@ export default function LocationMapPage() {
                     </span>
                   )}
                 </div>
-                <p style={{ fontSize: '0.72rem', color: '#6b5030', lineHeight: 1.4,
+                <p style={{ fontSize: '0.72rem', color: '#8b6d3f', lineHeight: 1.4,
                   overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
                   {loc.description}
                 </p>
                 <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px',
-                  fontSize: '0.65rem', color: '#5c3d1e' }}>
+                  fontSize: '0.65rem', color: '#a8894e' }}>
                   <span>⭐ Мин. разряд: {loc.min_rank}</span>
                   {loc.requires_ticket && <span>🎫 Нужна путёвка</span>}
                 </div>
@@ -190,7 +190,7 @@ export default function LocationMapPage() {
       </div>
 
       {locations.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '40px 16px', color: '#5c3d1e' }}>
+        <div style={{ textAlign: 'center', padding: '40px 16px', color: '#a8894e' }}>
           <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🌊</div>
           <p style={{ fontSize: '0.85rem' }}>На этой базе нет доступных локаций</p>
         </div>

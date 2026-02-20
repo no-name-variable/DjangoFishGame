@@ -126,7 +126,7 @@ export default function CafePage() {
         >
           {msg}
           <button
-            style={{ marginLeft: 'auto', color: '#5c3d1e' }}
+            style={{ marginLeft: 'auto', color: '#a8894e' }}
             onClick={() => setMsg('')}
           >
             ✖
@@ -135,11 +135,11 @@ export default function CafePage() {
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
           Загрузка заказов...
         </div>
       ) : Object.keys(grouped).length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
           <p style={{ fontSize: '0.85rem' }}>Нет активных заказов</p>
         </div>
       ) : (
@@ -184,7 +184,7 @@ export default function CafePage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-serif text-sm text-wood-200 mb-0.5">{order.species_name}</h3>
-                        <p className="text-[0.65rem] text-wood-600 mb-1">
+                        <p className="text-[0.65rem] text-wood-400 mb-1">
                           {order.quantity_required} шт. от{' '}
                           {order.min_weight_grams >= 1000
                             ? `${(order.min_weight_grams / 1000).toFixed(1)} кг`
@@ -208,7 +208,7 @@ export default function CafePage() {
                             {order.quantity_delivered}/{order.quantity_required}
                             {isCompleted && ' Выполнено'}
                           </span>
-                          <span className="text-wood-600">{getTimeLeft(order.expires_at)}</span>
+                          <span className="text-wood-400">{getTimeLeft(order.expires_at)}</span>
                         </div>
                       </div>
                     </div>

@@ -31,7 +31,7 @@ export default function GameLayout({ children }: { children: ReactNode }) {
         <TopBar />
 
         {/* Контент */}
-        <main className={`flex-1 min-h-0 ${isFishing ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <main className={`flex-1 min-h-0 ${isFishing ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'}`}>
           {children}
         </main>
 

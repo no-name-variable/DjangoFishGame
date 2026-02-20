@@ -62,7 +62,7 @@ export default function PotionsPage() {
           display: 'flex', gap: '6px', alignItems: 'center',
         }}>
           {message}
-          <button style={{ marginLeft: 'auto', color: '#5c3d1e' }} onClick={() => setMessage('')}>✖</button>
+          <button style={{ marginLeft: 'auto', color: '#a8894e' }} onClick={() => setMessage('')}>✖</button>
         </div>
       )}
 
@@ -89,7 +89,7 @@ export default function PotionsPage() {
             })}
           </div>
         ) : (
-          <p style={{ fontSize: '0.78rem', color: '#5c3d1e' }}>
+          <p style={{ fontSize: '0.78rem', color: '#a8894e' }}>
             🌊 Звёзды выпадают случайно при ловле рыбы. Рыбачьте больше!
           </p>
         )}
@@ -114,7 +114,7 @@ export default function PotionsPage() {
                     {a.potion_name}
                   </span>
                 </div>
-                <span style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>
+                <span style={{ fontSize: '0.65rem', color: '#a8894e' }}>
                   до дня {a.expires_at_day}, {a.expires_at_hour}:00
                 </span>
               </div>
@@ -156,7 +156,7 @@ export default function PotionsPage() {
                     </span>
                   )}
                 </h3>
-                <p style={{ fontSize: '0.72rem', color: '#6b5030', marginBottom: '6px' }}>{p.description}</p>
+                <p style={{ fontSize: '0.72rem', color: '#8b6d3f', marginBottom: '6px' }}>{p.description}</p>
 
                 {/* Требования (звёзды) */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '4px' }}>
@@ -179,7 +179,7 @@ export default function PotionsPage() {
                 </div>
 
                 {/* Стоимость */}
-                <div style={{ display: 'flex', gap: '10px', fontSize: '0.65rem', color: '#5c3d1e' }}>
+                <div style={{ display: 'flex', gap: '10px', fontSize: '0.65rem', color: '#a8894e' }}>
                   <span>⚖️ -{p.karma_cost} кармы</span>
                   {p.duration_hours > 0 && <span>⏱ {p.duration_hours} ч.</span>}
                 </div>
@@ -199,7 +199,7 @@ export default function PotionsPage() {
         ))}
 
         {potions.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
             <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🧪</div>
             <p style={{ fontSize: '0.85rem' }}>Рецепты не найдены</p>
           </div>

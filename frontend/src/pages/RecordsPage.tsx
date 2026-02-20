@@ -62,7 +62,7 @@ export default function RecordsPage() {
               </div>
               <div style={{ fontSize: '0.65rem', color: '#7898b8' }}>{r.player_nickname}</div>
               {r.location_name && (
-                <div style={{ fontSize: '0.6rem', color: '#5c3d1e', marginTop: '2px' }}>📍 {r.location_name}</div>
+                <div style={{ fontSize: '0.6rem', color: '#a8894e', marginTop: '2px' }}>📍 {r.location_name}</div>
               )}
             </div>
           ))}
@@ -106,12 +106,12 @@ export default function RecordsPage() {
                 <td><span className="gold-text" style={{ fontSize: '0.85rem' }}>{r.weight.toFixed(2)} кг</span></td>
                 <td style={{ color: '#a8894e' }}>{r.length.toFixed(1)} см</td>
                 <td style={{ color: '#7898b8' }}>{r.player_nickname}</td>
-                <td style={{ color: '#5c3d1e', fontSize: '0.75rem' }}>{r.location_name ?? '—'}</td>
+                <td style={{ color: '#a8894e', fontSize: '0.75rem' }}>{r.location_name ?? '—'}</td>
               </tr>
             ))}
             {records.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: '#5c3d1e' }}>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: '#a8894e' }}>
                   <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>🎣</div>
                   Рекорды ещё не установлены
                 </td>

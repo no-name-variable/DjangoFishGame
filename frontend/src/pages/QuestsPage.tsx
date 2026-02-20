@@ -121,7 +121,7 @@ export default function QuestsPage() {
                         </span>
                       )}
                     </h3>
-                    <p style={{ fontSize: '0.72rem', color: '#6b5030', marginBottom: '6px' }}>
+                    <p style={{ fontSize: '0.72rem', color: '#8b6d3f', marginBottom: '6px' }}>
                       {pq.quest.description}
                     </p>
 
@@ -144,13 +144,13 @@ export default function QuestsPage() {
 
                     {/* Локация */}
                     {pq.quest.target_location_name && (
-                      <p style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>
+                      <p style={{ fontSize: '0.65rem', color: '#a8894e' }}>
                         📍 {pq.quest.target_location_name}
                       </p>
                     )}
 
                     {/* Награды */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px', fontSize: '0.68rem', color: '#5c3d1e' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px', fontSize: '0.68rem', color: '#a8894e' }}>
                       <span>💰 {pq.quest.reward_money}$</span>
                       <span>✨ {pq.quest.reward_experience} опыта</span>
                       {pq.quest.reward_karma > 0 && <span>⚖️ +{pq.quest.reward_karma}</span>}
@@ -179,7 +179,7 @@ export default function QuestsPage() {
             )
           })}
           {myQuests.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+            <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📜</div>
               <p style={{ fontSize: '0.85rem' }}>Нет активных квестов. Возьмите задание!</p>
             </div>
@@ -213,10 +213,10 @@ export default function QuestsPage() {
                     </span>
                   )}
                 </h3>
-                <p style={{ fontSize: '0.72rem', color: '#6b5030', marginBottom: '6px' }}>
+                <p style={{ fontSize: '0.72rem', color: '#8b6d3f', marginBottom: '6px' }}>
                   {q.description}
                 </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '0.68rem', color: '#5c3d1e' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '0.68rem', color: '#a8894e' }}>
                   <span>💰 {q.reward_money}$</span>
                   <span>✨ {q.reward_experience} опыта</span>
                   {q.reward_karma > 0 && <span>⚖️ +{q.reward_karma}</span>}
@@ -233,7 +233,7 @@ export default function QuestsPage() {
             </div>
           ))}
           {available.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+            <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>✅</div>
               <p style={{ fontSize: '0.85rem' }}>Вы взяли все доступные квесты!</p>
             </div>

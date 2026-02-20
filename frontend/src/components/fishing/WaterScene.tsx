@@ -129,7 +129,6 @@ export default function WaterScene({
 
     const w = app.screen.width
     const h = app.screen.height
-    const waterline = h * WATERLINE_RATIO
 
     // Слои
     const bgLayer = new Container()
@@ -178,6 +177,9 @@ export default function WaterScene({
     app.stage.eventMode = 'static'
     app.stage.hitArea = app.screen
     app.stage.on('pointerdown', (e: FederatedPointerEvent) => {
+      const w = app.screen.width
+      const h = app.screen.height
+      const waterline = h * WATERLINE_RATIO
       const px = e.globalX
       const py = e.globalY
 
@@ -208,10 +210,22 @@ export default function WaterScene({
     const drawFrame = () => {
       frameRef.current++
       const f = frameRef.current
+      const w = app.screen.width
+      const h = app.screen.height
+      const waterline = h * WATERLINE_RATIO
       const curSessions = sessionsRef.current
       const curFights = fightsRef.current
       const activeId = activeIdRef.current
       const tod = timeRef.current
+
+      // Обновляем масштаб фона при изменении размера канваса
+      if (bgSprite) {
+        const scale = Math.max(w / bgSprite.texture.width, h / bgSprite.texture.height)
+        bgSprite.width = bgSprite.texture.width * scale
+        bgSprite.height = bgSprite.texture.height * scale
+        bgSprite.x = (w - bgSprite.width) / 2
+        bgSprite.y = (h - bgSprite.height) / 2
+      }
 
       // Fallback-фон
       bgFallback.clear()

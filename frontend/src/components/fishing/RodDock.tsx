@@ -77,8 +77,8 @@ function RodSlot({
           bg-wood-800/20 hover:bg-wood-800/40 hover:border-wood-600/60
           transition-all flex items-center justify-center gap-1 min-w-0"
       >
-        <span className="text-wood-600 text-sm">+</span>
-        <span className="text-wood-600 text-[10px] truncate">Удочка</span>
+        <span className="text-wood-400 text-sm">+</span>
+        <span className="text-wood-400 text-[10px] truncate">Удочка</span>
       </button>
     )
   }
@@ -154,7 +154,7 @@ function RodPicker({
     return (
       <div className="absolute bottom-full left-0 right-0 mb-1 p-2 bg-wood-900/95
         border border-wood-700/60 rounded shadow-lg z-10">
-        <p className="text-wood-500 text-xs text-center">Нет доступных удочек</p>
+        <p className="text-wood-300 text-xs text-center">Нет доступных удочек</p>
       </div>
     )
   }
@@ -176,7 +176,7 @@ function RodPicker({
               {r.durability_current}%
             </span>
           </div>
-          <div className="text-wood-500 text-[10px] flex gap-1.5 flex-wrap">
+          <div className="text-wood-300 text-[10px] flex gap-1.5 flex-wrap">
             <span>{rodClassLabel[r.rod_class] || r.rod_class}</span>
             {r.bait_name && <span>· {r.bait_name} ({r.bait_remaining})</span>}
           </div>
@@ -199,10 +199,10 @@ export default function RodDock({
 
   return (
     <div className="p-2 border-b border-wood-700/40 relative">
-      <div className="text-wood-500 text-[10px] mb-1 font-serif">Удочки:</div>
+      <div className="text-wood-300 text-[10px] mb-1 font-serif">Удочки:</div>
 
       {hasNoRods ? (
-        <div className="text-wood-600 text-xs text-center py-2">Нет снастей</div>
+        <div className="text-wood-400 text-xs text-center py-2">Нет снастей</div>
       ) : (
         <div className="flex gap-1.5">
           {/* Слоты заброшенных удочек */}
@@ -251,7 +251,7 @@ export default function RodDock({
 
       {/* Подсказка при пустом состоянии */}
       {sessions.length === 0 && availableRods.length > 0 && !pickerOpen && !selectedRod && (
-        <p className="text-wood-500 text-[10px] mt-1 text-center">
+        <p className="text-wood-300 text-[10px] mt-1 text-center">
           Выберите удочку и кликните по воде
         </p>
       )}

@@ -114,7 +114,7 @@ function SettingSlider({ label, value, min, max, step, disabled, onChange }: {
 
   return (
     <>
-      <span className="text-wood-500 text-xs">{label}:</span>
+      <span className="text-wood-300 text-xs">{label}:</span>
       <div className="flex items-center gap-1.5">
         <input
           type="range"
@@ -170,7 +170,7 @@ export default function TacklePanel({
   const msgIsSuccess = message.startsWith('✅') || message.includes('садке') || message.includes('Заброс') || message.includes('Отпущена')
 
   return (
-    <div className="wood-panel flex flex-col h-full overflow-hidden">
+    <div className="wood-panel flex flex-col lg:h-full lg:overflow-hidden">
       {/* Dok удочек — слоты с визуальным выбором */}
       <RodDock
         sessions={sessions}
@@ -187,7 +187,7 @@ export default function TacklePanel({
         <div className="p-2 border-b border-wood-700/40 overflow-y-auto" style={{ maxHeight: '185px' }}>
           {/* Заголовок: класс + прочность */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '0.68rem', color: '#8b6d3f', fontFamily: 'Georgia, serif' }}>
+            <span style={{ fontSize: '0.68rem', color: '#c0a87a', fontFamily: 'Georgia, serif' }}>
               {rodClassLabel[activeRod.rod_class] || activeRod.rod_class}
             </span>
             <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: durabilityColor(activeRod.durability_current) }}>
@@ -270,14 +270,14 @@ export default function TacklePanel({
         <div className="flex flex-wrap gap-2">
           {/* Нет сессий и есть удочки = подсказка */}
           {sessions.length === 0 && rods.length > 0 && (
-            <span className="text-wood-500 text-sm font-serif py-1 w-full text-center">
+            <span className="text-wood-300 text-sm font-serif py-1 w-full text-center">
               🎣 Кликните по воде для заброса
             </span>
           )}
 
           {/* Нет снастей */}
           {rods.length === 0 && (
-            <span className="text-wood-500 text-xs">Нет готовых снастей</span>
+            <span className="text-wood-300 text-xs">Нет готовых снастей</span>
           )}
 
           {/* Кнопка подсечки — меняет вид по состоянию */}
@@ -348,7 +348,7 @@ export default function TacklePanel({
             if (!waitingSession) return null
             return (
               <div className="w-full flex flex-col gap-2">
-                <span className="text-wood-500 text-sm font-serif animate-pulse py-1 text-center">
+                <span className="text-wood-300 text-sm font-serif animate-pulse py-1 text-center">
                   ⏳ Ожидание поклёвки...
                 </span>
 
@@ -427,7 +427,7 @@ export default function TacklePanel({
 
       {/* ─── Чат / Игроки ─── */}
       {chatChannelId && (
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-[200px] lg:min-h-0 flex flex-col">
           <div className="flex border-b border-wood-700/40">
             <button
               onClick={() => setChatTab('chat')}
@@ -436,7 +436,7 @@ export default function TacklePanel({
                 fontFamily: 'Georgia, serif', background: 'none',
                 borderTop: 'none', borderLeft: 'none', borderRight: 'none', cursor: 'pointer',
                 borderBottom: chatTab === 'chat' ? '2px solid #7898b8' : '2px solid transparent',
-                color: chatTab === 'chat' ? '#d4c5a9' : '#5c3d1e',
+                color: chatTab === 'chat' ? '#d4c5a9' : '#a8894e',
               }}
             >
               💬 Чат
@@ -448,7 +448,7 @@ export default function TacklePanel({
                 fontFamily: 'Georgia, serif', background: 'none',
                 borderTop: 'none', borderLeft: 'none', borderRight: 'none', cursor: 'pointer',
                 borderBottom: chatTab === 'players' ? '2px solid #7898b8' : '2px solid transparent',
-                color: chatTab === 'players' ? '#d4c5a9' : '#5c3d1e',
+                color: chatTab === 'players' ? '#d4c5a9' : '#a8894e',
               }}
             >
               👥 Игроки{playerCount > 0 ? ` (${playerCount})` : ''}

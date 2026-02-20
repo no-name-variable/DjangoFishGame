@@ -56,7 +56,7 @@ export default function HousePage() {
           display: 'flex', gap: '6px', alignItems: 'center',
         }}>
           {message}
-          <button style={{ marginLeft: 'auto', color: '#5c3d1e' }} onClick={() => setMessage('')}>{'\u2716'}</button>
+          <button style={{ marginLeft: 'auto', color: '#a8894e' }} onClick={() => setMessage('')}>{'\u2716'}</button>
         </div>
       )}
 
@@ -76,7 +76,7 @@ export default function HousePage() {
           <div style={{ fontSize: '0.8rem', color: '#d4c5a9', fontFamily: 'Georgia, serif' }}>
             Ингредиенты для самогона
           </div>
-          <div style={{ fontSize: '0.68rem', color: '#5c3d1e' }}>
+          <div style={{ fontSize: '0.68rem', color: '#a8894e' }}>
             Покупайте в магазине, хранятся в рюкзаке
           </div>
         </div>

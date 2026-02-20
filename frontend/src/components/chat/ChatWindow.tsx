@@ -68,7 +68,7 @@ export default function ChatWindow({ channelType, channelId, className, onMember
   }
 
   return (
-    <div className={`card flex flex-col ${className || 'h-64'}`}>
+    <div className={`card flex flex-col overflow-hidden ${className || 'h-64'}`} style={{ minHeight: '200px' }}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-serif text-sm text-wood-200">
           Чат {channelType === 'location' ? 'локации' : channelType === 'base' ? 'базы' : channelType === 'bar' ? 'бара' : 'общий'}
@@ -76,7 +76,7 @@ export default function ChatWindow({ channelType, channelId, className, onMember
         <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-1 text-sm mb-2">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-1 text-sm mb-2">
         {messages.map((m) => (
           <div key={m.id}>
             <span className="text-water-300 font-medium">{m.nickname}: </span>

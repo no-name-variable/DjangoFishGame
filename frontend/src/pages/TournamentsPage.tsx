@@ -72,7 +72,7 @@ export default function TournamentsPage() {
       {msg && (
         <div className="wood-panel px-3 py-2 mb-3 text-sm" style={{ color: '#f87171', display: 'flex', gap: '6px' }}>
           ⚠️ {msg}
-          <button style={{ marginLeft: 'auto', color: '#5c3d1e' }} onClick={() => setMsg('')}>✖</button>
+          <button style={{ marginLeft: 'auto', color: '#a8894e' }} onClick={() => setMsg('')}>✖</button>
         </div>
       )}
 
@@ -109,11 +109,11 @@ export default function TournamentsPage() {
                   </div>
 
                   {t.description && (
-                    <p style={{ fontSize: '0.72rem', color: '#6b5030', marginBottom: '6px' }}>{t.description}</p>
+                    <p style={{ fontSize: '0.72rem', color: '#8b6d3f', marginBottom: '6px' }}>{t.description}</p>
                   )}
 
                   {/* Метаданные */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.7rem', color: '#5c3d1e' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.7rem', color: '#a8894e' }}>
                     <span>{SCORING_LABEL[t.scoring] ?? t.scoring}</span>
                     <span>💰 Взнос: {t.entry_fee}$</span>
                     <span>🏆 Приз: {t.prize_money}$</span>
@@ -160,7 +160,7 @@ export default function TournamentsPage() {
                         </tr>
                       ))}
                       {results.length === 0 && (
-                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: '16px', color: '#5c3d1e' }}>
+                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: '16px', color: '#a8894e' }}>
                           Нет участников
                         </td></tr>
                       )}
@@ -176,7 +176,7 @@ export default function TournamentsPage() {
         })}
 
         {tournaments.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
             <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⚔️</div>
             <p style={{ fontSize: '0.85rem' }}>Нет активных турниров. Создайте первый!</p>
           </div>

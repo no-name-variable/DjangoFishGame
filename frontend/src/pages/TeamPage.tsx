@@ -58,7 +58,7 @@ export default function TeamPage() {
       {msg && (
         <div className="wood-panel px-3 py-2 mb-3 text-sm" style={{ color: '#f87171', display: 'flex', gap: '6px' }}>
           ⚠️ {msg}
-          <button style={{ marginLeft: 'auto', color: '#5c3d1e' }} onClick={() => setMsg('')}>✖</button>
+          <button style={{ marginLeft: 'auto', color: '#a8894e' }} onClick={() => setMsg('')}>✖</button>
         </div>
       )}
 
@@ -70,9 +70,9 @@ export default function TeamPage() {
             <div>
               <h2 className="gold-text text-lg">{myTeam.name}</h2>
               {myTeam.description && (
-                <p style={{ fontSize: '0.75rem', color: '#6b5030', marginTop: '2px' }}>{myTeam.description}</p>
+                <p style={{ fontSize: '0.75rem', color: '#8b6d3f', marginTop: '2px' }}>{myTeam.description}</p>
               )}
-              <p style={{ fontSize: '0.65rem', color: '#5c3d1e', marginTop: '4px' }}>
+              <p style={{ fontSize: '0.65rem', color: '#a8894e', marginTop: '4px' }}>
                 👑 {myTeam.leader_nickname} · 👥 {myTeam.member_count}/{myTeam.max_members} участников
               </p>
             </div>
@@ -106,7 +106,7 @@ export default function TeamPage() {
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.68rem' }}>
-                        <span style={{ color: '#5c3d1e' }}>⭐ {m.rank}</span>
+                        <span style={{ color: '#a8894e' }}>⭐ {m.rank}</span>
                         <span style={{
                           color: rc.color, background: `${rc.color}18`,
                           border: `1px solid ${rc.color}35`,
@@ -158,12 +158,12 @@ export default function TeamPage() {
                     {t.name}
                   </h3>
                   {t.description && (
-                    <p style={{ fontSize: '0.68rem', color: '#6b5030', marginBottom: '2px',
+                    <p style={{ fontSize: '0.68rem', color: '#8b6d3f', marginBottom: '2px',
                       overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                       {t.description}
                     </p>
                   )}
-                  <p style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>
+                  <p style={{ fontSize: '0.65rem', color: '#a8894e' }}>
                     👑 {t.leader_nickname} · 👥 {t.member_count}/{t.max_members}
                   </p>
                 </div>
@@ -174,7 +174,7 @@ export default function TeamPage() {
               </div>
             ))}
             {teams.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+              <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '8px' }}>👫</div>
                 <p style={{ fontSize: '0.85rem' }}>Команд пока нет. Создайте первую!</p>
               </div>

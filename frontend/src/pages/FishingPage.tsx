@@ -314,14 +314,14 @@ export default function FishingPage() {
   }, [selectedRodCast, availableRods.length])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-y-auto lg:overflow-hidden">
       {/* Инфо-панель */}
       <div className="flex items-center justify-between px-2 sm:px-3 py-1 shrink-0"
         style={{
           background: 'rgba(7,18,7,0.85)', backdropFilter: 'blur(4px)',
           borderBottom: '1px solid rgba(92,61,30,0.3)',
         }}>
-        <span className="font-serif text-xs sm:text-sm truncate min-w-0" style={{ color: '#a8894e' }}>
+        <span className="font-serif text-xs sm:text-sm truncate min-w-0" style={{ color: '#d4c5a9' }}>
           📍 {player?.current_location_name || 'Локация'}
         </span>
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
@@ -342,7 +342,7 @@ export default function FishingPage() {
             title="Управление снастями"
             style={{
               background: 'rgba(92,61,30,0.25)', border: '1px solid rgba(92,61,30,0.4)',
-              borderRadius: '6px', color: '#a8894e', fontSize: '0.8rem',
+              borderRadius: '6px', color: '#d4c5a9', fontSize: '0.8rem',
               padding: '2px 8px', cursor: 'pointer', lineHeight: 1.4,
             }}
           >
@@ -361,9 +361,9 @@ export default function FishingPage() {
       </div>
 
       {/* Основная область: водоём + правая панель */}
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
+      <div className="flex-none lg:flex-1 flex flex-col lg:flex-row lg:min-h-0">
         {/* Водоём */}
-        <div ref={waterRef} className="flex-[2] lg:flex-1 min-h-0 min-w-0 relative overflow-hidden">
+        <div ref={waterRef} className="h-[50vh] lg:h-auto lg:flex-1 min-h-0 min-w-0 relative overflow-hidden shrink-0">
           <WaterScene
             key={locationImage || 'default'}
             sessions={sessionList}
@@ -384,10 +384,10 @@ export default function FishingPage() {
                 padding: '14px 24px', textAlign: 'center',
               }}>
                 <div style={{ fontSize: '1.6rem', marginBottom: '6px' }}>🎣</div>
-                <p style={{ fontFamily: 'Georgia, serif', fontSize: '0.82rem', color: '#8b6d3f' }}>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '0.82rem', color: '#d4c5a9' }}>
                   Нет готовых снастей
                 </p>
-                <p style={{ fontSize: '0.68rem', color: '#5c3d1e', marginTop: '3px' }}>
+                <p style={{ fontSize: '0.68rem', color: '#a8894e', marginTop: '3px' }}>
                   Соберите удочку в рюкзаке
                 </p>
               </div>
@@ -414,7 +414,7 @@ export default function FishingPage() {
         </div>
 
         {/* Правая панель */}
-        <div className="flex-1 lg:flex-none w-full lg:w-80 xl:w-96 min-h-0 overflow-hidden">
+        <div className="flex-none lg:flex-none w-full lg:w-80 xl:w-96 lg:min-h-0 lg:overflow-hidden">
           <TacklePanel
             rods={rods}
             availableRods={availableRods}

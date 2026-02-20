@@ -110,7 +110,7 @@ export default function TopBar() {
             {/* XP */}
             <div className="flex items-center gap-1.5 mt-0.5">
               <MiniBar value={expPercent} color="#d4a84a" width={48} />
-              <span className="text-[0.6rem] text-wood-500 whitespace-nowrap">
+              <span className="text-[0.6rem] text-wood-300 whitespace-nowrap">
                 {expPercent}%
               </span>
             </div>
@@ -118,7 +118,7 @@ export default function TopBar() {
         </div>
 
         {/* ── Центр: локация + время (скрыто на мобильных) ── */}
-        <div className="hidden md:flex items-center gap-1.5 text-[0.68rem] text-wood-500 overflow-hidden shrink min-w-0">
+        <div className="hidden md:flex items-center gap-1.5 text-[0.68rem] text-wood-300 overflow-hidden shrink min-w-0">
           {player.current_base_name && (
             <span className="whitespace-nowrap overflow-hidden text-ellipsis">
               🏕️ {player.current_base_name}
@@ -164,7 +164,7 @@ export default function TopBar() {
           {/* Звук */}
           <button
             onClick={toggleSound}
-            style={{ ...iconBtn, fontSize: '0.85rem', color: soundEnabled ? '#a8894e' : '#4a3118' }}
+            style={{ ...iconBtn, fontSize: '0.85rem', color: soundEnabled ? '#a8894e' : '#6b5030' }}
             title={soundEnabled ? 'Выключить звук' : 'Включить звук'}
           >
             {soundEnabled ? '🔊' : '🔇'}
@@ -184,9 +184,9 @@ export default function TopBar() {
           {/* Выход */}
           <button
             onClick={() => { logout(); navigate('/login') }}
-            style={{ ...iconBtn, fontSize: '0.75rem', color: '#4a3118' }}
+            style={{ ...iconBtn, fontSize: '0.75rem', color: '#6b5030' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#ef4444' }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#4a3118' }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#6b5030' }}
             title="Выход"
           >
             ✖
@@ -195,7 +195,7 @@ export default function TopBar() {
           {/* Collapse toggle */}
           <button
             onClick={() => setExpanded(v => !v)}
-            style={{ ...iconBtn, fontSize: '0.7rem', color: '#4a3118' }}
+            style={{ ...iconBtn, fontSize: '0.7rem', color: '#6b5030' }}
             title={expanded ? 'Свернуть' : 'Подробнее'}
           >
             <span style={{
@@ -214,7 +214,7 @@ export default function TopBar() {
 
           {/* Локация + время — показываем только на мобильных (на десктопе уже видно) */}
           {(player.current_base_name || (todIcon && timeStr)) && (
-            <div className="flex md:hidden items-center gap-1.5 text-wood-500">
+            <div className="flex md:hidden items-center gap-1.5 text-wood-300">
               {player.current_base_name && <span>🏕️ {player.current_base_name}</span>}
               {player.current_location_name && <span style={{ color: '#7898b8' }}>/ {player.current_location_name}</span>}
               {todIcon && timeStr && <span style={{ color: '#7898b8' }}>{todIcon} {timeStr}</span>}
@@ -237,7 +237,7 @@ export default function TopBar() {
           <div className="flex items-center gap-1.5">
             <span style={{ color: '#8b6d3f' }}>✨ Опыт:</span>
             <span style={{ color: '#d4a84a' }}>{player.experience}</span>
-            <span style={{ color: '#4a3118' }}>/</span>
+            <span style={{ color: '#6b5030' }}>/</span>
             <span style={{ color: '#8b6d3f' }}>{player.experience_to_next_rank}</span>
           </div>
 
@@ -267,7 +267,7 @@ export default function TopBar() {
           {/* Громкость — на мобильных (если звук включён) */}
           {soundEnabled && (
             <div className="flex sm:hidden items-center gap-1.5">
-              <span className="text-wood-500">🔊</span>
+              <span className="text-wood-300">🔊</span>
               <input
                 type="range" min="0" max="1" step="0.1" value={volume}
                 onChange={(e) => setVolume(Number(e.target.value))}

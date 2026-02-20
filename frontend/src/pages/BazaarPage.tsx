@@ -112,7 +112,7 @@ export default function BazaarPage() {
           display: 'flex', gap: '6px', alignItems: 'center',
         }}>
           {msg}
-          <button style={{ marginLeft: 'auto', color: '#5c3d1e' }} onClick={() => setMsg('')}>✖</button>
+          <button style={{ marginLeft: 'auto', color: '#a8894e' }} onClick={() => setMsg('')}>✖</button>
         </div>
       )}
 
@@ -150,7 +150,7 @@ export default function BazaarPage() {
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>🎣 Загрузка...</div>
+            <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>🎣 Загрузка...</div>
           ) : (
             <div className="space-y-2">
               {listings.map((l) => (
@@ -173,7 +173,7 @@ export default function BazaarPage() {
                       <h3 className="font-serif text-sm text-wood-200 truncate mb-0.5">
                         {l.item_name}
                       </h3>
-                      <p className="text-[0.65rem] text-wood-600">
+                      <p className="text-[0.65rem] text-wood-400">
                         📦 {l.quantity} шт. · 👤 {l.seller_nickname}
                       </p>
                     </div>
@@ -190,7 +190,7 @@ export default function BazaarPage() {
                 </div>
               ))}
               {listings.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+                <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
                   <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🏷️</div>
                   <p style={{ fontSize: '0.85rem' }}>Нет лотов{filter ? ' в этой категории' : ''}.</p>
                 </div>
@@ -208,7 +208,7 @@ export default function BazaarPage() {
           </button>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>🎣 Загрузка...</div>
+            <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>🎣 Загрузка...</div>
           ) : (
             <div className="space-y-2">
               {myListings.map((l) => (
@@ -217,7 +217,7 @@ export default function BazaarPage() {
                     <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', color: '#d4c5a9', marginBottom: '2px' }}>
                       {l.item_name}
                     </h3>
-                    <p style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>
+                    <p style={{ fontSize: '0.65rem', color: '#a8894e' }}>
                       📦 {l.quantity} шт. · 💰 {l.price}$
                       {!l.is_active && <span style={{ color: '#4a3118', marginLeft: '6px' }}>✅ Продано</span>}
                     </p>
@@ -231,7 +231,7 @@ export default function BazaarPage() {
                 </div>
               ))}
               {myListings.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+                <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
                   <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📦</div>
                   <p style={{ fontSize: '0.85rem' }}>У вас нет активных лотов</p>
                 </div>
@@ -257,7 +257,7 @@ export default function BazaarPage() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 className="gold-text text-lg">📦 Создать лот</h2>
-              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5c3d1e', fontSize: '1rem' }}
+              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a8894e', fontSize: '1rem' }}
                 onClick={() => setShowCreateModal(false)}>✖</button>
             </div>
 
@@ -292,14 +292,14 @@ export default function BazaarPage() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '0.8rem', color: '#d4c5a9' }}>{item.item_name}</div>
-                        <div style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>В наличии: {item.quantity} шт.</div>
+                        <div style={{ fontSize: '0.65rem', color: '#a8894e' }}>В наличии: {item.quantity} шт.</div>
                       </div>
                       {isSel && <span style={{ color: '#d4a84a', fontSize: '0.8rem' }}>✓</span>}
                     </div>
                   )
                 })}
                 {inventory.length === 0 && (
-                  <p style={{ fontSize: '0.78rem', color: '#5c3d1e', textAlign: 'center', padding: '16px' }}>
+                  <p style={{ fontSize: '0.78rem', color: '#a8894e', textAlign: 'center', padding: '16px' }}>
                     Нет предметов для продажи
                   </p>
                 )}

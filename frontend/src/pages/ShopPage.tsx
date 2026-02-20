@@ -73,7 +73,7 @@ export default function ShopPage() {
   const activeCat = categories.find((c) => c.key === category)
 
   return (
-    <div className="flex flex-col sm:flex-row h-full overflow-hidden">
+    <div className="flex flex-col sm:flex-row sm:h-full sm:overflow-hidden">
 
       {/* ── Меню категорий: горизонтальное на мобильных, боковое на десктопе ── */}
       <aside className="shrink-0 sm:w-[160px] overflow-x-auto sm:overflow-x-hidden sm:overflow-y-auto border-b sm:border-b-0 sm:border-r"
@@ -145,7 +145,7 @@ export default function ShopPage() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e', fontSize: '0.85rem' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e', fontSize: '0.85rem' }}>
             🎣 Загрузка...
           </div>
         ) : (
@@ -182,7 +182,7 @@ export default function ShopPage() {
                       {item.specs.map((s) => (
                         <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between',
                           fontSize: '0.7rem', borderBottom: '1px solid rgba(74,49,24,0.2)', paddingBottom: '2px' }}>
-                          <span style={{ color: '#5c3d1e' }}>{s.label}</span>
+                          <span style={{ color: '#a8894e' }}>{s.label}</span>
                           <span style={{ color: '#a8894e' }}>{s.value}</span>
                         </div>
                       ))}
@@ -215,7 +215,7 @@ export default function ShopPage() {
             ))}
 
             {items.length === 0 && (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#a8894e' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📦</div>
                 <p style={{ fontSize: '0.85rem' }}>Нет товаров в этой категории</p>
               </div>

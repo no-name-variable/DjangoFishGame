@@ -26,7 +26,7 @@ export default function FightBar({ tension, distance, rodDurability = 100 }: Fig
     <div className="p-1" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       {/* ── Полоса натяжения ── */}
       <div>
-        <div className="flex justify-between text-[10px] text-wood-500 mb-1 font-serif">
+        <div className="flex justify-between text-[10px] text-wood-300 mb-1 font-serif">
           <span>Безопасно</span>
           <span>Натяжение</span>
           <span>Обрыв!</span>
@@ -70,7 +70,7 @@ export default function FightBar({ tension, distance, rodDurability = 100 }: Fig
         </div>
 
         <div className="flex justify-between mt-1 text-xs">
-          <span style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>Прочность:</span>
+          <span style={{ fontSize: '0.65rem', color: '#a8894e' }}>Прочность:</span>
           <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: isCritical ? '#f87171' : '#d4c5a9' }}>
             {clampedTension.toFixed(0)}%
           </span>
@@ -83,11 +83,11 @@ export default function FightBar({ tension, distance, rodDurability = 100 }: Fig
       {/* ── Полоса дистанции (подводка к берегу) ── */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-          <span style={{ fontSize: '0.6rem', color: '#5c3d1e' }}>📏 Дистанция</span>
+          <span style={{ fontSize: '0.6rem', color: '#a8894e' }}>📏 Дистанция</span>
           <span style={{ fontSize: '0.68rem', color: '#7898b8', fontWeight: 'bold' }}>
             {distance.toFixed(1)} м
           </span>
-          <span style={{ fontSize: '0.6rem', color: isClose ? '#4ade80' : '#5c3d1e' }}>
+          <span style={{ fontSize: '0.6rem', color: isClose ? '#4ade80' : '#a8894e' }}>
             {isClose ? '🎣 Почти!' : '🌊 Берег'}
           </span>
         </div>

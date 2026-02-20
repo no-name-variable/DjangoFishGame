@@ -39,7 +39,7 @@ export default function NewspaperPage() {
         <h1 className="gold-text" style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', letterSpacing: '0.05em' }}>
           📰 Рыболовная газета
         </h1>
-        <p style={{ fontSize: '0.7rem', color: '#5c3d1e', marginTop: '4px' }}>
+        <p style={{ fontSize: '0.7rem', color: '#a8894e', marginTop: '4px' }}>
           {today} · Новости мира рыбалки
         </p>
       </div>
@@ -56,7 +56,7 @@ export default function NewspaperPage() {
             <p style={{ fontFamily: 'Georgia, serif', fontSize: '1.1rem', color: '#7898b8', fontWeight: 'bold', marginBottom: '2px' }}>
               {s.value}
             </p>
-            <p style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>{s.label}</p>
+            <p style={{ fontSize: '0.65rem', color: '#a8894e' }}>{s.label}</p>
           </div>
         ))}
       </div>
@@ -86,13 +86,13 @@ export default function NewspaperPage() {
                   </div>
                   <div style={{ fontSize: '0.68rem', color: '#7898b8', flexShrink: 0, textAlign: 'right', paddingLeft: '8px' }}>
                     <span className="gold-text">{r.weight.toFixed(2)}кг</span>
-                    <span style={{ color: '#5c3d1e', marginLeft: '4px' }}>— {r.player_nickname}</span>
+                    <span style={{ color: '#a8894e', marginLeft: '4px' }}>— {r.player_nickname}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p style={{ fontSize: '0.78rem', color: '#5c3d1e', textAlign: 'center', padding: '16px 0' }}>
+            <p style={{ fontSize: '0.78rem', color: '#a8894e', textAlign: 'center', padding: '16px 0' }}>
               Рекордов на этой неделе пока нет
             </p>
           )}
@@ -117,11 +117,11 @@ export default function NewspaperPage() {
                     {p.nickname}
                   </span>
                 </div>
-                <span style={{ fontSize: '0.65rem', color: '#5c3d1e' }}>⭐ {p.rank}</span>
+                <span style={{ fontSize: '0.65rem', color: '#a8894e' }}>⭐ {p.rank}</span>
               </div>
             ))}
             {data.top_players.length === 0 && (
-              <p style={{ fontSize: '0.78rem', color: '#5c3d1e', textAlign: 'center', padding: '16px 0' }}>Нет данных</p>
+              <p style={{ fontSize: '0.78rem', color: '#a8894e', textAlign: 'center', padding: '16px 0' }}>Нет данных</p>
             )}
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function NewspaperPage() {
               </tr>
             ))}
             {data.top_records.length === 0 && (
-              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: '#5c3d1e' }}>
+              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: '#a8894e' }}>
                 Рекордов пока нет
               </td></tr>
             )}

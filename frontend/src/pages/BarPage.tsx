@@ -154,14 +154,14 @@ export default function BarPage() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px', color: '#5c3d1e' }}>
+      <div style={{ textAlign: 'center', padding: '40px', color: '#a8894e' }}>
         Загрузка...
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-full gap-3 lg:gap-4 p-3 lg:p-4 max-w-[1100px] mx-auto">
+    <div className="flex flex-col lg:flex-row lg:h-full gap-3 lg:gap-4 p-3 lg:p-4 max-w-[1100px] mx-auto">
 
       {/* ── Контент ── */}
       <main className="flex-1 min-w-0 overflow-y-auto">
@@ -195,7 +195,7 @@ export default function BarPage() {
           >
             {msg}
             <button
-              style={{ marginLeft: 'auto', color: '#5c3d1e' }}
+              style={{ marginLeft: 'auto', color: '#a8894e' }}
               onClick={() => setMsg('')}
             >
               ✖
@@ -205,7 +205,7 @@ export default function BarPage() {
 
         {/* Напитки */}
         <section style={{ marginBottom: '16px' }}>
-          <h2 className="font-serif text-sm text-wood-500 mb-2 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
+          <h2 className="font-serif text-sm text-wood-300 mb-2 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
             Напитки
           </h2>
 
@@ -219,7 +219,7 @@ export default function BarPage() {
                 <span className="font-serif text-xs sm:text-sm text-wood-200 leading-tight">
                   {drink.name}
                 </span>
-                <span className="text-[0.6rem] sm:text-xs text-wood-500 hidden sm:block">
+                <span className="text-[0.6rem] sm:text-xs text-wood-300 hidden sm:block">
                   {drink.description}
                 </span>
                 <div className="flex gap-1 text-[0.6rem] sm:text-xs text-wood-400">
@@ -241,12 +241,12 @@ export default function BarPage() {
 
         {/* Закуска */}
         <section>
-          <h2 className="font-serif text-sm text-wood-500 mb-2 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
+          <h2 className="font-serif text-sm text-wood-300 mb-2 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
             Закуска из рыбы
           </h2>
 
           {creel.length === 0 ? (
-            <p className="text-wood-500 text-xs sm:text-sm text-center py-4">
+            <p className="text-wood-300 text-xs sm:text-sm text-center py-4">
               В садке нет рыбы для приготовления
             </p>
           ) : (
@@ -283,7 +283,7 @@ export default function BarPage() {
                     style={{
                       border: '1px solid rgba(74,49,24,0.4)',
                       background: 'rgba(13,31,13,0.5)',
-                      color: fishPage === 0 ? '#3a2a14' : '#8b6d3f',
+                      color: fishPage === 0 ? '#5c3d1e' : '#8b6d3f',
                     }}
                   >
                     &lt;
@@ -298,7 +298,7 @@ export default function BarPage() {
                     style={{
                       border: '1px solid rgba(74,49,24,0.4)',
                       background: 'rgba(13,31,13,0.5)',
-                      color: fishPage >= totalFishPages - 1 ? '#3a2a14' : '#8b6d3f',
+                      color: fishPage >= totalFishPages - 1 ? '#5c3d1e' : '#8b6d3f',
                     }}
                   >
                     &gt;
@@ -348,17 +348,17 @@ export default function BarPage() {
       </main>
 
       {/* ── Сайдбар: радио + чат ── */}
-      <aside className="w-full lg:w-[300px] flex-shrink-0 flex flex-col gap-2 min-h-0 h-80 lg:h-auto">
+      <aside className="w-full lg:w-[300px] flex-shrink-0 flex flex-col gap-2 lg:min-h-0">
         <RadioWidget />
 
-        <h2 className="font-serif text-sm text-wood-500 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
+        <h2 className="font-serif text-sm text-wood-300 pb-1" style={{ borderBottom: '1px solid rgba(92,61,30,0.3)' }}>
           Барный чат
         </h2>
 
         {/* Участники */}
         {members.length > 0 && (
           <div className="flex flex-wrap gap-1.5 p-2 rounded-lg" style={{ background: 'rgba(13,31,13,0.5)', border: '1px solid rgba(74,49,24,0.3)' }}>
-            <span className="text-wood-500 text-[0.6rem] w-full">
+            <span className="text-wood-300 text-[0.6rem] w-full">
               В баре ({members.length}):
             </span>
             {members.map((name) => (
@@ -376,7 +376,7 @@ export default function BarPage() {
         <ChatWindow
           channelType="bar"
           channelId={barChannelId}
-          className="flex-1 min-h-0"
+          className="h-64 lg:flex-1 lg:h-auto lg:min-h-0"
           onMembersChange={setMembers}
         />
       </aside>
